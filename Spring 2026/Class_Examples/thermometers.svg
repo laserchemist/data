@@ -1,0 +1,68 @@
+<svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="600" height="400" fill="#f0f8ff"/>
+  
+  <!-- North Thermometer -->
+  <g id="north-thermometer" transform="translate(150, 80)">
+    <!-- Label -->
+    <text x="0" y="-20" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#1e3a8a" text-anchor="middle">NORTH</text>
+    
+    <!-- Thermometer tube -->
+    <rect x="-20" y="0" width="40" height="200" rx="20" fill="#e0f2fe" stroke="#1e3a8a" stroke-width="3"/>
+    
+    <!-- Temperature markings -->
+    <line x1="20" y1="50" x2="35" y2="50" stroke="#1e3a8a" stroke-width="2"/>
+    <line x1="20" y1="100" x2="35" y2="100" stroke="#1e3a8a" stroke-width="2"/>
+    <line x1="20" y1="150" x2="35" y2="150" stroke="#1e3a8a" stroke-width="2"/>
+    
+    <!-- Mercury level (low - cold) -->
+    <rect x="-15" y="140" width="30" height="55" fill="#3b82f6"/>
+    
+    <!-- Bulb -->
+    <circle cx="0" cy="220" r="30" fill="#3b82f6" stroke="#1e3a8a" stroke-width="3"/>
+    
+    <!-- Snowflakes -->
+    <text x="-50" y="30" font-size="30" fill="#60a5fa">❄</text>
+    <text x="40" y="60" font-size="25" fill="#93c5fd">❄</text>
+    <text x="-45" y="90" font-size="20" fill="#bfdbfe">❄</text>
+    
+    <!-- Temperature value -->
+    <text x="0" y="280" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#1e3a8a" text-anchor="middle">-10°C</text>
+  </g>
+  
+  <!-- South Thermometer -->
+  <g id="south-thermometer" transform="translate(450, 80)">
+    <!-- Label -->
+    <text x="0" y="-20" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#dc2626" text-anchor="middle">SOUTH</text>
+    
+    <!-- Thermometer tube -->
+    <rect x="-20" y="0" width="40" height="200" rx="20" fill="#fee2e2" stroke="#dc2626" stroke-width="3"/>
+    
+    <!-- Temperature markings -->
+    <line x1="20" y1="50" x2="35" y2="50" stroke="#dc2626" stroke-width="2"/>
+    <line x1="20" y1="100" x2="35" y2="100" stroke="#dc2626" stroke-width="2"/>
+    <line x1="20" y1="150" x2="35" y2="150" stroke="#dc2626" stroke-width="2"/>
+    
+    <!-- Mercury level (high - hot) -->
+    <rect x="-15" y="30" width="30" height="165" fill="#ef4444"/>
+    
+    <!-- Bulb -->
+    <circle cx="0" cy="220" r="30" fill="#ef4444" stroke="#dc2626" stroke-width="3"/>
+    
+    <!-- Sun rays -->
+    <circle cx="0" cy="-30" r="20" fill="#fbbf24" opacity="0.8"/>
+    <line x1="0" y1="-55" x2="0" y2="-65" stroke="#fbbf24" stroke-width="3" stroke-linecap="round"/>
+    <line x1="17" y1="-47" x2="24" y2="-54" stroke="#fbbf24" stroke-width="3" stroke-linecap="round"/>
+    <line x1="25" y1="-30" x2="35" y2="-30" stroke="#fbbf24" stroke-width="3" stroke-linecap="round"/>
+    <line x1="17" y1="-13" x2="24" y2="-6" stroke="#fbbf24" stroke-width="3" stroke-linecap="round"/>
+    <line x1="-17" y1="-47" x2="-24" y2="-54" stroke="#fbbf24" stroke-width="3" stroke-linecap="round"/>
+    <line x1="-25" y1="-30" x2="-35" y2="-30" stroke="#fbbf24" stroke-width="3" stroke-linecap="round"/>
+    <line x1="-17" y1="-13" x2="-24" y2="-6" stroke="#fbbf24" stroke-width="3" stroke-linecap="round"/>
+    
+    <!-- Temperature value -->
+    <text x="0" y="280" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#dc2626" text-anchor="middle">35°C</text>
+  </g>
+  
+  <!-- Decorative arrow between them -->
+  <line x1="220" y1="200" x2="380" y2="200" stroke="#64748b" stroke-width="2" stroke-dasharray="5,5" opacity="0.5"/>
+</svg>
