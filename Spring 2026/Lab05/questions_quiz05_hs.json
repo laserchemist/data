@@ -1,0 +1,886 @@
+[
+  {
+    "question": "Given <code>arr = make_array(3, 7, 2, 9, 4)</code>, what does <code>np.count_nonzero(arr &gt; 5)</code> return?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "1",
+        "correct": false,
+        "feedback": "Only one value is above 5? Count again: 7 and 9 are both &gt; 5."
+      },
+      {
+        "answer": "2",
+        "correct": true,
+        "feedback": "Correct! 7 &gt; 5 and 9 &gt; 5 \u2014 two True values."
+      },
+      {
+        "answer": "7",
+        "correct": false,
+        "feedback": "7 is an element of arr, not the count of elements above 5."
+      },
+      {
+        "answer": "True",
+        "correct": false,
+        "feedback": "<code>count_nonzero</code> returns an integer, not a Boolean."
+      }
+    ]
+  },
+  {
+    "question": "Which expression returns <code>True</code>?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "<code>5 == '5'</code>",
+        "correct": false,
+        "feedback": "Different types \u2014 int vs str \u2014 are never equal in Python."
+      },
+      {
+        "answer": "<code>not False</code>",
+        "correct": true,
+        "feedback": "Correct! <code>not False</code> evaluates to <code>True</code>."
+      },
+      {
+        "answer": "<code>7 &lt; 3</code>",
+        "correct": false,
+        "feedback": "7 is not less than 3."
+      },
+      {
+        "answer": "<code>10 != 10</code>",
+        "correct": false,
+        "feedback": "10 equals 10, so != is False."
+      }
+    ]
+  },
+  {
+    "question": "A function contains: <code>if x &gt; 10: return 'high'</code> / <code>elif x &gt; 5: return 'medium'</code> / <code>else: return 'low'</code>. What does it return when <code>x = 10</code>?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "'high'",
+        "correct": false,
+        "feedback": "<code>x &gt; 10</code> is False when x = 10 (strict inequality)."
+      },
+      {
+        "answer": "'medium'",
+        "correct": true,
+        "feedback": "Correct! x &gt; 10 is False, but x &gt; 5 is True (10 &gt; 5)."
+      },
+      {
+        "answer": "'low'",
+        "correct": false,
+        "feedback": "The elif condition x &gt; 5 is True for x = 10, so 'low' is never reached."
+      },
+      {
+        "answer": "An error",
+        "correct": false,
+        "feedback": "No error \u2014 the elif branch matches cleanly."
+      }
+    ]
+  },
+  {
+    "question": "How many branches of an <code>if/elif/elif/else</code> chain execute when the first <code>elif</code> condition is True?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "All branches whose conditions are True",
+        "correct": false,
+        "feedback": "Only ONE branch ever executes \u2014 the first True one."
+      },
+      {
+        "answer": "Exactly one \u2014 the first True branch",
+        "correct": true,
+        "feedback": "Correct! Python evaluates top-to-bottom and stops at the first True condition."
+      },
+      {
+        "answer": "Two \u2014 the elif and the else",
+        "correct": false,
+        "feedback": "else only runs when NO condition above it is True."
+      },
+      {
+        "answer": "It depends on the variable type",
+        "correct": false,
+        "feedback": "The number of branches executed (always 1) doesn't depend on type."
+      }
+    ]
+  },
+  {
+    "question": "What is the value of <code>total</code> after: <code>total = 0 / for i in np.arange(1, 6): / &nbsp;&nbsp;&nbsp;&nbsp;total = total + i</code>?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "5",
+        "correct": false,
+        "feedback": "<code>np.arange(1, 6)</code> gives [1,2,3,4,5]. Sum all five."
+      },
+      {
+        "answer": "10",
+        "correct": false,
+        "feedback": "That would be 1+2+3+4 only. Don't forget 5."
+      },
+      {
+        "answer": "15",
+        "correct": true,
+        "feedback": "Correct! 1+2+3+4+5 = 15."
+      },
+      {
+        "answer": "6",
+        "correct": false,
+        "feedback": "<code>np.arange(1, 6)</code> stops before 6, so 6 is never added."
+      }
+    ]
+  },
+  {
+    "question": "You want to count how many words in a list have more than 4 characters. Which loop structure is correct?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "<code>for word in words: count = len(word) &gt; 4</code>",
+        "correct": false,
+        "feedback": "This overwrites <code>count</code> each iteration instead of accumulating."
+      },
+      {
+        "answer": "<code>count = 0 / for word in words: / &nbsp;&nbsp;if len(word) &gt; 4: count += 1</code>",
+        "correct": true,
+        "feedback": "Correct! Initialise outside, increment conditionally inside the loop."
+      },
+      {
+        "answer": "<code>for count in words: count &gt; 4</code>",
+        "correct": false,
+        "feedback": "This iterates over words but names the loop variable <code>count</code>, which is confusing and wrong."
+      },
+      {
+        "answer": "<code>count = sum(words &gt; 4)</code>",
+        "correct": false,
+        "feedback": "You can't compare a list of strings to an integer like this."
+      }
+    ]
+  },
+  {
+    "question": "Two independent events: P(A) = 0.4, P(B) = 0.3. What is P(A and B)?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "0.70",
+        "correct": false,
+        "feedback": "0.70 \u2248 P(A) + P(B) which approximates P(A or B). For AND with independent events: multiply."
+      },
+      {
+        "answer": "0.12",
+        "correct": true,
+        "feedback": "Correct! P(A and B) = P(A) \u00d7 P(B) = 0.4 \u00d7 0.3 = 0.12."
+      },
+      {
+        "answer": "0.10",
+        "correct": false,
+        "feedback": "Check the multiplication: 0.4 \u00d7 0.3 = 0.12, not 0.10."
+      },
+      {
+        "answer": "Cannot be determined",
+        "correct": false,
+        "feedback": "Independence is given \u2014 we can multiply directly."
+      }
+    ]
+  },
+  {
+    "question": "P(rain today) = 0.35. Assuming independence, what is P(rain on both today AND tomorrow)?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "0.70",
+        "correct": false,
+        "feedback": "That's 2 \u00d7 0.35 \u2014 addition, not multiplication."
+      },
+      {
+        "answer": "0.1225",
+        "correct": true,
+        "feedback": "Correct! 0.35 \u00d7 0.35 = 0.1225."
+      },
+      {
+        "answer": "0.65",
+        "correct": false,
+        "feedback": "0.65 = P(no rain) = 1 \u2212 0.35. That's the complement, not the joint probability."
+      },
+      {
+        "answer": "0.35",
+        "correct": false,
+        "feedback": "That's the single-day probability. Two independent days requires multiplication."
+      }
+    ]
+  },
+  {
+    "question": "A bag has 2 red, 2 green, 2 blue marbles. You draw 3 without replacement. P(all three different colours) = ?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "1/6",
+        "correct": false,
+        "feedback": "Work step by step: first draw any colour (6/6), second must differ (4/5), third must be remaining colour (2/4)."
+      },
+      {
+        "answer": "2/5",
+        "correct": true,
+        "feedback": "Correct! (6/6) \u00d7 (4/5) \u00d7 (2/4) = 48/120 = 2/5."
+      },
+      {
+        "answer": "1/15",
+        "correct": false,
+        "feedback": "That's too small. Remember the first draw is guaranteed (6/6 = 1)."
+      },
+      {
+        "answer": "1/3",
+        "correct": false,
+        "feedback": "Close but not right \u2014 step through: 1 \u00d7 4/5 \u00d7 2/4 = 8/20 = 2/5."
+      }
+    ]
+  },
+  {
+    "question": "A simulation runs 1000 times. 47 runs produce a result as extreme as the real data. What is the p-value?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "47",
+        "correct": false,
+        "feedback": "The p-value is a proportion (0\u20131). Divide by total simulations."
+      },
+      {
+        "answer": "0.047",
+        "correct": true,
+        "feedback": "Correct! p = 47/1000 = 0.047. Since 0.047 &lt; 0.05 this is statistically significant."
+      },
+      {
+        "answer": "0.53",
+        "correct": false,
+        "feedback": "0.53 = (1000\u221247)/1000 \u2014 the fraction that did NOT match."
+      },
+      {
+        "answer": "0.95",
+        "correct": false,
+        "feedback": "0.95 is the confidence level corresponding to \u03b1 = 0.05, not the p-value."
+      }
+    ]
+  },
+  {
+    "question": "Why do we run 1000 simulations instead of just 1 when estimating a p-value?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "One simulation is too slow",
+        "correct": false,
+        "feedback": "One simulation is faster! We run many to reduce variability, not for speed."
+      },
+      {
+        "answer": "To build a reliable picture of what random chance produces \u2014 one run is too variable",
+        "correct": true,
+        "feedback": "Correct! 1000 simulations reveal the full null distribution, giving a stable p-value estimate."
+      },
+      {
+        "answer": "Each simulation tests a different null hypothesis",
+        "correct": false,
+        "feedback": "All 1000 simulations test the same null hypothesis \u2014 they each give one random outcome."
+      },
+      {
+        "answer": "The law of large numbers requires at least 1000 samples",
+        "correct": false,
+        "feedback": "The LLN is a real principle but doesn't mandate exactly 1000 \u2014 that number is a practical choice."
+      }
+    ]
+  },
+  {
+    "question": "The null distribution from 1000 simulations is centred at 50% correct. The real groundhog scored 53%. The p-value is 0.18. What do you conclude?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Reject H\u2080 \u2014 the groundhog is significantly better than chance",
+        "correct": false,
+        "feedback": "p = 0.18 &gt; 0.05. We cannot reject H\u2080."
+      },
+      {
+        "answer": "Fail to reject H\u2080 \u2014 the result is consistent with random guessing",
+        "correct": true,
+        "feedback": "Correct! p = 0.18 means 18% of random simulations matched or beat 53%. That's not surprising enough to reject H\u2080."
+      },
+      {
+        "answer": "The simulation was too small \u2014 run 10,000 to get a real answer",
+        "correct": false,
+        "feedback": "1000 simulations gives a reliable p-value. The conclusion doesn't change with more runs."
+      },
+      {
+        "answer": "Accept H\u2080 as proven \u2014 groundhogs are purely random",
+        "correct": false,
+        "feedback": "We never 'prove' or 'accept' H\u2080 \u2014 we only fail to reject it. Absence of evidence is not evidence of absence."
+      }
+    ]
+  },
+  {
+    "question": "A researcher tests 20 groundhogs individually, each at \u03b1 = 0.05. Approximately what is P(at least one false positive)?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "0.05",
+        "correct": false,
+        "feedback": "0.05 is the per-test rate. With 20 tests it compounds: 1 \u2212 0.95\u00b2\u2070."
+      },
+      {
+        "answer": "0.26",
+        "correct": false,
+        "feedback": "Check the calculation: 1 \u2212 0.95\u00b2\u2070 \u2248 0.64, not 0.26."
+      },
+      {
+        "answer": "0.64",
+        "correct": true,
+        "feedback": "Correct! P(\u22651 false positive) = 1 \u2212 (1\u22120.05)\u00b2\u2070 = 1 \u2212 0.95\u00b2\u2070 \u2248 0.64."
+      },
+      {
+        "answer": "1.00",
+        "correct": false,
+        "feedback": "1.00 requires a guarantee \u2014 that only happens with infinitely many tests."
+      }
+    ]
+  },
+  {
+    "question": "After Bonferroni correction for 34 tests (33 groundhogs + combined group), what is the adjusted \u03b1 threshold?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "0.05",
+        "correct": false,
+        "feedback": "That's the uncorrected threshold. Bonferroni divides by number of tests."
+      },
+      {
+        "answer": "0.0015",
+        "correct": true,
+        "feedback": "Correct! \u03b1_adjusted = 0.05 / 34 \u2248 0.0015. A much stricter bar."
+      },
+      {
+        "answer": "0.034",
+        "correct": false,
+        "feedback": "0.034 = 34 \u00d7 0.001 \u2014 that's not the Bonferroni formula. Divide \u03b1 by n_tests."
+      },
+      {
+        "answer": "0.17",
+        "correct": false,
+        "feedback": "0.05 \u00d7 34 = 1.7 \u2014 multiplying goes the wrong way. Divide: 0.05 / 34."
+      }
+    ]
+  },
+  {
+    "question": "Essex Ed has 9 observations; Punxsutawney Phil has 107. Both score 60% correct. Whose p-value is likely smaller?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Essex Ed's \u2014 fewer observations make the test more sensitive",
+        "correct": false,
+        "feedback": "Fewer observations make the test LESS sensitive \u2014 the null distribution is wide, so 60% is easy to achieve by chance."
+      },
+      {
+        "answer": "Phil's \u2014 more observations make 60% harder to explain as luck",
+        "correct": true,
+        "feedback": "Correct! With 107 observations the null distribution is narrow, so 60% is genuinely surprising. With 9, it's not."
+      },
+      {
+        "answer": "They are identical since both scored 60%",
+        "correct": false,
+        "feedback": "Accuracy alone doesn't determine the p-value \u2014 sample size matters equally."
+      },
+      {
+        "answer": "P-values cannot be compared across different groundhogs",
+        "correct": false,
+        "feedback": "P-values are standardised and can always be compared."
+      }
+    ]
+  },
+  {
+    "question": "What type does Python return when you evaluate <code>3 &lt; 5</code>?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "int",
+        "correct": false,
+        "feedback": "int would be the result of arithmetic like 3 + 5. Comparisons return a Boolean."
+      },
+      {
+        "answer": "str",
+        "correct": false,
+        "feedback": "str is text. Comparisons return True or False \u2014 Boolean values."
+      },
+      {
+        "answer": "bool",
+        "correct": true,
+        "feedback": "Correct! Any comparison (<, >, ==, !=, <=, >=) returns a bool: True or False."
+      },
+      {
+        "answer": "float",
+        "correct": false,
+        "feedback": "float is a decimal number. 3 < 5 returns the Boolean True."
+      }
+    ]
+  },
+  {
+    "question": "What is the value of <code>not (3 == 3)</code>?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "True",
+        "correct": false,
+        "feedback": "3 == 3 is True, and not True is False."
+      },
+      {
+        "answer": "False",
+        "correct": true,
+        "feedback": "Correct! 3 == 3 evaluates to True, then not True gives False."
+      },
+      {
+        "answer": "0",
+        "correct": false,
+        "feedback": "In Python, False and 0 are equivalent in some contexts, but the actual return type here is the Boolean False."
+      },
+      {
+        "answer": "Error",
+        "correct": false,
+        "feedback": "No error \u2014 not is a valid Boolean operator."
+      }
+    ]
+  },
+  {
+    "question": "Which comparison operator tests that two values are <em>not</em> equal?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "<code>=</code>",
+        "correct": false,
+        "feedback": "= is assignment (stores a value). It's not a comparison at all."
+      },
+      {
+        "answer": "<code>==</code>",
+        "correct": false,
+        "feedback": "== tests equality (are they the same?), not inequality."
+      },
+      {
+        "answer": "<code>!=</code>",
+        "correct": true,
+        "feedback": "Correct! != means 'not equal to'. For example, 3 != 4 is True."
+      },
+      {
+        "answer": "<code>&lt;&gt;</code>",
+        "correct": false,
+        "feedback": "<> was used in very old Python 2. In Python 3 it's a syntax error. Use !=."
+      }
+    ]
+  },
+  {
+    "question": "What does <code>arr == 'yes'</code> return when <code>arr</code> is a NumPy array of strings?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "True or False (a single Boolean)",
+        "correct": false,
+        "feedback": "A single Boolean is what you'd get for a scalar. Arrays return element-wise results."
+      },
+      {
+        "answer": "A Boolean array \u2014 True where element equals 'yes', False elsewhere",
+        "correct": true,
+        "feedback": "Correct! NumPy applies the comparison to every element and returns an array of Booleans."
+      },
+      {
+        "answer": "The count of elements that equal 'yes'",
+        "correct": false,
+        "feedback": "That's what np.count_nonzero(arr == 'yes') gives. The == alone returns a Boolean array."
+      },
+      {
+        "answer": "An error \u2014 you can't compare arrays to strings",
+        "correct": false,
+        "feedback": "You can absolutely compare a string array to a string \u2014 NumPy handles it element-wise."
+      }
+    ]
+  },
+  {
+    "question": "Given <code>x = 8</code>, what does <code>(x &gt; 5) and (x &lt; 10)</code> return?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "True",
+        "correct": true,
+        "feedback": "Correct! Both conditions are True (8 > 5 and 8 < 10), so and gives True."
+      },
+      {
+        "answer": "False",
+        "correct": false,
+        "feedback": "Both sub-conditions are True, so and returns True."
+      },
+      {
+        "answer": "8",
+        "correct": false,
+        "feedback": "The expression is a Boolean comparison, not an arithmetic operation. Result is True or False."
+      },
+      {
+        "answer": "Error",
+        "correct": false,
+        "feedback": "No error \u2014 and is a standard Boolean operator in Python."
+      }
+    ]
+  },
+  {
+    "question": "In the groundhog study, <code>groundhogdata.where('shadowPres', are.equal_to('yes'))</code> returns rows where the shadow column equals 'yes'. What type does this return?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "A Boolean array",
+        "correct": false,
+        "feedback": "are.equal_to used inside .where() does produce a Boolean array internally, but .where() itself returns a Table."
+      },
+      {
+        "answer": "A filtered Table containing only matching rows",
+        "correct": true,
+        "feedback": "Correct! .where() always returns a Table \u2014 the same columns but only rows that match the condition."
+      },
+      {
+        "answer": "An integer count of matching rows",
+        "correct": false,
+        "feedback": "For the count, you'd use .where(...).num_rows. The .where() method itself returns a Table."
+      },
+      {
+        "answer": "The string 'yes'",
+        "correct": false,
+        "feedback": ".where() filters rows \u2014 it returns a Table, not the value you filtered on."
+      }
+    ]
+  },
+  {
+    "question": "A fair coin is flipped once. What is the probability of getting Heads?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "0",
+        "correct": false,
+        "feedback": "0 means impossible. A fair coin definitely can land Heads."
+      },
+      {
+        "answer": "0.25",
+        "correct": false,
+        "feedback": "0.25 would be the probability of Heads twice in a row. One flip is 0.5."
+      },
+      {
+        "answer": "0.5",
+        "correct": true,
+        "feedback": "Correct! A fair coin has two equally likely outcomes, so P(Heads) = 1/2 = 0.5."
+      },
+      {
+        "answer": "1",
+        "correct": false,
+        "feedback": "1 means certain. Tails is also possible."
+      }
+    ]
+  },
+  {
+    "question": "P(drawing a red card from a standard 52-card deck) = ?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "1/4",
+        "correct": false,
+        "feedback": "1/4 would be one suit (e.g. hearts). Red cards are hearts + diamonds = 26/52."
+      },
+      {
+        "answer": "1/2",
+        "correct": true,
+        "feedback": "Correct! 26 red cards out of 52 total = 26/52 = 1/2 = 0.5."
+      },
+      {
+        "answer": "1/13",
+        "correct": false,
+        "feedback": "1/13 is the probability of a specific rank (e.g. an Ace). Red = 1/2."
+      },
+      {
+        "answer": "1/52",
+        "correct": false,
+        "feedback": "1/52 is the probability of one specific card. There are 26 red cards."
+      }
+    ]
+  },
+  {
+    "question": "If P(A) = 0.3, what is P(not A)?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "0.3",
+        "correct": false,
+        "feedback": "That's P(A) itself. The complement is 1 minus that."
+      },
+      {
+        "answer": "0.6",
+        "correct": false,
+        "feedback": "Close \u2014 but 1 \u2212 0.3 = 0.7, not 0.6."
+      },
+      {
+        "answer": "0.7",
+        "correct": true,
+        "feedback": "Correct! P(not A) = 1 \u2212 P(A) = 1 \u2212 0.3 = 0.7."
+      },
+      {
+        "answer": "1.3",
+        "correct": false,
+        "feedback": "Probabilities can never exceed 1. P(not A) = 1 \u2212 0.3 = 0.7."
+      }
+    ]
+  },
+  {
+    "question": "You roll a standard 6-sided die. What is P(rolling a 3)?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "1/3",
+        "correct": false,
+        "feedback": "1/3 would mean 2 faces out of 6. Only one face shows a 3."
+      },
+      {
+        "answer": "3/6",
+        "correct": false,
+        "feedback": "3/6 = 0.5. That would be right for rolling 3 or higher from 1-6. One specific value has probability 1/6."
+      },
+      {
+        "answer": "1/6",
+        "correct": true,
+        "feedback": "Correct! One face out of six equally likely outcomes. P(3) = 1/6 \u2248 0.167."
+      },
+      {
+        "answer": "1/2",
+        "correct": false,
+        "feedback": "1/2 applies to two equally likely outcomes (like a coin). A die has six faces."
+      }
+    ]
+  },
+  {
+    "question": "P(A) = 0.5 and P(B) = 0.5, and A and B are independent. What is P(A and B)?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "1.0",
+        "correct": false,
+        "feedback": "1.0 means certain. Two independent 50/50 events don't guarantee both happening."
+      },
+      {
+        "answer": "0.5",
+        "correct": false,
+        "feedback": "That's the probability of either one alone. For both: multiply."
+      },
+      {
+        "answer": "0.25",
+        "correct": true,
+        "feedback": "Correct! P(A and B) = 0.5 \u00d7 0.5 = 0.25. Like getting Heads twice in a row."
+      },
+      {
+        "answer": "0.0",
+        "correct": false,
+        "feedback": "0 means impossible. Two independent events can certainly both occur."
+      }
+    ]
+  },
+  {
+    "question": "What does the null hypothesis (H\u2080) typically claim in a simulation test?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "The observed result is caused by a real effect",
+        "correct": false,
+        "feedback": "That's closer to the alternative hypothesis. H\u2080 assumes the boring explanation."
+      },
+      {
+        "answer": "The observed result is due to random chance alone \u2014 no real effect",
+        "correct": true,
+        "feedback": "Correct! H\u2080 is the 'nothing interesting is happening' hypothesis. We try to gather evidence against it."
+      },
+      {
+        "answer": "The experiment was conducted incorrectly",
+        "correct": false,
+        "feedback": "H\u2080 says nothing about experimental quality \u2014 only about whether the effect is real or random."
+      },
+      {
+        "answer": "The sample size is too small to draw any conclusion",
+        "correct": false,
+        "feedback": "Sample size affects statistical power, but H\u2080 is a claim about the world, not about the study design."
+      }
+    ]
+  },
+  {
+    "question": "In the groundhog study, what is the null hypothesis?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Groundhogs are always correct about spring arrival",
+        "correct": false,
+        "feedback": "That would be an extreme alternative hypothesis. H\u2080 is the sceptical baseline."
+      },
+      {
+        "answer": "Groundhog predictions are no better than random guessing (\u224850% correct)",
+        "correct": true,
+        "feedback": "Correct! H\u2080 says the groundhog is just flipping a coin \u2014 any apparent accuracy is luck."
+      },
+      {
+        "answer": "Groundhogs never see their shadows",
+        "correct": false,
+        "feedback": "H\u2080 is about prediction accuracy, not shadow frequency."
+      },
+      {
+        "answer": "Spring always arrives early",
+        "correct": false,
+        "feedback": "H\u2080 is about whether groundhog predictions beat chance, not about when spring arrives."
+      }
+    ]
+  },
+  {
+    "question": "We find p = 0.62 for the groundhog test. What is the correct conclusion?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Reject H\u2080 \u2014 the groundhog is a reliable predictor",
+        "correct": false,
+        "feedback": "p = 0.62 is far above 0.05. We cannot reject H\u2080."
+      },
+      {
+        "answer": "Fail to reject H\u2080 \u2014 no evidence the groundhog beats random chance",
+        "correct": true,
+        "feedback": "Correct! p = 0.62 means 62% of random simulations matched or beat the groundhog. That's completely consistent with luck."
+      },
+      {
+        "answer": "Accept H\u2080 \u2014 proven that groundhogs are random",
+        "correct": false,
+        "feedback": "We never 'accept' or 'prove' H\u2080. We only fail to find evidence against it."
+      },
+      {
+        "answer": "The test was invalid \u2014 re-run with more simulations",
+        "correct": false,
+        "feedback": "1000 simulations is sufficient. The p-value of 0.62 is a clear result \u2014 more simulations won't change the conclusion."
+      }
+    ]
+  },
+  {
+    "question": "Which p-value provides the strongest evidence against the null hypothesis?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "0.82",
+        "correct": false,
+        "feedback": "p = 0.82 means 82% of random simulations were at least that good. Very weak evidence against H\u2080."
+      },
+      {
+        "answer": "0.45",
+        "correct": false,
+        "feedback": "p = 0.45 is well above 0.05 \u2014 no meaningful evidence against H\u2080."
+      },
+      {
+        "answer": "0.05",
+        "correct": false,
+        "feedback": "p = 0.05 is right at the conventional threshold \u2014 marginal evidence. Compare to the clearly smallest option."
+      },
+      {
+        "answer": "0.003",
+        "correct": true,
+        "feedback": "Correct! p = 0.003 means only 0.3% of random simulations matched the result \u2014 very strong evidence against H\u2080."
+      }
+    ]
+  },
+  {
+    "question": "In the groundhog simulation, one run produces 48% correct. The real groundhogs scored 51%. What does the simulation run tell us?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "The groundhogs are better than chance because 51% > 48%",
+        "correct": false,
+        "feedback": "One simulation isn't enough to conclude anything \u2014 it's just one random outcome. We need many simulations."
+      },
+      {
+        "answer": "Random chance can produce results near 51%, so one run isn't sufficient evidence",
+        "correct": true,
+        "feedback": "Correct! A single simulation shows chance can get close to 51%. We need 1000 runs to see the full distribution."
+      },
+      {
+        "answer": "The null hypothesis is false because the simulation didn't reach 51%",
+        "correct": false,
+        "feedback": "One simulation not reaching 51% proves nothing \u2014 random variation is high with few runs."
+      },
+      {
+        "answer": "The groundhogs scored below the simulation so H\u2080 is supported",
+        "correct": false,
+        "feedback": "51% (real) > 48% (simulation) \u2014 groundhogs scored higher, not lower. But either way, one simulation proves nothing."
+      }
+    ]
+  },
+  {
+    "question": "The groundhog data has two ways to be 'correct'. Which pair is right?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Shadow seen + spring early, OR no shadow + spring late",
+        "correct": false,
+        "feedback": "This is backwards. Shadow predicts late spring; no shadow predicts early spring."
+      },
+      {
+        "answer": "Shadow seen + spring late, OR no shadow + spring early",
+        "correct": true,
+        "feedback": "Correct! The legend says shadow \u2192 6 more weeks of winter (late spring); no shadow \u2192 early spring."
+      },
+      {
+        "answer": "Shadow seen on any day + any spring outcome",
+        "correct": false,
+        "feedback": "Correctness requires the prediction to match the actual outcome, not just seeing a shadow."
+      },
+      {
+        "answer": "No shadow seen + spring late",
+        "correct": false,
+        "feedback": "No shadow is supposed to predict early spring, so late spring would be a wrong prediction."
+      }
+    ]
+  },
+  {
+    "question": "Why do we simulate random groundhog predictions rather than calculating the probability mathematically?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Because the math is too hard",
+        "correct": false,
+        "feedback": "The probability could be calculated analytically for simple cases, but simulation is more flexible and gives identical results."
+      },
+      {
+        "answer": "Simulation shows the full distribution of outcomes, making the comparison to real data visual and intuitive",
+        "correct": true,
+        "feedback": "Correct! Simulation builds a histogram of what chance looks like, so we can see exactly where the real groundhog falls."
+      },
+      {
+        "answer": "Because np.random.choice only works with simulation",
+        "correct": false,
+        "feedback": "np.random.choice is a tool for simulation, but the reason we simulate is pedagogical and practical, not because math is impossible."
+      },
+      {
+        "answer": "The result is more accurate with simulation than with math",
+        "correct": false,
+        "feedback": "With enough simulations the results converge, but neither approach is inherently more accurate than the other."
+      }
+    ]
+  },
+  {
+    "question": "If a groundhog scores 60% correct over 5 years, should we conclude it has real predictive ability?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Yes \u2014 60% is above the 50% chance baseline",
+        "correct": false,
+        "feedback": "With only 5 years (observations), getting 3 out of 5 correct happens by chance quite often. Sample size matters enormously."
+      },
+      {
+        "answer": "No \u2014 with only 5 observations, 60% is easily explained by luck",
+        "correct": true,
+        "feedback": "Correct! With 5 flips, getting 3 right (60%) has probability \u224831% by pure chance. Very weak evidence."
+      },
+      {
+        "answer": "Yes \u2014 any score above 50% disproves the null hypothesis",
+        "correct": false,
+        "feedback": "Being above 50% is necessary but not sufficient. Statistical significance also requires enough observations."
+      },
+      {
+        "answer": "We cannot evaluate this without knowing the groundhog's name",
+        "correct": false,
+        "feedback": "The name doesn't matter \u2014 what matters is the number of observations and the accuracy."
+      }
+    ]
+  }
+]
