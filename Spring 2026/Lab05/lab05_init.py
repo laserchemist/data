@@ -22,7 +22,10 @@ In the notebook:
 
 import sys, os
 # ── add parent directory so shared files are importable ──────────────────────
-_parent = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+# os.getcwd() is used instead of __file__ because __file__ is unreliable
+# in JupyterHub — the notebook runs from inside the lab folder, so
+# os.getcwd() gives the lab directory and '..' reaches the course root.
+_parent = os.path.abspath(os.path.join(os.getcwd(), '..'))
 if _parent not in sys.path:
     sys.path.insert(0, _parent)
 # ── standard imports ──────────────────────────────────────────────────────────
