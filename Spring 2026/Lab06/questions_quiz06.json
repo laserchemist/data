@@ -1,0 +1,756 @@
+[
+  {
+    "question": "What does <code>np.random.choice(make_array(1,2,3,4,5,6))</code> return?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "The entire array [1,2,3,4,5,6]",
+        "correct": false,
+        "feedback": "Without a size argument, np.random.choice returns a single randomly chosen element, not the whole array."
+      },
+      {
+        "answer": "One randomly chosen value from the array",
+        "correct": true,
+        "feedback": "Correct! np.random.choice picks one element at random when no size is specified."
+      },
+      {
+        "answer": "Always the first element, 1",
+        "correct": false,
+        "feedback": "np.random.choice picks randomly \u2014 it's equally likely to return any element."
+      },
+      {
+        "answer": "The sum of all elements",
+        "correct": false,
+        "feedback": "That would be np.sum(...). np.random.choice selects one element."
+      }
+    ]
+  },
+  {
+    "question": "Which line simulates rolling a 6-sided die 10 times and stores all results?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "<code>np.random.choice(6, 10)</code>",
+        "correct": false,
+        "feedback": "np.random.choice(6, 10) draws from integers 0\u20135, not 1\u20136. You need an explicit array of faces."
+      },
+      {
+        "answer": "<code>np.random.choice(np.arange(1,7), 10)</code>",
+        "correct": true,
+        "feedback": "Correct! np.arange(1,7) gives [1,2,3,4,5,6] and np.random.choice draws 10 values from it."
+      },
+      {
+        "answer": "<code>np.arange(1, 7, 10)</code>",
+        "correct": false,
+        "feedback": "np.arange(1,7,10) gives just [1] \u2014 start=1, stop=7, step=10. That's not a die roll."
+      },
+      {
+        "answer": "<code>np.random.choice(make_array(1,7), 10)</code>",
+        "correct": false,
+        "feedback": "make_array(1,7) creates an array with only two values: [1, 7]. That's not a 6-sided die."
+      }
+    ]
+  },
+  {
+    "question": "You want to simulate 1000 flips of a fair coin. Which is correct?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "<code>np.random.choice(['Heads','Tails'])</code>",
+        "correct": false,
+        "feedback": "Missing the size argument \u2014 this only flips once."
+      },
+      {
+        "answer": "<code>np.random.choice(['Heads','Tails'], 1000)</code>",
+        "correct": true,
+        "feedback": "Correct! The second argument is the number of draws. This returns an array of 1000 random coin flips."
+      },
+      {
+        "answer": "<code>np.arange('Heads','Tails', 1000)</code>",
+        "correct": false,
+        "feedback": "np.arange works with numbers, not strings, and doesn't do random selection."
+      },
+      {
+        "answer": "<code>np.random.choice(1000, ['Heads','Tails'])</code>",
+        "correct": false,
+        "feedback": "The arguments are reversed \u2014 array first, then size: np.random.choice(array, size)."
+      }
+    ]
+  },
+  {
+    "question": "After rolling a 20-sided die 1000 times with <code>rolls = np.random.choice(np.arange(1,21), 1000)</code>, how do you count how many times you rolled a 20?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "<code>rolls[20]</code>",
+        "correct": false,
+        "feedback": "rolls[20] gives the 21st element of the array (index 20), not the count of 20s."
+      },
+      {
+        "answer": "<code>np.count_nonzero(rolls == 20)</code>",
+        "correct": true,
+        "feedback": "Correct! rolls == 20 creates a Boolean array, and count_nonzero sums the True values."
+      },
+      {
+        "answer": "<code>np.sum(rolls)</code>",
+        "correct": false,
+        "feedback": "np.sum adds all values together. You need to filter for 20s first."
+      },
+      {
+        "answer": "<code>len(rolls == 20)</code>",
+        "correct": false,
+        "feedback": "len() gives the length of the array (1000), not the count of matching elements."
+      }
+    ]
+  },
+  {
+    "question": "What does <code>np.arange(1, 21)</code> produce?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Integers from 1 to 20 inclusive",
+        "correct": true,
+        "feedback": "Correct! np.arange(start, stop) produces values from start up to but not including stop: 1, 2, 3, ... 20."
+      },
+      {
+        "answer": "Integers from 1 to 21 inclusive",
+        "correct": false,
+        "feedback": "np.arange stops BEFORE the stop value. np.arange(1,21) ends at 20."
+      },
+      {
+        "answer": "20 random integers between 1 and 21",
+        "correct": false,
+        "feedback": "np.arange generates evenly spaced values, not random ones."
+      },
+      {
+        "answer": "A single integer, 21",
+        "correct": false,
+        "feedback": "np.arange generates a sequence. np.arange(1,21) gives an array of 20 integers."
+      }
+    ]
+  },
+  {
+    "question": "What is the purpose of <code>for i in np.arange(1000):</code> in a simulation?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "To create an array of 1000 random numbers",
+        "correct": false,
+        "feedback": "np.arange(1000) creates [0,1,2,...,999] \u2014 a counter, not random numbers. The loop repeats the body 1000 times."
+      },
+      {
+        "answer": "To repeat the simulation body 1000 times",
+        "correct": true,
+        "feedback": "Correct! The loop variable i is often unused \u2014 np.arange(1000) just provides 1000 iterations."
+      },
+      {
+        "answer": "To roll a die 1000 times in one line",
+        "correct": false,
+        "feedback": "The for loop structure repeats whatever is inside it. The actual die roll would be inside the loop body."
+      },
+      {
+        "answer": "To generate the numbers 1 through 1000",
+        "correct": false,
+        "feedback": "np.arange(1000) generates 0 through 999. For 1 through 1000 you'd write np.arange(1, 1001)."
+      }
+    ]
+  },
+  {
+    "question": "You want to build up an array of simulation results one value at a time. Which pattern is correct?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "<code>results = [] / for i in np.arange(100): results = np.append(results, roll())</code>",
+        "correct": true,
+        "feedback": "Correct! Initialise empty, then np.append grows the array one result at a time each iteration."
+      },
+      {
+        "answer": "<code>results = np.arange(100) / for i in results: results[i] = roll()</code>",
+        "correct": false,
+        "feedback": "This pre-fills with 0\u201399 and tries to index with those values, which will fail or give wrong results."
+      },
+      {
+        "answer": "<code>for i in np.arange(100): results = roll()</code>",
+        "correct": false,
+        "feedback": "This overwrites results each iteration \u2014 you only keep the last roll, not all 100."
+      },
+      {
+        "answer": "<code>results = np.random.choice(roll, 100)</code>",
+        "correct": false,
+        "feedback": "np.random.choice selects from an existing array, it doesn't call a function 100 times."
+      }
+    ]
+  },
+  {
+    "question": "In the D&D simulation, <code>simulate_observations(modifier, num_observations)</code> returns an array of modified die rolls. The modifier is added to each roll. If modifier=11 and you roll a 7, what is the modified result?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "7",
+        "correct": false,
+        "feedback": "The modifier is added to the roll: 7 + 11 = 18."
+      },
+      {
+        "answer": "11",
+        "correct": false,
+        "feedback": "11 is just the modifier. The result is roll + modifier = 7 + 11."
+      },
+      {
+        "answer": "18",
+        "correct": true,
+        "feedback": "Correct! modified_result = roll + modifier = 7 + 11 = 18."
+      },
+      {
+        "answer": "77",
+        "correct": false,
+        "feedback": "That would be concatenation. In Python, integers add: 7 + 11 = 18."
+      }
+    ]
+  },
+  {
+    "question": "Which method sorts a Table by a column in descending order?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "<code>tbl.sort('Count')</code>",
+        "correct": false,
+        "feedback": "Without descending=True, sort() goes ascending (smallest first)."
+      },
+      {
+        "answer": "<code>tbl.sort('Count', descending=True)</code>",
+        "correct": true,
+        "feedback": "Correct! descending=True sorts largest first."
+      },
+      {
+        "answer": "<code>tbl.order('Count', reverse=True)</code>",
+        "correct": false,
+        "feedback": "order() and reverse= are not Table methods in the datascience library."
+      },
+      {
+        "answer": "<code>tbl.column('Count').sort()</code>",
+        "correct": false,
+        "feedback": "tbl.column('Count') returns an array, not a Table, so you lose the other columns."
+      }
+    ]
+  },
+  {
+    "question": "You have a Table with columns 'words' and 'count'. How do you create a Table showing only words that appear more than 5 times?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "<code>tbl.where('count', are.above(5))</code>",
+        "correct": true,
+        "feedback": "Correct! are.above(5) keeps rows where count > 5."
+      },
+      {
+        "answer": "<code>tbl.filter('count' > 5)</code>",
+        "correct": false,
+        "feedback": "filter() is not a Table method. Use where() with an are predicate."
+      },
+      {
+        "answer": "<code>tbl.count > 5</code>",
+        "correct": false,
+        "feedback": "This compares the string 'count' attribute (which doesn't exist on a Table) to 5."
+      },
+      {
+        "answer": "<code>tbl.select('count', are.above(5))</code>",
+        "correct": false,
+        "feedback": "select() picks columns by name \u2014 it doesn't filter rows. Use where() for row filtering."
+      }
+    ]
+  },
+  {
+    "question": "How do you build a Table from two lists, <code>keys</code> and <code>values</code>?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "<code>Table([keys, values])</code>",
+        "correct": false,
+        "feedback": "Table() doesn't accept lists directly as positional arguments."
+      },
+      {
+        "answer": "<code>Table().with_columns('words', keys, 'count', values)</code>",
+        "correct": true,
+        "feedback": "Correct! with_columns takes alternating label/data pairs."
+      },
+      {
+        "answer": "<code>Table(keys, values, columns=['words','count'])</code>",
+        "correct": false,
+        "feedback": "This is pandas syntax. The datascience library uses with_columns()."
+      },
+      {
+        "answer": "<code>Table().add('words', keys).add('count', values)</code>",
+        "correct": false,
+        "feedback": "add() is not a Table method. Use with_columns()."
+      }
+    ]
+  },
+  {
+    "question": "What does <code>tbl.sort('count', descending=True).column('words').item(0)</code> return?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "The least common word",
+        "correct": false,
+        "feedback": "descending=True puts the highest count first, so item(0) is the MOST common word."
+      },
+      {
+        "answer": "The most common word",
+        "correct": true,
+        "feedback": "Correct! Sort by count descending, extract the words column, take the first element."
+      },
+      {
+        "answer": "The total count of all words",
+        "correct": false,
+        "feedback": "That would be sum(tbl.column('count')). This chain extracts a single word."
+      },
+      {
+        "answer": "An error \u2014 you cannot chain these methods",
+        "correct": false,
+        "feedback": "Method chaining works fine here: sort() returns a Table, column() returns an array, item(0) returns a value."
+      }
+    ]
+  },
+  {
+    "question": "In the DNA GC content simulation, <code>np.random.choice(['G','C','T','A'])</code> is called inside a loop. What does this simulate?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Reading the actual DNA sequence from a file",
+        "correct": false,
+        "feedback": "Random choice simulates a random nucleotide \u2014 it has nothing to do with reading a real sequence."
+      },
+      {
+        "answer": "Randomly selecting one nucleotide, as if each position is equally likely to be any base",
+        "correct": true,
+        "feedback": "Correct! This models a random DNA sequence where each position is independently G, C, T, or A with equal probability."
+      },
+      {
+        "answer": "Counting how many G and C bases are in the sequence",
+        "correct": false,
+        "feedback": "Counting would use .count(). np.random.choice generates random values."
+      },
+      {
+        "answer": "Sorting the nucleotides alphabetically",
+        "correct": false,
+        "feedback": "np.random.choice picks randomly \u2014 it doesn't sort."
+      }
+    ]
+  },
+  {
+    "question": "In the <code>calcGC</code> function, a sliding window of size <code>samplesize</code> moves along the sequence. What does a larger window size do to the results?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Makes the GC values more variable (noisier)",
+        "correct": false,
+        "feedback": "Larger windows average over more bases, which reduces noise (smooths the values)."
+      },
+      {
+        "answer": "Smooths out the GC values \u2014 averaging over more bases reduces variability",
+        "correct": true,
+        "feedback": "Correct! This is the key statistical insight: larger samples give more stable estimates."
+      },
+      {
+        "answer": "Has no effect on the GC fraction values",
+        "correct": false,
+        "feedback": "Window size directly affects variability \u2014 smaller windows are noisier, larger windows are smoother."
+      },
+      {
+        "answer": "Always increases the GC fraction",
+        "correct": false,
+        "feedback": "Window size affects variability, not the average level of GC content."
+      }
+    ]
+  },
+  {
+    "question": "What does <code>d = {}</code> create?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "An empty list",
+        "correct": false,
+        "feedback": "[] creates an empty list. {} creates an empty dictionary."
+      },
+      {
+        "answer": "An empty dictionary",
+        "correct": true,
+        "feedback": "Correct! Curly braces with no content create an empty Python dictionary."
+      },
+      {
+        "answer": "An empty set",
+        "correct": false,
+        "feedback": "An empty set is created with set(), not {}. {} is a dictionary."
+      },
+      {
+        "answer": "A zero value",
+        "correct": false,
+        "feedback": "{} is a dictionary, not a number."
+      }
+    ]
+  },
+  {
+    "question": "Given <code>d = {'a': 3, 'b': 7, 'c': 1}</code>, what does <code>d['b']</code> return?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "3",
+        "correct": false,
+        "feedback": "3 is the value for key 'a'. d['b'] returns the value for key 'b'."
+      },
+      {
+        "answer": "7",
+        "correct": true,
+        "feedback": "Correct! d['b'] looks up the value associated with key 'b', which is 7."
+      },
+      {
+        "answer": "'b'",
+        "correct": false,
+        "feedback": "d['b'] returns the value, not the key. You already provided the key."
+      },
+      {
+        "answer": "An error",
+        "correct": false,
+        "feedback": "'b' is a valid key \u2014 no error. A KeyError only occurs for missing keys."
+      }
+    ]
+  },
+  {
+    "question": "In the letter-counting loop, <code>d[letter] = d.get(letter, 0) + 1</code> is used. What does <code>d.get(letter, 0)</code> do?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Raises a KeyError if letter is not in d",
+        "correct": false,
+        "feedback": "That's what d[letter] would do. .get() is safe \u2014 it returns the default instead of raising an error."
+      },
+      {
+        "answer": "Returns d[letter] if letter exists, otherwise returns 0",
+        "correct": true,
+        "feedback": "Correct! .get(key, default) is a safe lookup \u2014 perfect for counting, where missing keys should start at 0."
+      },
+      {
+        "answer": "Deletes the letter from the dictionary",
+        "correct": false,
+        "feedback": "Deletion uses del d[key] or d.pop(key). .get() only reads values."
+      },
+      {
+        "answer": "Returns True if the letter is in d",
+        "correct": false,
+        "feedback": "That would be 'letter' in d. .get() returns the value (or default), not a Boolean."
+      }
+    ]
+  },
+  {
+    "question": "Which line sorts a dictionary <code>d</code> by value in descending order and keeps only the top 5 entries?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "<code>d.sort(reverse=True)[:5]</code>",
+        "correct": false,
+        "feedback": "Dictionaries don't have a .sort() method. Use sorted() with a key."
+      },
+      {
+        "answer": "<code>dict(sorted(d.items(), key=lambda x: x[1], reverse=True)[:5])</code>",
+        "correct": true,
+        "feedback": "Correct! sorted() on .items() with key=lambda x:x[1] sorts by value; [:5] keeps the top 5."
+      },
+      {
+        "answer": "<code>d.values().sort(reverse=True)[:5]</code>",
+        "correct": false,
+        "feedback": "d.values() returns a view object, not a list, and doesn't support .sort() or slicing directly."
+      },
+      {
+        "answer": "<code>sorted(d, reverse=True)[:5]</code>",
+        "correct": false,
+        "feedback": "sorted(d) sorts by keys, not values. You need .items() and key=lambda x:x[1]."
+      }
+    ]
+  },
+  {
+    "question": "What does <code>darwin_string.split()</code> do?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Splits the text into individual characters",
+        "correct": false,
+        "feedback": ".split() without arguments splits on whitespace (spaces, newlines), returning words."
+      },
+      {
+        "answer": "Splits the text into a list of words separated by whitespace",
+        "correct": true,
+        "feedback": "Correct! .split() with no argument splits on any whitespace \u2014 spaces, tabs, newlines \u2014 giving a list of words."
+      },
+      {
+        "answer": "Splits the text at every comma",
+        "correct": false,
+        "feedback": "To split at commas: .split(',').  .split() with no argument splits on whitespace."
+      },
+      {
+        "answer": "Returns the number of words",
+        "correct": false,
+        "feedback": "len(darwin_string.split()) gives the count. .split() itself returns the list of words."
+      }
+    ]
+  },
+  {
+    "question": "In the stop-word filtering step, <code>[word for word in words if word.lower() not in stop]</code> removes common words. Why use <code>word.lower()</code>?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "To count the letters in each word",
+        "correct": false,
+        "feedback": ".lower() converts to lowercase \u2014 it doesn't count letters."
+      },
+      {
+        "answer": "So 'The' and 'the' both match the stop word 'the' regardless of capitalisation",
+        "correct": true,
+        "feedback": "Correct! Without lowercasing, 'The' wouldn't match 'the' in the stop list. .lower() makes comparison case-insensitive."
+      },
+      {
+        "answer": "To remove punctuation from the word",
+        "correct": false,
+        "feedback": "Punctuation removal uses .strip() or .replace(). .lower() only changes case."
+      },
+      {
+        "answer": "Because stop is a list of uppercase words",
+        "correct": false,
+        "feedback": "Stop word lists are typically lowercase. We lowercase the text word to match them."
+      }
+    ]
+  },
+  {
+    "question": "You roll a 20-sided die 1000 times. Which value is closest to the expected mean of all rolls?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "1",
+        "correct": false,
+        "feedback": "The mean of a fair die from 1 to 20 is (1+20)/2 = 10.5."
+      },
+      {
+        "answer": "10.5",
+        "correct": true,
+        "feedback": "Correct! For a fair die with faces 1 to n, the expected mean is (n+1)/2 = 21/2 = 10.5."
+      },
+      {
+        "answer": "20",
+        "correct": false,
+        "feedback": "20 is the maximum face. The average across all faces is (1+20)/2 = 10.5."
+      },
+      {
+        "answer": "5.5",
+        "correct": false,
+        "feedback": "5.5 is the mean of a 10-sided die (1\u201310). For 1\u201320 it's (1+20)/2 = 10.5."
+      }
+    ]
+  },
+  {
+    "question": "In the modifier estimation problem, the <em>minimum</em> of observed rolls is used to estimate the modifier. Why does the minimum make sense as an estimator?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "The minimum is always the most accurate value in any dataset",
+        "correct": false,
+        "feedback": "The minimum is not universally the best estimator \u2014 it works here because of the specific structure of the problem."
+      },
+      {
+        "answer": "The minimum modified roll is the roll where you got a 1 on the die, so minimum \u2248 modifier + 1",
+        "correct": true,
+        "feedback": "Correct! The smallest possible modified roll is modifier + 1 (rolling a 1 on the die). So min(observations) - 1 estimates the modifier."
+      },
+      {
+        "answer": "The minimum ignores outliers and gives the true modifier",
+        "correct": false,
+        "feedback": "The minimum IS the most extreme value \u2014 it's actually very sensitive to outliers, not robust to them."
+      },
+      {
+        "answer": "Because np.min() is faster than np.mean()",
+        "correct": false,
+        "feedback": "The choice of estimator is about statistical logic, not computational speed."
+      }
+    ]
+  },
+  {
+    "question": "What does the histogram of 1000 modified die rolls (modifier + random 1\u201320) look like?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "A bell curve (normal distribution)",
+        "correct": false,
+        "feedback": "A single die roll is uniform, not bell-shaped. You'd need to add many dice together for a bell curve."
+      },
+      {
+        "answer": "Approximately flat (uniform) \u2014 each value equally likely",
+        "correct": true,
+        "feedback": "Correct! Adding a constant modifier shifts the distribution but doesn't change its shape. Each face is equally likely so the result is approximately uniform."
+      },
+      {
+        "answer": "Concentrated at the modifier value",
+        "correct": false,
+        "feedback": "The modifier shifts the distribution, it doesn't concentrate it. All modified values are equally likely."
+      },
+      {
+        "answer": "Skewed right with most values near the minimum",
+        "correct": false,
+        "feedback": "A uniform distribution has no skew \u2014 all values are equally probable."
+      }
+    ]
+  },
+  {
+    "question": "In the groundhog simulation, what does one run of the inner loop represent?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "One real groundhog prediction from the historical record",
+        "correct": false,
+        "feedback": "The simulation generates random predictions \u2014 it doesn't use the real historical data inside the loop."
+      },
+      {
+        "answer": "One randomly-generated prediction outcome (shadow + spring) under the null hypothesis",
+        "correct": true,
+        "feedback": "Correct! Each inner iteration randomly picks a shadow outcome and a spring outcome, simulating what H\u2080 (random guessing) predicts."
+      },
+      {
+        "answer": "One year of weather data",
+        "correct": false,
+        "feedback": "The simulation doesn't use weather data \u2014 it randomly generates shadow/spring pairs to model chance."
+      },
+      {
+        "answer": "One run of the entire 1000-simulation experiment",
+        "correct": false,
+        "feedback": "The inner loop handles individual observations. The outer loop runs the whole experiment 1000 times."
+      }
+    ]
+  },
+  {
+    "question": "After running <code>sim_ground(1000, num_observations)</code>, you plot a histogram of results. The real groundhog accuracy falls at the 88th percentile of the distribution. What is the approximate p-value?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "0.88",
+        "correct": false,
+        "feedback": "0.88 is the percentile \u2014 the fraction of simulations BELOW the real result. The p-value uses the fraction ABOVE."
+      },
+      {
+        "answer": "0.12",
+        "correct": true,
+        "feedback": "Correct! p-value = fraction of simulations at or above the real result = 1 \u2212 0.88 = 0.12."
+      },
+      {
+        "answer": "0.50",
+        "correct": false,
+        "feedback": "0.50 would mean the result is right at the median of the null distribution."
+      },
+      {
+        "answer": "0.08",
+        "correct": false,
+        "feedback": "Check the arithmetic: if 88% of simulations are below, then 12% are at or above. p = 0.12."
+      }
+    ]
+  },
+  {
+    "question": "You run <code>np.random.choice(np.arange(1,7), 10000)</code> and compute the mean. Which value is it closest to, and why?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "3.0 \u2014 the midpoint of 1 and 6 rounded down",
+        "correct": false,
+        "feedback": "The mean of integers 1 through 6 is (1+2+3+4+5+6)/6 = 21/6 = 3.5, not 3.0."
+      },
+      {
+        "answer": "3.5 \u2014 the expected value of a fair 6-sided die",
+        "correct": true,
+        "feedback": "Correct! E[die] = (1+2+3+4+5+6)/6 = 3.5. With 10,000 rolls the sample mean converges to this by the Law of Large Numbers."
+      },
+      {
+        "answer": "6.0 \u2014 the maximum face value",
+        "correct": false,
+        "feedback": "The maximum is 6 but the average across all equally likely faces is 3.5."
+      },
+      {
+        "answer": "It varies randomly \u2014 there is no consistent value",
+        "correct": false,
+        "feedback": "With 10,000 rolls the mean is very stable around 3.5. The Law of Large Numbers ensures convergence."
+      }
+    ]
+  },
+  {
+    "question": "The <code>calcGC</code> function uses a sliding window. If the sequence has 200 bases and samplesize=10, how many GC fraction values does it return?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "10",
+        "correct": false,
+        "feedback": "10 is the window size. The number of windows is len(seq) - samplesize = 200 - 10 = 190."
+      },
+      {
+        "answer": "190",
+        "correct": true,
+        "feedback": "Correct! range(len(seq) - samplesize) gives 0 to 189, so 190 windows slide along the 200-base sequence."
+      },
+      {
+        "answer": "200",
+        "correct": false,
+        "feedback": "You can't start a window of size 10 at position 191 or beyond (would run off the end). Result: 200 - 10 = 190."
+      },
+      {
+        "answer": "20",
+        "correct": false,
+        "feedback": "20 would be 200/10 \u2014 non-overlapping windows. A sliding window moves one base at a time, giving 190 values."
+      }
+    ]
+  },
+  {
+    "question": "In a simulation you want to estimate P(rolling at least one 6 in 4 rolls of a fair die). Which approach is correct?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Run 10000 trials; in each trial roll 4 dice; count trials where max(rolls)==6; divide by 10000",
+        "correct": true,
+        "feedback": "Correct! Each trial simulates 4 rolls; checking max==6 (or any==6) identifies success. Dividing by total trials gives the estimated probability."
+      },
+      {
+        "answer": "Roll one die 40000 times and count sixes; divide by 40000",
+        "correct": false,
+        "feedback": "This estimates P(one roll is 6) = 1/6, not P(at least one 6 in 4 rolls)."
+      },
+      {
+        "answer": "P = (1/6) \u00d7 4 = 4/6",
+        "correct": false,
+        "feedback": "You can't just multiply for 'at least one'. The correct formula is 1 \u2212 (5/6)\u2074 \u2248 0.518. The simulation approach handles this correctly."
+      },
+      {
+        "answer": "It can't be estimated by simulation \u2014 requires exact probability theory",
+        "correct": false,
+        "feedback": "Simulation is perfectly suited to this. The exact answer is 1 \u2212 (5/6)\u2074 \u2248 0.518, and simulation converges to this."
+      }
+    ]
+  },
+  {
+    "question": "You build a word frequency Table from an article and sort by count descending. After removing stop words the top word changes from 'the' to 'RSV'. What does this tell you about the article?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "The article is poorly written because 'the' appeared so often",
+        "correct": false,
+        "feedback": "'The' appearing frequently is expected in any English text \u2014 it says nothing about writing quality."
+      },
+      {
+        "answer": "RSV is likely a key topic \u2014 it's the most content-meaningful word after common words are removed",
+        "correct": true,
+        "feedback": "Correct! Stop word removal reveals the content-bearing vocabulary. A high-frequency content word like RSV signals the article's focus."
+      },
+      {
+        "answer": "The stop word list was applied incorrectly",
+        "correct": false,
+        "feedback": "The result is exactly what stop word removal is designed to do \u2014 surface meaningful terms."
+      },
+      {
+        "answer": "The article has fewer than 100 unique words",
+        "correct": false,
+        "feedback": "Word count can't be inferred from knowing the top word. Scientific articles typically have thousands of unique words."
+      }
+    ]
+  }
+]
