@@ -22,12 +22,14 @@ In the notebook:
 
 import sys, os
 # ── add parent directory so shared files are importable ──────────────────────
-# os.getcwd() is used instead of __file__ because __file__ is unreliable
-# in JupyterHub — the notebook runs from inside the lab folder, so
-# os.getcwd() gives the lab directory and '..' reaches the course root.
-_parent = os.path.abspath(os.path.join(os.getcwd(), '..'))
-if _parent not in sys.path:
-    sys.path.insert(0, _parent)
+# Works whether the notebook is in a lab subdirectory (lab05/) or the root.
+# Adds both the current directory and its parent so lab_submit, notebook_style,
+# and stemds_quiz are always findable.
+_cwd = os.getcwd()
+_parent = os.path.abspath(os.path.join(_cwd, '..'))
+for _p in [_cwd, _parent]:
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
 # ── standard imports ──────────────────────────────────────────────────────────
 import numpy as np
 import math
@@ -35,8 +37,8 @@ import json, glob
 import nbformat as nbf
 import matplotlib
 import matplotlib.pyplot as plt
-get_ipython().run_line_magic("matplotlib", "inline")
 plt.style.use("ggplot")
+# Note: %matplotlib inline must be called in the notebook setup cell
 from datascience import *
 from gofer.ok import check
 from IPython.display import display
