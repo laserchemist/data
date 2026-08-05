@@ -12,7 +12,7 @@ Student notebook — final cell (all students see):
 
 Unlike the high-school version, LAB_ID is NOT hard-coded in this file —
 this file is shared by every lab, so each notebook passes its own
-lab_id="Lab01" / "Lab05" / etc. when it calls submit_lab(). OPEN_ENDED_IDS
+lab_id="Lab00" / "Lab01" / "Lab05" / etc. when it calls submit_lab(). OPEN_ENDED_IDS
 is not needed either — all open-ended questions are detected automatically.
 
 Write targets (tried in order):

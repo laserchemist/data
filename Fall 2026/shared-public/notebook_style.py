@@ -27,6 +27,12 @@ _DEFAULT = dict(
     question_border = "#2980b9",
     challenge_bg     = "#fff4e5",
     challenge_border = "#e67e22",
+    hint_bg          = "#fffbe0",
+    hint_border      = "#f1c40f",
+    background_bg     = "#eef1f3",
+    background_border = "#7f8c8d",
+    application_bg     = "#e8f8f0",
+    application_border = "#16a085",
 )
 
 # ---------------------------------------------------------------------------
@@ -39,18 +45,27 @@ _THEMES = {
         h3_color="#cd853f", body_size=18, code_size=16,
         question_bg="#2c2c2c", question_border="#c9a84c",
         challenge_bg="#332a1a", challenge_border="#e0a458",
+        hint_bg="#3a3420", hint_border="#e0c458",
+        background_bg="#2a2a2a", background_border="#9a9a9a",
+        application_bg="#1f3329", application_border="#4cb894",
     ),
     "ocean": dict(
         body_color="#003153", h1_color="#0077b6", h2_color="#00b4d8",
         h3_color="#48cae4", body_size=18, code_size=16,
         question_bg="#caf0f8", question_border="#0077b6",
         challenge_bg="#fff0e0", challenge_border="#f4a261",
+        hint_bg="#fff8dc", hint_border="#ffd166",
+        background_bg="#e8eef1", background_border="#6c8a99",
+        application_bg="#e0f7f0", application_border="#149174",
     ),
     "high_contrast": dict(
         body_color="#000000", h1_color="#cc0000", h2_color="#006600",
         h3_color="#000099", body_size=20, code_size=18,
         question_bg="#ffffe0", question_border="#cc0000",
         challenge_bg="#ffe9d6", challenge_border="#cc6600",
+        hint_bg="#fffacd", hint_border="#cc9900",
+        background_bg="#e6e6e6", background_border="#333333",
+        application_bg="#d6f5e6", application_border="#006644",
     ),
 }
 
@@ -120,6 +135,36 @@ def apply_style(theme: str = "default", **overrides):
   .challenge-box {{
     background: {cfg['challenge_bg']};
     border-left: 6px solid {cfg['challenge_border']};
+    padding: 12px 16px;
+    border-radius: 4px;
+    margin: 10px 0;
+    font-size: {cfg['body_size']}px;
+  }}
+
+  /* ── Hint callout box (small nudge, not a full question) ───────────── */
+  .hint-box {{
+    background: {cfg['hint_bg']};
+    border-left: 6px solid {cfg['hint_border']};
+    padding: 10px 16px;
+    border-radius: 4px;
+    margin: 10px 0;
+    font-size: {cfg['body_size']}px;
+  }}
+
+  /* ── Background / reference callout box (new methods, context, FYI) ── */
+  .background-box {{
+    background: {cfg['background_bg']};
+    border-left: 6px solid {cfg['background_border']};
+    padding: 12px 16px;
+    border-radius: 4px;
+    margin: 10px 0;
+    font-size: {cfg['body_size']}px;
+  }}
+
+  /* ── Real-world application callout box ─────────────────────────────── */
+  .application-box {{
+    background: {cfg['application_bg']};
+    border-left: 6px solid {cfg['application_border']};
     padding: 12px 16px;
     border-radius: 4px;
     margin: 10px 0;

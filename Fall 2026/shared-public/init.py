@@ -10,12 +10,16 @@ Expected directory layout:
     ├── shared-public/
     │   ├── init.py            ← this file
     │   ├── lab_submit.py      ← shared submission helper
-    │   └── notebook_style.py  ← shared styling
+    │   ├── notebook_style.py  ← shared styling
+    │   └── eds_mod.py         ← shared helper functions (ptrend, etc.)
     ├── lab00/
     │   └── lab00_undergrad.ipynb
     ├── lab01/
     │   ├── lab01_undergrad.ipynb
     │   └── tests_01/
+    ├── lab04/
+    │   ├── lab04_undergrad.ipynb
+    │   └── tests/
     └── lab05/
         ├── lab05_undergrad.ipynb
         └── tests/
@@ -52,13 +56,14 @@ from gofer.ok import check
 from IPython.display import display
 from jupyterquiz import display_quiz
 
-# ── styling + submission helper (both live alongside this file) ──────────────
+# ── styling + submission helper + course helper functions (all alongside this file) ──
 from notebook_style import apply_style
 from lab_submit import submit_lab
+from eds_mod import ptrend
 apply_style()
 
 # ── course / content version ──────────────────────────────────────────────────
-COURSE_VERSION = "2026SpringV1"
+COURSE_VERSION = "2026FallV1"
 
 # ── current notebook path ─────────────────────────────────────────────────────
 notebook = max(glob.glob("*.ipynb"), key=os.path.getmtime)
