@@ -1,16 +1,16 @@
 test = {
-  'name': '0',
+  'name': '1',
   'points': 1,
   'suites': [
     {
       'cases': [
         {
           'code': r"""
-          >>> # Make sure to replace the ellipsis (...) in the cell above 
-          >>> # with your animal (in quotes) and the number of legs it has.
-          >>> type(animal) == str
+          >>> slices * 2 == 16
           True
-          >>> type(legs) == int
+          >>> people == 4
+          True
+          >>> type(each_person_gets) == float or type(each_person_gets) == int
           True
           """,
           'hidden': False,
