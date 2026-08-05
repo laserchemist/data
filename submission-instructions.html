@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Submission Instructions — Elements of Data Science</title>
+  <style>
+    :root {
+      --cherry: #A41E35;
+      --cherry-dark: #7A1626;
+      --black: #222222;
+      --silver: #A7A8AA;
+      --silver-light: #E7E7E8;
+      --white: #FFFFFF;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 24px 20px 64px;
+      line-height: 1.6;
+      background: var(--white);
+      color: var(--black);
+    }
+    a { color: var(--cherry-dark); }
+    hr { border: none; border-top: 1px solid var(--silver-light); margin: 28px 0; }
+    h1 { color: var(--white); }
+    h2 { color: var(--cherry-dark); border-bottom: 2px solid var(--silver-light); padding-bottom: 6px; }
+    ol, ul { padding-left: 1.4em; }
+    li { margin: 8px 0; }
+    code {
+      background: var(--silver-light);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.95em;
+    }
+    .header {
+      background: linear-gradient(135deg, var(--cherry-dark), var(--cherry));
+      border-radius: 14px;
+      padding: 24px 28px;
+      margin-bottom: 24px;
+      border: 1px solid var(--silver);
+    }
+    .header p {
+      color: var(--silver-light);
+      font-size: 1.05em;
+      margin: 6px 0 0;
+    }
+    .back-link {
+      display: inline-block;
+      margin-bottom: 18px;
+      color: var(--black);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .note {
+      background: var(--silver-light);
+      border-left: 6px solid var(--cherry);
+      padding: 12px 16px;
+      border-radius: 4px;
+      margin: 16px 0;
+    }
+  </style>
+</head>
+<body>
+
+<a class="back-link" href="./index.html">← Back to Elements of Data Science</a>
+
+<div class="header">
+  <h1 style="margin:0;">🦉 Submission Instructions</h1>
+  <p>Two files to save alongside your Submit Lab click — every lab, every week.</p>
+</div>
+
+<p>
+  Clicking <b>Submit Lab</b> records your score, but it doesn't hand in your actual notebook.
+  Every lab in this course also asks you to download two copies of your work as backups that
+  can be checked against your recorded score: the raw <code>.ipynb</code> file, and an HTML
+  export uploaded to the matching Canvas assignment.
+</p>
+
+<hr id="ipynb">
+<h2>📥 1. Download your notebook as .ipynb</h2>
+
+<p><b>In JupyterLab</b> (what you're using on the Temple hub):</p>
+<ol>
+  <li>Save your work first — <code>Ctrl+S</code> (Windows/Linux) or <code>Cmd+S</code> (Mac), or File → Save Notebook.</li>
+  <li>In the left-hand File Browser, right-click your notebook's filename.</li>
+  <li>Choose <b>Download</b>.</li>
+</ol>
+
+<p>If the file browser panel isn't open, click the folder icon in the far-left sidebar to open it first.</p>
+
+<div class="note">
+  Alternative: File menu → Save Notebook, then File menu → Download. Both routes produce the
+  same <code>.ipynb</code> file — pick whichever is visible in your JupyterLab layout.
+</div>
+
+<hr id="html">
+<h2>🖨️ 2. Export an HTML copy for Canvas</h2>
+
+<p>Canvas assignments generally don't accept <code>.ipynb</code> uploads directly, so you'll also export a self-contained HTML version that opens in any browser:</p>
+
+<ol>
+  <li>With your notebook open and saved, go to the <b>File</b> menu.</li>
+  <li>Choose <b>Save and Export Notebook As…</b> → <b>HTML</b>.</li>
+  <li>Your browser will download a <code>.html</code> file with the same name as your notebook.</li>
+  <li>Go to the matching assignment in Canvas and upload that <code>.html</code> file.</li>
+</ol>
+
+<div class="note">
+  If your JupyterLab version shows <b>File → Download as → HTML</b> instead, that's the same
+  feature under an older menu name — use whichever one appears.
+</div>
+
+<hr>
+<h2>✅ Checklist, every lab</h2>
+<ul>
+  <li>Ran every cell top to bottom (Run → Run All Cells) so outputs are up to date</li>
+  <li>Clicked <b>Submit Lab</b> in the notebook</li>
+  <li>Downloaded the <code>.ipynb</code> file</li>
+  <li>Exported and uploaded the HTML file to Canvas</li>
+</ul>
+
+</body>
+</html>

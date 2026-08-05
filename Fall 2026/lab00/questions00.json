@@ -1,0 +1,86 @@
+[
+   {
+      "question": "How do you create a variable called volume and set it equal to 10 in Python?",
+      "type": "multiple_choice",
+      "answers": [
+         {
+            "answer": "volume = 10",
+            "correct": true,
+            "feedback": "✅ Yes! The = sign assigns the value on the right to the variable name on the left."
+         },
+         {
+            "answer": "volume == 10",
+            "correct": false,
+            "feedback": "Close, but == checks whether two things are equal — it doesn't create a variable. That would give an error here."
+         },
+         {
+            "answer": "10 = volume",
+            "correct": false,
+            "feedback": "Python assignment always reads right-to-left: value first, then = , then the variable name."
+         }
+      ]
+   },
+   {
+      "question": "You've stored a number in a variable called mass_g. Which line prints its value?",
+      "type": "multiple_choice",
+      "answers": [
+         {
+            "answer": "print(mass_g)",
+            "correct": true,
+            "feedback": "✅ Correct — print() displays whatever value the variable currently holds."
+         },
+         {
+            "answer": "print(\"mass_g\")",
+            "correct": false,
+            "feedback": "This prints the literal text mass_g, not the number stored inside the variable. Quotes turn it into a string."
+         },
+         {
+            "answer": "mass_g.print()",
+            "correct": false,
+            "feedback": "Numbers don't have a .print() method in Python — print() is a function you call on the variable, not a method."
+         }
+      ]
+   },
+   {
+      "question": "Temple University was founded by ______, who first offered free evening classes to working students in Philadelphia in the 1880s.",
+      "type": "multiple_choice",
+      "answers": [
+         {
+            "answer": "Russell Conwell",
+            "correct": true,
+            "feedback": "✅ Correct! Russell Conwell began tutoring a single working student in the evenings — those free night classes grew into Temple University."
+         },
+         {
+            "answer": "Benjamin Franklin",
+            "correct": false,
+            "feedback": "Franklin founded what became the University of Pennsylvania, not Temple — an easy mix-up since both are in Philadelphia."
+         },
+         {
+            "answer": "William Penn",
+            "correct": false,
+            "feedback": "Penn founded the colony of Pennsylvania in the 1600s, roughly two centuries before Temple was established."
+         }
+      ]
+   },
+   {
+      "question": "Why is Temple's mascot a night owl?",
+      "type": "multiple_choice",
+      "answers": [
+         {
+            "answer": "Founder Russell Conwell called his evening students \"night owls\" because they studied after their day jobs, and the nocturnal owl became Temple's symbol",
+            "correct": true,
+            "feedback": "✅ Exactly! Conwell reportedly told his students, \"The owl of the night makes the eagle of the day.\" Temple was one of the first U.S. schools to adopt the owl as its mascot."
+         },
+         {
+            "answer": "The owl was chosen in a marketing rebrand decades after Temple was founded",
+            "correct": false,
+            "feedback": "Not quite — the owl dates back to Temple's founding in the 1880s, tied directly to its identity as a night school."
+         },
+         {
+            "answer": "Temple's first campus was built next to a nature preserve known for owls",
+            "correct": false,
+            "feedback": "No — the owl symbolizes the night-school students themselves, not the campus location."
+         }
+      ]
+   }
+]

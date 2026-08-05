@@ -10,24 +10,27 @@ one directory *above* the semester folder, so future semesters can reuse it just
 `Season YYYY/` folder and updating the button URLs.
 
 ```
-data/                         (repo root)
-├── index.html                ← "Elements of Data Science" launch page (Temple colors, nbgitpuller links)
+data/                              (repo root)
+├── index.html                     ← "Elements of Data Science" launch page (Temple colors, nbgitpuller links)
+├── submission-instructions.html   ← .ipynb download + Canvas HTML export steps, linked from lab00 onward
 └── Fall 2026/
-    ├── README.md              ← this file
-    ├── shared-public/         ← universal, one directory above every lab
-    │   ├── init.py            ← single shared setup, imported by every lab notebook
-    │   ├── lab_submit.py      ← shared submission helper (Google Sheets via gspread)
-    │   └── notebook_style.py  ← shared CSS styling, incl. new .challenge-box
+    ├── README.md                  ← pointer to this file
+    ├── shared-public/             ← universal, one directory above every lab
+    │   ├── init.py                ← single shared setup, imported by every lab notebook
+    │   ├── lab_submit.py          ← shared submission helper (Google Sheets via gspread)
+    │   └── notebook_style.py      ← shared CSS styling, incl. .challenge-box
     ├── lab00/
-    │   └── lab00_undergrad.ipynb
+    │   ├── lab00_undergrad.ipynb
+    │   ├── questions00.json       ← Quick Check quiz, incl. a Temple founder / Night Owl question
+    │   └── tests00/               ← placeholder, see Gaps below
     ├── lab01/
     │   ├── lab01_undergrad.ipynb
     │   ├── questions01B.json, questions01C.json, questions01D.json
-    │   └── tests_01/           ← placeholder, see Gaps below
+    │   └── tests_01/              ← placeholder, see Gaps below
     └── lab05/
         ├── lab05_undergrad.ipynb
-        ├── GroundHogData/      ← placeholder, see Gaps below
-        └── tests/               ← placeholder, see Gaps below
+        ├── GroundHogData/         ← placeholder, see Gaps below
+        └── tests/                  ← placeholder, see Gaps below
 ```
 
 Every lab notebook's first code cell reads:
@@ -68,16 +71,29 @@ applies notebook styling, and exposes `check()`, `user`, `test_open()`, `submit_
 - **Branding.** `index.html` uses Temple's official palette — cherry `#A41E35`, black `#222222`,
   silver `#A7A8AA`, white — instead of the high-school page's purple/rainbow theme, and is titled
   simply "Elements of Data Science" with no semester in the header.
+- **Lab 00 now teaches the submission workflow, not just Python.** Two of its three questions
+  (name, reagent-volume calculation) are now `check()`-graded like every other lab, followed by
+  a `## 📝 Quick Check` `jupyterquiz` (two Python-concept questions, plus two Temple-history
+  questions on Russell Conwell and the "night owl" mascot origin — facts verified against
+  Temple's official [Temple Traditions](https://www.temple.edu/about/history/temple-traditions)
+  page). The lab ends with the same run-all-tests → `submit_lab(lab_id="Lab00")` pattern as
+  every other lab, so students hit the full submission routine on day one.
+- **Submission instructions page.** `submission-instructions.html` (repo root) walks through
+  downloading the `.ipynb` and exporting an HTML copy for Canvas, with `#ipynb` / `#html` anchor
+  links referenced from lab00's final cell onward. This was written fresh since no existing
+  instructions page was provided — swap in your official one if you already have one, or edit
+  this one to match).
 
 ## Before this goes live — gaps to fill in
 
 The uploaded material didn't include a few files this restructuring references. Nothing will run
 end-to-end until these are added:
 
-1. **gofer test scripts** — `lab01/tests_01/*.py` and `lab05/tests/*.py` (e.g. `q0.py`,
-   `q1a.py`, … `q14_open_ended.py`). Only `check('tests_01/q0.py')`-style *calls* existed in the
-   source notebooks; the test files themselves weren't part of the upload. Copy your existing
-   ones in, updating any that reference the changed leap-year math in Lab 01's seconds-since-2000
+1. **gofer test scripts** — `lab00/tests00/*.py` (`q1.py`, `q3.py`), `lab01/tests_01/*.py`, and
+   `lab05/tests/*.py` (e.g. `q0.py`, `q1a.py`, … `q14_open_ended.py`). Only `check(...)`-style
+   *calls* existed in/were added to the source notebooks; the test files themselves weren't part
+   of the upload. Copy your existing ones in for Lab 01/05, and write two new ones for Lab 00,
+   updating any that reference the changed leap-year math in Lab 01's seconds-since-2000
    challenge (now 7 leap years / 19 regular years, through 2026).
 2. **Lab 05 data files** — `GroundHogData/summarizedGroundhogData_20210326.csv` and
    `darwin_origin_species.txt` (the latter goes directly in `lab05/`). Referenced by the notebook
