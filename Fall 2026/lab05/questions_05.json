@@ -1,0 +1,110 @@
+[
+  {
+    "question": "What does np.count_nonzero(arr == 'London') do?",
+    "type": "multiple_choice",
+    "answers": [
+      {"answer": "Counts how many elements in arr are NOT 'London'",
+       "correct": false,
+       "feedback": "Not quite — count_nonzero counts True values (non-zero). 'London' == 'London' is True (1), so it counts matches, not non-matches."},
+      {"answer": "Returns True if any element equals 'London'",
+       "correct": false,
+       "feedback": "That's what np.any() does. count_nonzero gives an integer count."},
+      {"answer": "Counts how many elements in arr equal 'London'",
+       "correct": true,
+       "feedback": "Correct! arr == 'London' creates a Boolean array where True means the element matches. count_nonzero sums those True values (True = 1, False = 0)."},
+      {"answer": "Removes all elements that are not 'London'",
+       "correct": false,
+       "feedback": "count_nonzero counts — it doesn't filter or modify the array."}
+    ]
+  },
+  {
+    "question": "In an if/elif/else chain, what happens when the first condition is True?",
+    "type": "multiple_choice",
+    "answers": [
+      {"answer": "All matching conditions are executed",
+       "correct": false,
+       "feedback": "Only ONE branch executes — the first True one. Python then skips the rest."},
+      {"answer": "Only the first True branch executes; the rest are skipped",
+       "correct": true,
+       "feedback": "Correct! Python evaluates conditions top-to-bottom and executes exactly one branch — the first that is True."},
+      {"answer": "The else branch always runs regardless",
+       "correct": false,
+       "feedback": "The else branch is a fallback — it only runs if NO condition above it was True."},
+      {"answer": "Python raises an error if more than one condition is True",
+       "correct": false,
+       "feedback": "No error — Python simply executes the first True branch and ignores the others."}
+    ]
+  },
+  {
+    "question": "A simulation runs 1000 times. 47 of those runs produce a result as extreme as the real data. What is the p-value?",
+    "type": "multiple_choice",
+    "answers": [
+      {"answer": "47",
+       "correct": false,
+       "feedback": "The p-value is a proportion (0 to 1), not a count. Divide 47 by the total simulations."},
+      {"answer": "0.047",
+       "correct": true,
+       "feedback": "Correct! p-value = 47 / 1000 = 0.047. Since 0.047 < 0.05, this is statistically significant at the 5% level."},
+      {"answer": "0.53",
+       "correct": false,
+       "feedback": "That would be (1000 - 47) / 1000 — the proportion that did NOT match. The p-value uses the count that DID."},
+      {"answer": "1000",
+       "correct": false,
+       "feedback": "1000 is the number of simulations. The p-value = matching simulations / total simulations."}
+    ]
+  },
+  {
+    "question": "Why do we run 1000 simulations instead of just 1 when computing a p-value?",
+    "type": "multiple_choice",
+    "answers": [
+      {"answer": "One simulation is too slow",
+       "correct": false,
+       "feedback": "Actually one simulation is faster! We run many because of variability, not speed."},
+      {"answer": "To get a reliable picture of what random chance can produce — one run might be unusually high or low by accident",
+       "correct": true,
+       "feedback": "Exactly! One simulation is just a single random draw. 1000 simulations reveal the full distribution of what 'chance' looks like, giving us a stable p-value estimate."},
+      {"answer": "Because the grader requires exactly 1000",
+       "correct": false,
+       "feedback": "The number is a practical choice — 1000 gives good precision without being too slow. 500 or 5000 would also work."},
+      {"answer": "Each simulation tests a different null hypothesis",
+       "correct": false,
+       "feedback": "All 1000 simulations test the same null hypothesis — they just give us 1000 different random outcomes to compare against."}
+    ]
+  },
+  {
+    "question": "The real groundhogs scored 47% correct. 38% of 1000 random simulations scored 47% or higher. What do you conclude?",
+    "type": "multiple_choice",
+    "answers": [
+      {"answer": "p = 0.38; no strong evidence the groundhogs beat random chance",
+       "correct": true,
+       "feedback": "Correct! p = 380/1000 = 0.38. Since 0.38 >> 0.05, we cannot reject H₀. Random guessing produces a score this good 38% of the time — groundhogs offer no advantage."},
+      {"answer": "p = 0.47; the groundhogs are slightly below chance",
+       "correct": false,
+       "feedback": "0.47 is the accuracy, not the p-value. The p-value = proportion of simulations that matched or exceeded 47%."},
+      {"answer": "p = 0.38; we strongly reject the null hypothesis",
+       "correct": false,
+       "feedback": "p = 0.38 is correct, but 0.38 >> 0.05 means we CANNOT reject H₀. A high p-value means the data is consistent with random chance."},
+      {"answer": "We need more data before computing a p-value",
+       "correct": false,
+       "feedback": "We already have a p-value: 0.38. More data might narrow the null distribution, but we can draw a conclusion now."}
+    ]
+  },
+  {
+    "question": "Essex Ed has 9 observations; Punxsutawney Phil has 107. Both score 60% correct. Whose p-value is likely smaller?",
+    "type": "multiple_choice",
+    "answers": [
+      {"answer": "Essex Ed's, because he has fewer observations so the test is more sensitive",
+       "correct": false,
+       "feedback": "Fewer observations actually makes the test LESS sensitive. With only 9 flips, even 7/9 (78%) correct could happen by chance fairly often."},
+      {"answer": "Phil's, because more observations make it less likely that 60% accuracy is due to chance",
+       "correct": true,
+       "feedback": "Correct! With 107 observations, the null distribution is narrow — landing at 60% is surprising if you're just guessing. With only 9 observations, 60% (≈5-6 correct) happens by chance all the time."},
+      {"answer": "They would have identical p-values since both scored 60%",
+       "correct": false,
+       "feedback": "The accuracy alone doesn't determine the p-value — the sample size matters. More data → narrower null distribution → smaller p-value for the same accuracy."},
+      {"answer": "P-values cannot be compared between groundhogs",
+       "correct": false,
+       "feedback": "They can absolutely be compared — that's the point of the p-value as a standardised measure of evidence."}
+    ]
+  }
+]

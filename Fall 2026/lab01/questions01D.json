@@ -1,0 +1,65 @@
+[
+   {
+      "question": "What does ** mean in Python?",
+      "type": "multiple_choice",
+      "answers": [
+         {
+            "answer": "Multiply (same as *)",
+            "correct": false,
+            "feedback": "Close! A single * means multiply. Double ** means something different — it raises a number to a power."
+         },
+         {
+            "answer": "Raise to a power (exponent)",
+            "correct": true,
+            "feedback": "✅ Yes! 2 ** 8 means 2 to the power of 8, which equals 256. It's Python's exponent operator."
+         },
+         {
+            "answer": "A typo — Python would give an error",
+            "correct": false,
+            "feedback": "No error! ** is a perfectly valid Python operator. Try 2 ** 10 in a code cell and see what you get."
+         }
+      ]
+   },
+   {
+      "question": "What is the value of  10 / 4  in Python?",
+      "type": "multiple_choice",
+      "answers": [
+         {
+            "answer": "2",
+            "correct": false,
+            "feedback": "That would be integer division (rounding down). Python's / gives the full decimal result."
+         },
+         {
+            "answer": "2.5",
+            "correct": true,
+            "feedback": "✅ Correct! Python's / always gives the full decimal answer. Use // if you only want the whole number part."
+         },
+         {
+            "answer": "40",
+            "correct": false,
+            "feedback": "40 would be 10 × 4. The / symbol means divide, not multiply."
+         }
+      ]
+   },
+   {
+      "question": "Python follows the same order of operations as math class (PEMDAS). What is  2 + 3 * 4 ?",
+      "type": "multiple_choice",
+      "answers": [
+         {
+            "answer": "20  (add first, then multiply)",
+            "correct": false,
+            "feedback": "Not quite — multiplication happens before addition, just like in math class. 3 * 4 = 12 first, then 2 + 12 = 14."
+         },
+         {
+            "answer": "14  (multiply first, then add)",
+            "correct": true,
+            "feedback": "✅ Right! Python uses PEMDAS. Multiplication before addition: 3 × 4 = 12, then 2 + 12 = 14."
+         },
+         {
+            "answer": "It depends on which computer you use",
+            "correct": false,
+            "feedback": "Python always follows the same order of operations everywhere — PEMDAS is universal."
+         }
+      ]
+   }
+]

@@ -1,0 +1,65 @@
+[
+   {
+      "question": "What is a variable in Python?",
+      "type": "multiple_choice",
+      "answers": [
+         {
+            "answer": "A labeled box that stores a piece of information",
+            "correct": true,
+            "feedback": "✅ Exactly! Think of a variable as a labeled container — you give it a name and fill it with data."
+         },
+         {
+            "answer": "A number that can never be changed",
+            "correct": false,
+            "feedback": "Not quite — variables can hold any type of data (numbers, text, lists) and their value can be updated anytime."
+         },
+         {
+            "answer": "A type of error message",
+            "correct": false,
+            "feedback": "No — error messages appear when something goes wrong. Variables are how we store and name data."
+         }
+      ]
+   },
+   {
+      "question": "Which of these correctly stores your name as a string variable?",
+      "type": "multiple_choice",
+      "answers": [
+         {
+            "answer": "name = Alex",
+            "correct": false,
+            "feedback": "Close! But Python won't know Alex is a word — it needs quotes. Try: name = \"Alex\""
+         },
+         {
+            "answer": "name = \"Alex\"",
+            "correct": true,
+            "feedback": "✅ Yes! Strings are always wrapped in quotes — either single 'Alex' or double \"Alex\" both work."
+         },
+         {
+            "answer": "name = 42",
+            "correct": false,
+            "feedback": "42 is a number, not a string. To store your name you need quotes around it."
+         }
+      ]
+   },
+   {
+      "question": "What happens when you run:  dogname = \"Fido\"  then  dogname = \"Rex\" ?",
+      "type": "multiple_choice",
+      "answers": [
+         {
+            "answer": "Python stores both names and remembers both",
+            "correct": false,
+            "feedback": "Not quite — a variable can only hold one value at a time. The second assignment replaces the first."
+         },
+         {
+            "answer": "Python gives an error because you already used that name",
+            "correct": false,
+            "feedback": "No error! You're allowed to reassign a variable to a new value whenever you like."
+         },
+         {
+            "answer": "dogname now equals \"Rex\" — the old value \"Fido\" is gone",
+            "correct": true,
+            "feedback": "✅ Correct! Reassigning a variable overwrites the old value. dogname is now \"Rex\"."
+         }
+      ]
+   }
+]
