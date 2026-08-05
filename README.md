@@ -13,12 +13,14 @@ one directory *above* the semester folder, so future semesters can reuse it just
 data/                              (repo root)
 ├── index.html                     ← "Elements of Data Science" launch page (Temple colors, nbgitpuller links)
 ├── submission-instructions.html   ← .ipynb download + Canvas HTML export steps, linked from lab00 onward
-└── Fall 2026/
+├── Fall 2026/
     ├── README.md                  ← pointer to this file
     ├── shared-public/             ← universal, one directory above every lab
     │   ├── init.py                ← single shared setup, imported by every lab notebook
     │   ├── lab_submit.py          ← shared submission helper (Google Sheets via gspread)
-    │   └── notebook_style.py      ← shared CSS styling, incl. .challenge-box
+    │   ├── notebook_style.py      ← shared CSS styling: .question-box, .challenge-box,
+    │   │                            .hint-box, .background-box, .application-box
+    │   └── eds_mod.py             ← shared helper functions (ptrend, see Gaps below)
     ├── lab00/
     │   ├── lab00_undergrad.ipynb
     │   ├── questions00.json       ← Quick Check quiz, incl. a Temple founder / Night Owl question
@@ -27,6 +29,10 @@ data/                              (repo root)
     │   ├── lab01_undergrad.ipynb
     │   ├── questions01B.json, questions01C.json, questions01D.json
     │   └── tests_01/              ← placeholder, see Gaps below
+    ├── lab04/
+    │   ├── lab04_undergrad.ipynb
+    │   ├── data/                  ← placeholder, see Gaps below
+    │   └── tests/                 ← placeholder, see Gaps below
     └── lab05/
         ├── lab05_undergrad.ipynb
         ├── GroundHogData/         ← placeholder, see Gaps below
@@ -82,10 +88,28 @@ applies notebook styling, and exposes `check()`, `user`, `test_open()`, `submit_
   downloading the `.ipynb` and exporting an HTML copy for Canvas, with `#ipynb` / `#html` anchor
   links. This was written fresh since no existing instructions page was provided — swap in your
   official one if you already have one, or edit this one to match.
-- **Submission order, all three labs.** Every lab's final section now spells out three ordered
+- **Submission order, all labs.** Every lab's final section now spells out three ordered
   steps: (1) run the test cell and check your score, (2) download the `.ipynb` and export/upload
   the HTML copy to Canvas, (3) only then run the final cell and click **Submit Lab** — so the
   gradebook submission is a confirmation that Canvas is already done, not a substitute for it.
+- **No hard-coded Temple/semester label inside the labs.** Every notebook header used to include
+  a `### Introduction to Data Science · Temple University · Fall 2026` line — since labs get
+  reused across semesters, that line is gone from lab00/01/04/05. `index.html` still carries the
+  Temple branding; the notebooks themselves no longer do.
+- **More color-coded callout boxes.** `notebook_style.py` now has five box styles instead of two:
+  `.question-box` (blue, graded questions), `.challenge-box` (orange, harder extension work),
+  `.hint-box` (gold, small nudges), `.background-box` (grey, "here's a new method" reference
+  notes), and `.application-box` (teal, "why this matters in practice"). Lab 04 uses all five.
+- **Lab 04 (Functions and Visualization) restructured from `Lab04-Functions.ipynb`.** All ten
+  `<font color=blue>Question N</font>` markers became `.question-box` divs, the two `<font
+  color=green>` tips became `.hint-box` divs, Question 2's inline hint was split into its own
+  `.hint-box`, two `.background-box` notes were added for the `.stats()` and `.to_csv()` table
+  methods, and two `.application-box` notes tie the functions section and the disease-tracking
+  section to real use cases. The deeper multi-source epidemiology comparison (CDC wastewater,
+  RSV, and a second CDC deaths feed layered on top of the core COVID case/deathrate analysis) is
+  now a `## 🚀 Challenges` section. `lab04_high_school.ipynb` was also provided and used as a
+  cross-check for where box-style callouts made sense, but the undergraduate content itself came
+  from `Lab04-Functions.ipynb`.
 
 ## Before this goes live — gaps to fill in
 
@@ -93,20 +117,31 @@ The uploaded material didn't include a few files this restructuring references. 
 end-to-end until these are added:
 
 1. **gofer test scripts** — `lab00/tests00/*.py` (`q1.py`, `q3.py`, `q2_open_ended.py` for the
-   Question 2 reflection), `lab01/tests_01/*.py`, and
-   `lab05/tests/*.py` (e.g. `q0.py`, `q1a.py`, … `q14_open_ended.py`). Only `check(...)`-style
-   *calls* existed in/were added to the source notebooks; the test files themselves weren't part
-   of the upload. Copy your existing ones in for Lab 01/05, and write two new ones for Lab 00,
-   updating any that reference the changed leap-year math in Lab 01's seconds-since-2000
-   challenge (now 7 leap years / 19 regular years, through 2026).
+   Question 2 reflection), `lab01/tests_01/*.py`, `lab04/tests/*.py` (`q1n.py`, `q2n.py`, `q3n.py`,
+   `q3a.py`, `q5a.py`, `q6new.py`, `q9a_open_ended.py`, `q9b.py`, `q10_open_ended.py`, `q10a.py`,
+   `q10b_open_ended.py`, `q10c_open_ended.py`, `q10d_open_ended.py`, `q10e_open_ended.py`,
+   `q11_open_ended.py`), and `lab05/tests/*.py` (e.g. `q0.py`, `q1a.py`, … `q14_open_ended.py`).
+   Only `check(...)`-style *calls* existed in/were added to the source notebooks; the test files
+   themselves weren't part of the upload. Copy your existing ones in for Lab 01/04/05, and write
+   two new ones for Lab 00, updating any that reference the changed leap-year math in Lab 01's
+   seconds-since-2000 challenge (now 7 leap years / 19 regular years, through 2026).
 2. **Lab 05 data files** — `GroundHogData/summarizedGroundhogData_20210326.csv` and
    `darwin_origin_species.txt` (the latter goes directly in `lab05/`). Referenced by the notebook
    but not uploaded.
-3. **Image assets** — `Temple_flag_morn.png` (needed in both the repo root, for `index.html`,
+3. **Lab 04 data files** — `lab04/data/Nobel_2023.csv`, `CDC_COVID_Waste_Water.csv`,
+   `CDC_COVID_deaths.csv`, and `CDC_RSV_Waste_Water.csv`. The live COVID case/death feed is pulled
+   from a public GitHub URL already in the notebook and needs no local copy.
+4. **`ptrend()` was reconstructed, not copied.** Lab 04 calls a `ptrend(table, date_col,
+   value_col, scale=1)` function that the original materials imported from `EDS_mod.EDS_mod`,
+   whose source wasn't part of the upload. `shared-public/eds_mod.py` rebuilds it from the
+   date-axis-formatting code pattern you shared (`matplotlib.dates.AutoDateLocator` /
+   `AutoDateFormatter`), matched to how `ptrend(...)` gets called in the notebook. If your actual
+   `EDS_mod.ptrend()` behaves differently, swap it in — nothing else needs to change.
+5. **Image assets** — `Temple_flag_morn.png` (needed in both the repo root, for `index.html`,
    and in `lab01/`) and the `intro_jupyter_images/` folder (`toolbar.png`, `typecell.png`,
    `checkpass.png`, `checkfail.png`, `error.jpg`) used in Lab 01. Copy these from the existing
    STEMDS repo.
-4. **Google Sheet.** In `shared-public/lab_submit.py`, set `SHEET_ID` to this semester's sheet
+6. **Google Sheet.** In `shared-public/lab_submit.py`, set `SHEET_ID` to this semester's sheet
    and place a service-account credentials JSON at `shared-public/service_account.json` (share
    the sheet with that service account's email). Keep that credentials file out of the public
    repo — see note below.
@@ -119,7 +154,7 @@ labs under `Fall 2026/`.
 1. Push `index.html` and the `Fall 2026/` folder into `laserchemist/data` on `main`.
 2. In the repo's Settings → Pages, publish from `main` (root). `index.html` will then be served
    at the repo's GitHub Pages URL with no semester in the path.
-3. Each launch button uses this pattern (already filled in for lab00/01/05):
+3. Each launch button uses this pattern (already filled in for lab00/01/04/05):
 
    ```
    https://temple.2i2c.cloud/hub/user-redirect/git-pull?repo=https%3A%2F%2Fgithub.com%2Flaserchemist%2Fdata&urlpath=lab%2Ftree%2Fdata%2FFall%202026%2FlabNN%2FlabNN_undergrad.ipynb&branch=main
@@ -137,6 +172,6 @@ labs under `Fall 2026/`.
 
 ## Scope note
 
-Only Lab 00, Lab 01, and Lab 05 were built — no source material was provided for Lab 02–04
-(data types, Tables, functions/visualization), so those weren't stubbed out. `index.html` only
-links to the three labs that exist.
+Lab 00, Lab 01, Lab 04, and Lab 05 were built — no source material was provided for Lab 02–03
+(data types, Tables), so those weren't stubbed out. `index.html` only links to the labs that
+exist.
