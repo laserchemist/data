@@ -80,16 +80,20 @@ applies notebook styling, and exposes `check()`, `user`, `test_open()`, `submit_
   every other lab, so students hit the full submission routine on day one.
 - **Submission instructions page.** `submission-instructions.html` (repo root) walks through
   downloading the `.ipynb` and exporting an HTML copy for Canvas, with `#ipynb` / `#html` anchor
-  links referenced from lab00's final cell onward. This was written fresh since no existing
-  instructions page was provided — swap in your official one if you already have one, or edit
-  this one to match).
+  links. This was written fresh since no existing instructions page was provided — swap in your
+  official one if you already have one, or edit this one to match.
+- **Submission order, all three labs.** Every lab's final section now spells out three ordered
+  steps: (1) run the test cell and check your score, (2) download the `.ipynb` and export/upload
+  the HTML copy to Canvas, (3) only then run the final cell and click **Submit Lab** — so the
+  gradebook submission is a confirmation that Canvas is already done, not a substitute for it.
 
 ## Before this goes live — gaps to fill in
 
 The uploaded material didn't include a few files this restructuring references. Nothing will run
 end-to-end until these are added:
 
-1. **gofer test scripts** — `lab00/tests00/*.py` (`q1.py`, `q3.py`), `lab01/tests_01/*.py`, and
+1. **gofer test scripts** — `lab00/tests00/*.py` (`q1.py`, `q3.py`, `q2_open_ended.py` for the
+   Question 2 reflection), `lab01/tests_01/*.py`, and
    `lab05/tests/*.py` (e.g. `q0.py`, `q1a.py`, … `q14_open_ended.py`). Only `check(...)`-style
    *calls* existed in/were added to the source notebooks; the test files themselves weren't part
    of the upload. Copy your existing ones in for Lab 01/05, and write two new ones for Lab 00,
