@@ -116,8 +116,18 @@ applies notebook styling, and exposes `check()`, `user`, `test_open()`, `submit_
   landing pages, and jump out to the staff/calendar page at
   [laserchemist.github.io/EDS_ppl](https://laserchemist.github.io/EDS_ppl/) from either one.
   `Honors.html` is currently a straight copy of `index.html`'s content (same lab buttons, same
-  Resources list) with the header relabeled "Honors Section" and its tab shown active — swap in
-  honors-specific labs/links whenever that content exists.
+  Resources list) with its own tab shown active — swap in honors-specific labs/links whenever
+  that content exists.
+- **Header tagline.** The subtitle under the title now reads "Empowering STEM students through
+  data fluency" on both pages (with "— Honors" appended on `Honors.html`) instead of "First-Year
+  Science Sequence" / "Honors Section".
+- **Mobile fix: buttons overflowing the screen edge on iPhone Safari.** The lab buttons used
+  `display:inline-block; min-width:340px`, which is wider than the content area on most phones
+  once body/card padding is subtracted — Safari doesn't shrink below `min-width`, so the row
+  overflowed horizontally. Replaced with a `.lab-grid`/`.lab-btn` flexbox layout (`flex-wrap`,
+  `flex: 1 1 260px`, `box-sizing: border-box`, no hard `min-width`) plus a global
+  `* { box-sizing: border-box; }` and `overflow-x: hidden` on `html`/`body`, so buttons shrink to
+  fit any viewport instead of forcing horizontal scroll.
 
 ## Before this goes live — gaps to fill in
 
