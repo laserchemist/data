@@ -12,6 +12,7 @@ one directory *above* the semester folder, so future semesters can reuse it just
 ```
 data/                              (repo root)
 ├── index.html                     ← "Elements of Data Science" launch page (Temple colors, nbgitpuller links)
+├── Honors.html                    ← same page, "Honors" branding + active tab, same lab buttons
 ├── submission-instructions.html   ← .ipynb download + Canvas HTML export steps, linked from lab00 onward
 ├── Fall 2026/
     ├── README.md                  ← pointer to this file
@@ -110,6 +111,13 @@ applies notebook styling, and exposes `check()`, `user`, `test_open()`, `submit_
   now a `## 🚀 Challenges` section. `lab04_high_school.ipynb` was also provided and used as a
   cross-check for where box-style callouts made sense, but the undergraduate content itself came
   from `Lab04-Functions.ipynb`.
+- **Nav tabs + Honors page.** Both `index.html` and `Honors.html` now show a small pill-style nav
+  bar (🏠 Labs / 🎓 Honors / 👥 Course Staff & Calendar) so students can move between the two
+  landing pages, and jump out to the staff/calendar page at
+  [laserchemist.github.io/EDS_ppl](https://laserchemist.github.io/EDS_ppl/) from either one.
+  `Honors.html` is currently a straight copy of `index.html`'s content (same lab buttons, same
+  Resources list) with the header relabeled "Honors Section" and its tab shown active — swap in
+  honors-specific labs/links whenever that content exists.
 
 ## Before this goes live — gaps to fill in
 
@@ -151,7 +159,7 @@ end-to-end until these are added:
 This tree is meant to sit at `laserchemist/data`, with `index.html` at the repo root and the
 labs under `Fall 2026/`.
 
-1. Push `index.html` and the `Fall 2026/` folder into `laserchemist/data` on `main`.
+1. Push `index.html`, `Honors.html`, and the `Fall 2026/` folder into `laserchemist/data` on `main`.
 2. In the repo's Settings → Pages, publish from `main` (root). `index.html` will then be served
    at the repo's GitHub Pages URL with no semester in the path.
 3. Each launch button uses this pattern (already filled in for lab00/01/04/05):
