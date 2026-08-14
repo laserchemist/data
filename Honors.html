@@ -31,6 +31,7 @@
     ul { padding-left: 1.4em; }
     li { margin: 6px 0; }
     h2 { color: var(--cherry-dark); }
+
     .nav-tabs { margin: 4px 0 20px; }
     .nav-tab {
       display: inline-block;
@@ -44,30 +45,200 @@
     }
     .nav-tab.active { background: var(--cherry); color: var(--white); }
     .nav-tab.inactive { background: transparent; color: var(--silver-light); }
-    .lab-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin: 12px 0;
+
+    /* ---- How this section works ---- */
+    .howto {
+      border: 1px solid var(--silver);
+      border-left: 5px solid var(--cherry);
+      border-radius: 10px;
+      padding: 18px 22px;
+      margin: 4px 0 26px;
+      background: rgba(255,255,255,0.04);
     }
-    .lab-btn {
-      flex: 1 1 260px;
-      max-width: 420px;
-      min-width: 0;
-      width: 100%;
+    .howto h3 {
+      margin: 0 0 10px;
+      color: var(--white);
+      font-size: 1.15em;
+    }
+    .howto p { margin: 8px 0; color: var(--silver-light); }
+    .howto strong { color: var(--white); }
+
+    /* ---- Module sections ---- */
+    .module { margin: 0 0 34px; }
+    .module-head {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      flex-wrap: wrap;
+      border-bottom: 2px solid var(--cherry);
+      padding-bottom: 6px;
+      margin-bottom: 4px;
+    }
+    .module-num {
+      font-size: 0.75em;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--cherry);
+    }
+    .module-title { font-size: 1.35em; font-weight: 800; color: var(--silver-light); }
+    .module-weeks { font-size: 0.9em; color: var(--silver); margin-left: auto; }
+
+    /* ---- Week grouping ---- */
+    .week { margin: 18px 0 0; }
+    .week-label {
+      font-size: 0.78em;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--silver);
+      margin: 0 0 8px 2px;
+    }
+
+    /* ---- Class cards (expandable) ---- */
+    details.card {
+      border: 1px solid var(--silver);
+      border-left: 4px solid var(--cherry);
+      border-radius: 8px;
+      margin: 8px 0;
+      background: rgba(255,255,255,0.03);
+    }
+    details.card[open] { background: rgba(255,255,255,0.07); }
+    details.card.tbd { border-left-color: var(--silver); opacity: 0.9; }
+    details.card > summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 12px 16px;
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    details.card > summary::-webkit-details-marker { display: none; }
+    details.card > summary::after {
+      content: "▸";
+      margin-left: auto;
+      color: var(--silver);
+      font-size: 0.95em;
+      transition: transform 0.15s ease;
+      align-self: center;
+    }
+    details.card[open] > summary::after { transform: rotate(90deg); }
+    details.card > summary:hover { background: rgba(255,255,255,0.05); border-radius: 6px; }
+    details.card > summary:focus-visible { outline: 2px solid var(--silver-light); outline-offset: 2px; }
+
+    .class-tag {
+      font-size: 0.78em;
+      font-weight: 700;
+      color: var(--white);
+      background: var(--cherry-dark);
+      border-radius: 5px;
+      padding: 3px 8px;
+      white-space: nowrap;
+    }
+    .card.tbd .class-tag { background: #444; color: var(--silver-light); }
+    .class-name { font-weight: 700; color: var(--white); font-size: 1.05em; }
+    .class-topic { font-size: 0.9em; color: var(--silver); }
+
+    .card-body { padding: 2px 16px 16px; border-top: 1px solid rgba(167,168,170,0.3); }
+    .card-body h4 {
+      margin: 14px 0 6px;
+      font-size: 0.78em;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--cherry);
+      font-weight: 700;
+    }
+    .card-body ul { margin: 4px 0; color: var(--silver-light); }
+    .card-body p { margin: 4px 0; color: var(--silver-light); }
+    .tbd-note { color: var(--silver); font-style: italic; }
+
+    /* ---- Notebook buttons inside cards ---- */
+    .nb-link {
+      display: inline-block;
+      margin: 10px 8px 0 0;
+      padding: 8px 16px;
       background: var(--cherry);
       color: var(--white);
-      border-radius: 10px;
-      padding: 16px 24px;
-      box-shadow: 2px 2px 6px rgba(0,0,0,0.35);
-      border: 1px solid var(--silver);
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.9em;
       text-decoration: none;
-      display: block;
+      border: 1px solid var(--silver);
     }
-    .lab-btn .lab-title { font-size: 1.25em; font-weight: 700; }
-    .lab-btn .lab-desc { font-size: 1.0em; opacity: 0.92; }
-    @media (max-width: 420px) {
-      .lab-btn { flex-basis: 100%; }
+    .nb-link:hover { background: var(--cherry-dark); }
+
+    /* ---- Lab rows ---- */
+    .lab-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      border: 1px solid var(--silver);
+      border-left: 4px solid var(--silver);
+      border-radius: 8px;
+      padding: 11px 16px;
+      margin: 8px 0;
+      background: rgba(167,168,170,0.10);
+    }
+    .lab-row .lab-id {
+      font-size: 0.78em;
+      font-weight: 700;
+      color: var(--black);
+      background: var(--silver-light);
+      border-radius: 5px;
+      padding: 3px 8px;
+      white-space: nowrap;
+    }
+    .lab-row .lab-name { font-weight: 700; color: var(--white); }
+    .lab-row .lab-desc { font-size: 0.9em; color: var(--silver); }
+    .lab-row .lab-open {
+      margin-left: auto;
+      padding: 7px 15px;
+      background: var(--cherry);
+      color: var(--white);
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.88em;
+      text-decoration: none;
+      border: 1px solid var(--silver);
+      white-space: nowrap;
+    }
+    .lab-row .lab-open:hover { background: var(--cherry-dark); }
+    .lab-row .lab-pending {
+      margin-left: auto;
+      font-size: 0.85em;
+      color: var(--silver);
+      font-style: italic;
+      white-space: nowrap;
+    }
+
+    .quiz-flag {
+      font-size: 0.75em;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: #FFD9DF;
+      border: 1px solid #FFD9DF;
+      border-radius: 5px;
+      padding: 2px 7px;
+      white-space: nowrap;
+    }
+    .break-row {
+      border: 1px dashed var(--silver);
+      border-radius: 8px;
+      padding: 11px 16px;
+      margin: 8px 0;
+      color: var(--silver);
+      font-style: italic;
+      text-align: center;
+    }
+
+    @media (max-width: 520px) {
+      .lab-row .lab-open, .lab-row .lab-pending { margin-left: 0; }
+      .module-weeks { margin-left: 0; width: 100%; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      details.card > summary::after { transition: none; }
     }
   </style>
 </head>
@@ -87,16 +258,14 @@
 
 <hr style="border-top:1px solid var(--silver);">
 
-<p><em>Click any button to open the notebook on the hub.</em></p>
-
-<h2 style="color:var(--silver-light);">📚 Activities &amp; Labs</h2>
-
-<div class="lab-grid">
-<a class="lab-btn" href="https://temple.2i2c.cloud/hub/user-redirect/git-pull?repo=https%3A%2F%2Fgithub.com%2Flaserchemist%2Fdata&urlpath=lab%2Ftree%2Fdata%2FFall%202026%2Flab00%2Flab00_undergrad.ipynb&branch=main" target="_blank"><span class="lab-title">🔬 Lab 00</span><br><span class="lab-desc">Getting Your Bearings in Jupyter</span></a>
-<a class="lab-btn" href="https://temple.2i2c.cloud/hub/user-redirect/git-pull?repo=https%3A%2F%2Fgithub.com%2Flaserchemist%2Fdata&urlpath=lab%2Ftree%2Fdata%2FFall%202026%2Flab01%2Flab01_undergrad.ipynb&branch=main" target="_blank"><span class="lab-title">🔬 Lab 01</span><br><span class="lab-desc">Your First Python Code</span></a>
-<a class="lab-btn" href="https://temple.2i2c.cloud/hub/user-redirect/git-pull?repo=https%3A%2F%2Fgithub.com%2Flaserchemist%2Fdata&urlpath=lab%2Ftree%2Fdata%2FFall%202026%2Flab04%2Flab04_undergrad.ipynb&branch=main" target="_blank"><span class="lab-title">⚙️ Lab 04</span><br><span class="lab-desc">Functions and Visualization</span></a>
-<a class="lab-btn" href="https://temple.2i2c.cloud/hub/user-redirect/git-pull?repo=https%3A%2F%2Fgithub.com%2Flaserchemist%2Fdata&urlpath=lab%2Ftree%2Fdata%2FFall%202026%2Flab05%2Flab05_undergrad.ipynb&branch=main" target="_blank"><span class="lab-title">🎲 Lab 05</span><br><span class="lab-desc">Probability, Simulation &amp; Hypothesis Testing</span></a>
+<div class="howto">
+  <h3>How the Honors section works</h3>
+  <p><strong>The labs are the same as every other section of SCTC 1013.</strong> You work them on your own time, and you can bring questions to any instructor's or classroom assistant's office hours. Labs are due Tuesdays at midnight.</p>
+  <p><strong>Class time is for the arguments.</strong> Instead of coaching you through the labs, we use our time together for group activities and discussion — where a result is significant but unimportant, why p-hacking works, what a confidence interval actually claims, and what never makes it into the data at all.</p>
+  <p>Activity sheets are handed out on paper in class. This page is your map: what we did each day, what it was for, and where the code lives.</p>
 </div>
+
+<div id="schedule"></div>
 
 <hr style="border-top:1px solid var(--silver);">
 <h2 style="color:var(--silver-light);">🔗 Resources</h2>
@@ -107,5 +276,461 @@
   <li><a href="https://sites.temple.edu/data/" target="_blank">EDS Course Website</a></li>
 </ul>
 </div>
+
+<script>
+/* ==========================================================================
+   EDITING THIS PAGE
+   --------------------------------------------------------------------------
+   Everything you need to change lives in the two lists below: CLASSES and
+   LABS. Nothing below the "RENDERING" banner needs to be touched.
+
+   A CLASS entry looks like this:
+
+     { n: 11, topic: "Hypothesis testing, simulation",
+       activity: "Simulation from Scratch — The German Tank Problem",
+       objectives: [ "...", "..." ],
+       discussion: "Sample size effects.",
+       nb: "https://temple.2i2c.cloud/..." }
+
+     n           class number, 1-28. Week and Tue/Thu are worked out for you.
+     topic       what the class covers (short)
+     activity    the in-class activity name; use "" if there isn't one yet
+     objectives  list of strings. Leave as [] and the card says
+                 "Learning objectives coming soon."
+     discussion  optional discussion-topic line; omit or use "" for none
+     file        optional starter notebook, as a path inside the semester
+                 folder, e.g. "class11/class11_tanks.ipynb"
+     live        true once that notebook is pushed to the repo; false (or
+                 omitted) shows nothing
+     quiz        optional, e.g. quiz: "Quiz 1" — adds a badge to the card
+
+   A LAB entry looks like this:
+
+     { week: 6, id: "Lab 06", name: "Sampling and Simulation",
+       desc: "DNA GC content", file: "lab06/lab06_undergrad.ipynb",
+       live: false }
+
+     week   which week the lab is assigned in
+     live   THE ONLY THING YOU CHANGE WHEN A LAB GOES UP. false shows
+            "Posted when assigned"; true builds the hub link and shows
+            an "Open notebook" button.
+
+   You never paste a temple.2i2c.cloud URL. The hub link is assembled from
+   SEMESTER + the file path by hubUrl() below, so if the semester folder
+   changes you edit one string and every link on the page follows.
+   ========================================================================== */
+
+// The folder inside the repo that holds this semester's notebooks.
+const SEMESTER = "Fall 2026";
+
+const MODULES = [
+  { num: "Module 1", title: "Programming and data visualization", weeks: [1, 5] },
+  { num: "Module 2", title: "Statistical inference",              weeks: [6, 8] },
+  { num: "Module 3", title: "Prediction and machine learning",    weeks: [9, 15] }
+];
+
+const CLASSES = [
+
+  /* ---------- Module 1 ---------- */
+
+  { n: 1,
+    topic: "Course introduction",
+    activity: "Of Dice and Men",
+    objectives: [
+      "Understand data sets created by rolling dice as population samples.",
+      "Explain variability departures from expected values.", 
+      ],
+    discussion: "Sample size, rare events, and what it takes to test a claim." },
+
+  { n: 2,
+    topic: "Python notebook introduction",
+    activity: "Data to Die For",
+    objectives: [
+      "Explore data by plotting histograms by hand.", 
+      "See the evolution of sample distributions with sample size.", 
+      "Understand why you should learn to code."],
+    discussion: "AI and education." },
+
+  { n: 3,
+    topic: "Variables, arrays, slicing, order of operations",
+    activity: "Modules and Word Problems",
+    objectives: [
+      "Follow the order of operations in Python (PEMBAS).",
+      "Be able to use functions from Python modules.",
+      "Develop strategies for converting word problems to code."		
+    ],
+    discussion: "What does it mean for code to be packaged?" },
+
+  { n: 4,
+    topic: "Introduction to data tables",
+    activity: "Temple Crime",
+    objectives: [
+      "Become familiar with the datascience module.",
+      "Load a CSV into a Table and inspect it with num_rows, labels, and show.",
+      "Select and reorder columns, and filter rows using where with a predicate.",
+      "Sort a table to find extremes, and say what the ordering does not tell you."
+    ],
+    discussion: "Data power and the Clery Act — what counts as reportable, and what never enters the table." },
+
+  { n: 5,
+    topic: "More table methods",
+    activity: "Design Your Own Quiz Question",
+    objectives: [
+    "Become familiar with the types of questions that will be on the quiz.",
+    "Check your understanding of the material covered so far.",
+    "Have fun designing your own quiz questions (If they are good, I'll use them!)"
+    ],
+    discussion: "Spreadsheets are tables too." },
+
+  { n: 6,
+    topic: "Predicates",
+    activity: "Practice with Tables — Breakfast Cereals",
+    objectives: [
+      "Be able to read data into data tables.",
+      "Understand what metadata is and why it is essential.",
+      "Practice manipulating data in data tables."
+    ],
+    discussion: "Data cleaning and reproducibility." },
+
+  { n: 7,
+    topic: "Functions",
+    activity: "Dad Jokes",
+    objectives: [
+      "Understand how to create and use Python functions.",
+      "Be able to explain the difference between parameters and arguments.",
+      "Develop a heightened appreciation of Dad jokes :-)."
+    ],
+    discussion: "The DRY principle, demonstrated by a bug that one function would have prevented." },
+
+  { n: 8,
+    topic: "Data Visualization",
+    activity: "Introduction to matplotlib",
+    objectives: [
+      "Develop familiarity with plotting data in Python.",
+      "Learn to anticipate what code will do before running it."
+    ],
+    discussion: "Short activity — quiz day.",
+    quiz: "Quiz 1" },
+
+  { n: 9,
+    topic: "Conditionals",
+    activity: "The Same Word Twice",
+    objectives: [
+      "Write boolean expressions and if / elif / else rules that return a decision.",
+      "Apply a diagnostic rule across every row of a table with apply.",
+      "Compute P(flag | disease) and P(disease | flag) from the same counts, and explain why they differ."
+    ],
+    discussion: "Conditional versus unconditional probability." },
+
+  { n: 10,
+    topic: "More conditionals; hypothesis testing introduction",
+    activity: "Splitting the Difference",
+    objectives: [
+      "Simulate a repeated chance process and collect the results.",
+      "Compute an expected value and compare it against the spread of outcomes.",
+      "Argue why fair in expectation is not the same as fair in outcome."
+    ],
+    discussion: "Time permitting — how computers generate random numbers." },
+
+  /* ---------- Module 2 ---------- */
+
+  { n: 11,
+    topic: "Hypothesis testing, simulation, random number generation",
+    activity: "Simulation from Scratch — The German Tank Problem",
+    objectives: [
+      "Build a sampling distribution from scratch using a loop.",
+      "Compare three estimators of a population maximum on both bias and spread.",
+      "Test an estimator against a population you already know before trusting it on one you don't."
+    ],
+    discussion: "How sample size changes what an estimate can do." },
+
+  { n: 12,
+    topic: "Group and pivot",
+    activity: "The Cholesterol Paradox",
+    objectives: [
+      "Use group with and without a collect function to summarize by category.",
+      "Build a pivot table across two categorical variables.",
+      "Explain a reversal that appears when a third variable is held constant, and give it a name."
+    ],
+    discussion: "Built into the activity." },
+
+  { n: 13,
+    topic: "Sampling; the sign test for a trend",
+    activity: "Sampling a Population — Where Can You Park?",
+    objectives: [
+      "Draw samples with and without replacement using sample, and predict how the two differ.",
+      "Show that convenience sampling shifts an estimate systematically, not randomly.",
+      "Describe the streetlight effect in terms of what the sample can and cannot represent."
+    ] },
+
+  { n: 14,
+    topic: "Trend Detection",
+    activity: "Why a lag of two years?",
+    objectives: [
+      "Revisit trend detection from climate change lab to understand lags.",
+      "Compare the simulation we used with classic Mann-Kendall statistic.",
+      "Understanding the assumptions behind tend testing."
+    ],
+    discussion: "Short activity — quiz day.",
+    quiz: "Quiz 2" },
+
+  { n: 15,
+    topic: "Background on urban stream sampling",
+    activity: "Permutation Done Exactly — Thirty-Five Worlds",
+    objectives: [
+      "Enumerate all 35 ways to split seven patients into groups of three and four.",
+      "Compute the difference of means for every one of those splits.",
+      "Define a p-value as a proportion of a null distribution you have listed out completely.",
+      "Connect exact enumeration to the random shuffling used on larger samples."
+    ] },
+
+  { n: 16,
+    topic: "Central limit theorem; standardizing data",
+    activity: "Compared to what?",
+    objectives: [
+      "Understand what it means to standardize data.",
+      "Learn hos z-scores relate to outliers",
+      "Know the difference between standard error and standard deviation.",
+      "Learn how sample size controls standard error."
+    ] },
+
+  /* ---------- Module 3 ---------- */
+
+  { n: 17,
+    topic: "Exploratory data analysis, scatter plots and correlation",
+    activity: "Cars 2 had an alibi",
+    objectives: [
+      "Know basic summary statistics for a single variable.",
+      "Be able to create and interpret Box plots.",
+      "Explore bivariate data (two variables) through scatter plots and correlation.",
+      "Understand r, the correlation coefficient.",
+      "Analyze the role of outliers in correlation analysis."
+    ] },
+
+  { n: 18,
+    topic: "Correlation, causation, and linear regression",
+    activity: "Better than guessing",
+    objectives: [
+      "Fit a line to data and understand r-squared.",
+      "Know why it is so important to look at the residuals after fitting a model.",
+      "Be able to explain the difference between extrapolation and interpolation.",
+      "Be aware of the limits of a linear model for prediction.",
+      "Learn to love crickets!"
+      
+    ] },
+
+  { n: 19,
+    topic: "Pennypack review; bootstrap and confidence intervals",
+    activity: "The Confidence Game",
+    objectives: [
+      "You have a statistic such as the sample mean; how close it is to the true population mean?",
+      "You fit a line to data; how confident are you the fitted slope is close to the true slope?",
+      "Be able to explain how the magic of bootstrapping works."
+    ],
+    discussion: "What a confidence interval really means." },
+
+  { n: 20,
+    topic: "Another hypothesis testing example; bootstrapping; survivor bias",
+    activity: "The Registrar's Report",
+    objectives: [
+	  "Be able to recognize survivor bias.",
+	  "Recognize that censored data values still carry information.",
+	  "Interpret Kaplan-Meier curves."
+    ],
+    quiz: "Quiz 3" },
+
+  { n: 21,
+    topic: "R-squared and multiple regression",
+    activity: "TBD",
+    objectives: [] },
+
+  { n: 22,
+    topic: "Chevalier de Méré's problem",
+    activity: "Monte Carlo Day",
+    objectives: [] },
+
+  { n: 23,
+    topic: "Introduction to k-means; final project introduction",
+    activity: "Clustering",
+    objectives: [] },
+
+  { n: 24,
+    topic: "The Indego bike project",
+    activity: "Final project work",
+    objectives: [],
+    quiz: "Quiz 4" },
+
+  { n: 25,
+    topic: "Final project",
+    activity: "Final project work",
+    objectives: [] },
+
+  { n: 26,
+    topic: "Final project",
+    activity: "Final project work; vibe coding demo",
+    objectives: [],
+    discussion: "AI and education, revisited." },
+
+  { n: 27,
+    topic: "Final project",
+    activity: "Final project work",
+    objectives: [] },
+
+  { n: 28,
+    topic: "Presentations",
+    activity: "Group project presentations",
+    objectives: [],
+    discussion: "Final reflections on the course." }
+];
+
+const LABS = [
+  { week: 1, id: "Lab 00", name: "Getting Your Bearings in Jupyter", desc: "Practice with Jupyter notebooks — due Thursday",
+    file: "lab00/lab00_undergrad.ipynb", live: true },
+  { week: 1, id: "Lab 01", name: "Your First Python Code", desc: "Introduction to Python coding",
+    file: "lab01/lab01_undergrad.ipynb", live: true },
+  { week: 2, id: "Lab 02", name: "Data Types", desc: "Acceleration of gravity on the Moon",
+    file: "lab02/lab02_undergrad.ipynb", live: false },
+  { week: 3, id: "Lab 03", name: "Data Tables", desc: "Environmental Protection Index and sustainability",
+    file: "lab03/lab03_undergrad.ipynb", live: false },
+  { week: 4, id: "Lab 04", name: "Functions and Visualization", desc: "COVID data",
+    file: "lab04/lab04_undergrad.ipynb", live: true },
+  { week: 5, id: "Lab 05", name: "Probability and Randomization", desc: "Groundhog weather prognostication",
+    file: "lab05/lab05_undergrad.ipynb", live: true },
+  { week: 6, id: "Lab 06", name: "Sampling and Simulation", desc: "DNA GC content",
+    file: "lab06/lab06_undergrad.ipynb", live: false },
+  { week: 7, id: "Lab 07", name: "Inference", desc: "Global climate change",
+    file: "lab07/lab07_undergrad.ipynb", live: false },
+  { week: 8, id: "Project", name: "Pennypack Creek Water Quality", desc: "Module project — statistical inference",
+    file: "pennypack/PennypackCreek.ipynb", live: false },
+  { week: 9, id: "Lab 08", name: "Variance of Sample Means and Correlation", desc: "Old Faithful eruptions",
+    file: "lab08/lab08_undergrad.ipynb", live: false },
+  { week: 10, id: "Lab 09", name: "Regression", desc: "Estimating the age of the universe",
+    file: "lab09/lab09_undergrad.ipynb", live: false },
+  { week: 11, id: "Lab 10", name: "Machine Learning and Chemistry", desc: "Flower species classification and molecular acidity",
+    file: "lab10/lab10_undergrad.ipynb", live: false },
+  { week: 13, id: "Project", name: "Final Project", desc: "Group project" },
+  { week: 15, id: "Presentations", name: "Group Project Presentations", desc: "" }
+];
+
+/* ==========================================================================
+   RENDERING — you should not need to edit anything below this line.
+   ========================================================================== */
+
+const BREAK_WEEK = 14;   // Fall Break: no classes
+
+// Classes 1-26 fill weeks 1-13 (two per week); week 14 is Fall Break;
+// classes 27-28 land in week 15.
+function weekOf(n) {
+  return n <= 26 ? Math.ceil(n / 2) : 15;
+}
+// Odd class numbers meet Tuesday, even meet Thursday.
+function dayOf(n) {
+  return n % 2 === 1 ? "Tue" : "Thu";
+}
+
+// Build a 2i2c hub git-pull link from a notebook path inside the semester
+// folder. Matches the URLs used on the main Labs page.
+const HUB  = "https://temple.2i2c.cloud/hub/user-redirect/git-pull";
+const REPO = "https://github.com/laserchemist/data";
+function hubUrl(file) {
+  const path = "data/" + SEMESTER + "/" + file;
+  return HUB
+    + "?repo=" + encodeURIComponent(REPO)
+    + "&urlpath=" + encodeURIComponent("lab/tree/" + path)
+    + "&branch=main";
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+}
+
+function classCard(c) {
+  const week = weekOf(c.n);
+  const hasActivity = c.activity && c.activity.trim() !== "";
+  const hasObjectives = c.objectives && c.objectives.length > 0;
+  const tbd = !hasObjectives;
+
+  const title = hasActivity ? c.activity : "Activity to be announced";
+
+  let body = "";
+
+  if (hasObjectives) {
+    body += "<h4>What you should get out of it</h4><ul>";
+    body += c.objectives.map(o => `<li>${esc(o)}</li>`).join("");
+    body += "</ul>";
+  } else {
+    body += `<p class="tbd-note">Learning objectives posted closer to the date.</p>`;
+  }
+
+  if (c.discussion && c.discussion.trim() !== "") {
+    body += `<h4>Discussion</h4><p>${esc(c.discussion)}</p>`;
+  }
+
+  if (c.live && c.file) {
+    body += `<a class="nb-link" href="${esc(hubUrl(c.file))}" target="_blank">📓 Open the starter notebook</a>`;
+  }
+
+  const quizBadge = c.quiz ? `<span class="quiz-flag">${esc(c.quiz)}</span>` : "";
+
+  return `
+    <details class="card${tbd ? " tbd" : ""}">
+      <summary>
+        <span class="class-tag">Class ${c.n} · Week ${week} · ${dayOf(c.n)}</span>
+        <span class="class-name">${esc(title)}</span>
+        ${quizBadge}
+        <span class="class-topic">${esc(c.topic)}</span>
+      </summary>
+      <div class="card-body">${body}</div>
+    </details>`;
+}
+
+function labRow(l) {
+  const action = (l.live && l.file)
+    ? `<a class="lab-open" href="${esc(hubUrl(l.file))}" target="_blank">Open notebook</a>`
+    : `<span class="lab-pending">Posted when assigned</span>`;
+  const desc = l.desc ? `<span class="lab-desc">${esc(l.desc)}</span>` : "";
+  return `
+    <div class="lab-row">
+      <span class="lab-id">${esc(l.id)}</span>
+      <span class="lab-name">${esc(l.name)}</span>
+      ${desc}
+      ${action}
+    </div>`;
+}
+
+function render() {
+  let html = "";
+
+  for (const m of MODULES) {
+    const [first, last] = m.weeks;
+    html += `<section class="module">
+      <div class="module-head">
+        <span class="module-num">${esc(m.num)}</span>
+        <span class="module-title">${esc(m.title)}</span>
+        <span class="module-weeks">Weeks ${first}–${last}</span>
+      </div>`;
+
+    for (let w = first; w <= last; w++) {
+      const classes = CLASSES.filter(c => weekOf(c.n) === w);
+      const labs = LABS.filter(l => l.week === w);
+      if (w === BREAK_WEEK) {
+        html += `<div class="week"><div class="break-row">Fall Break — no classes</div></div>`;
+        continue;
+      }
+      if (classes.length === 0 && labs.length === 0) continue;
+
+      html += `<div class="week"><div class="week-label">Week ${w}</div>`;
+      html += classes.map(classCard).join("");
+      html += labs.map(labRow).join("");
+      html += `</div>`;
+    }
+    html += `</section>`;
+  }
+
+  document.getElementById("schedule").innerHTML = html;
+}
+
+render();
+</script>
 </body>
 </html>
