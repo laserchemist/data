@@ -1,0 +1,65 @@
+[
+   {
+      "question": "What does the type() function tell you about a variable?",
+      "type": "multiple_choice",
+      "answers": [
+         {
+            "answer": "What kind of data it holds (e.g. int, float, str)",
+            "correct": true,
+            "feedback": "✅ Right! type() reports the data type, which determines what operations you can perform on the value."
+         },
+         {
+            "answer": "The current value stored in the variable",
+            "correct": false,
+            "feedback": "Not quite — to see the value itself, just evaluate the variable directly (or use print()). type() reports the kind of data, not the value."
+         },
+         {
+            "answer": "How much memory the variable uses",
+            "correct": false,
+            "feedback": "Not in this course — type() tells you the category of data (int, float, str, etc.), not memory usage."
+         }
+      ]
+   },
+   {
+      "question": "What is the result of int(6.75)?",
+      "type": "multiple_choice",
+      "answers": [
+         {
+            "answer": "7",
+            "correct": false,
+            "feedback": "Careful — int() truncates toward zero, it doesn't round. 6.75 truncates to 6."
+         },
+         {
+            "answer": "6",
+            "correct": true,
+            "feedback": "✅ Correct! int() chops off everything after the decimal point rather than rounding."
+         },
+         {
+            "answer": "6.0",
+            "correct": false,
+            "feedback": "Close, but int() converts all the way to an integer type, so the result has no decimal point at all."
+         }
+      ]
+   },
+   {
+      "question": "Which data type would Python assign to the value 'Phineas'?",
+      "type": "multiple_choice",
+      "answers": [
+         {
+            "answer": "str",
+            "correct": true,
+            "feedback": "✅ Yes! Anything wrapped in quotes is a string (str) — a sequence of text characters."
+         },
+         {
+            "answer": "float",
+            "correct": false,
+            "feedback": "Not quite — float is for decimal numbers. Text in quotes is always a string."
+         },
+         {
+            "answer": "int",
+            "correct": false,
+            "feedback": "Not quite — int is for whole numbers. Since 'Phineas' is in quotes, it's text (a string)."
+         }
+      ]
+   }
+]

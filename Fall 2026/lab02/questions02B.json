@@ -1,0 +1,65 @@
+[
+   {
+      "question": "What does the .replace(old, new) string method do?",
+      "type": "multiple_choice",
+      "answers": [
+         {
+            "answer": "Returns a new string with every occurrence of 'old' swapped for 'new'",
+            "correct": true,
+            "feedback": "✅ Exactly! .replace() scans the string and swaps out every match — the original string itself is left unchanged."
+         },
+         {
+            "answer": "Deletes the 'old' text from the string permanently",
+            "correct": false,
+            "feedback": "Not quite — .replace() doesn't just delete; it substitutes 'old' with whatever you pass as 'new' (which could be an empty string)."
+         },
+         {
+            "answer": "Changes the original variable's type from str to something else",
+            "correct": false,
+            "feedback": "No — .replace() always returns a string. It doesn't change the type of the data."
+         }
+      ]
+   },
+   {
+      "question": "What is the difference between a function like abs(x) and a method like x.upper()?",
+      "type": "multiple_choice",
+      "answers": [
+         {
+            "answer": "A method is called on a specific value with dot notation; a function is called on its own",
+            "correct": true,
+            "feedback": "✅ Correct! Methods are bound to the object before the dot (x.upper()), while functions like abs(x) are called by themselves with the value passed inside the parentheses."
+         },
+         {
+            "answer": "Functions only work on numbers, methods only work on strings",
+            "correct": false,
+            "feedback": "Not quite — both functions and methods can work on many data types. The real difference is dot notation vs. standalone calls."
+         },
+         {
+            "answer": "There is no real difference — the terms are interchangeable",
+            "correct": false,
+            "feedback": "Not quite — they're related ideas, but methods specifically belong to a value and use dot notation, which functions don't."
+         }
+      ]
+   },
+   {
+      "question": "Why does 8 + \"8\" raise a TypeError in Python?",
+      "type": "multiple_choice",
+      "answers": [
+         {
+            "answer": "Python won't add an int and a str together without an explicit conversion",
+            "correct": true,
+            "feedback": "✅ Right! Python keeps types strict — you need int(\"8\") or str(8) first to make the types match before combining them."
+         },
+         {
+            "answer": "The + symbol can only be used with strings",
+            "correct": false,
+            "feedback": "Not quite — + works for numbers too (addition) and for strings (concatenation) — the problem is mixing an int and a str in the same expression."
+         },
+         {
+            "answer": "8 is not a valid number in Python",
+            "correct": false,
+            "feedback": "8 is a perfectly valid integer — the issue is that \"8\" (in quotes) is a string, and Python won't silently mix the two types."
+         }
+      ]
+   }
+]
