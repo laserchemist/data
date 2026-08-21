@@ -6,43 +6,19 @@ test = {
       'cases': [
          {
           'code': r"""
-          >>> # NOTE: You need to define your name above in question 1b
-          >>> # This needs to be a string in quotes
-          >>> # Example:
-          >>> # name = 'Stella'
-          >>> # Fix and rerun that cell and this cell...
-          >>> type(name) == str
-          True
+          >>> # NOTE: Define the variable, total_volume_mL
+          >>> # and put the number 32 for the total number
+          >>> # No units!
+          >>> type(total_volume_mL) == str
+          False
           """,
           'hidden': False,
           'locked': False
         },
           {
           'code': r"""
-          >>> # flour should be a number
-          >>> # flour = 2.5
-          >>> type(flour) == float
-          True
-          """,
-          'hidden': False,
-          'locked': False
-        },
-          {
-          'code': r"""
-          >>> # sugar should be a number
-          >>> # Fix and rerun that cell and this cell...
-          >>> # sugar = 1.75
-          >>> type(sugar) == float
-          True
-          """,
-          'hidden': False,
-          'locked': False
-        },
-                    {
-          'code': r"""
-          >>> # sugar should be 1.75 given text
-          >>> # sugar = 1.75
-          >>> sugar == 1.75
+          >>> # There are 5 groups with no label
+          >>> num_groups == 5
           True
           """,
           'hidden': False,
