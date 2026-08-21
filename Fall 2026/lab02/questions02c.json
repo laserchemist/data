@@ -1,0 +1,86 @@
+[
+   {
+      "question": "Which import style lets you call sin() directly, without writing math.sin()?",
+      "type": "multiple_choice",
+      "answers": [
+         {
+            "answer": "from math import sin",
+            "correct": true,
+            "feedback": "✅ Right! from module import name brings that specific function into your namespace directly, so you can call sin(x) on its own."
+         },
+         {
+            "answer": "import math",
+            "correct": false,
+            "feedback": "Not quite — a plain import math keeps everything inside the math namespace, so you'd still need math.sin(x)."
+         },
+         {
+            "answer": "import math as m",
+            "correct": false,
+            "feedback": "Not quite — this just renames the module to m, so you'd call m.sin(x), not sin(x) on its own."
+         }
+      ]
+   },
+   {
+      "question": "What is the main advantage of a NumPy array over a plain Python list for numerical work?",
+      "type": "multiple_choice",
+      "answers": [
+         {
+            "answer": "You can apply math operations to every element at once, without writing a loop",
+            "correct": true,
+            "feedback": "✅ Exactly! Arrays support vectorized operations — array * 2 doubles every element instantly, which is both faster and more readable than looping."
+         },
+         {
+            "answer": "Arrays can only store text, not numbers",
+            "correct": false,
+            "feedback": "Not quite — it's the opposite. NumPy arrays are built for numeric data and fast math on it."
+         },
+         {
+            "answer": "Arrays automatically remove duplicate values",
+            "correct": false,
+            "feedback": "Not quite — that's not a feature of NumPy arrays. Their strength is fast, element-wise math on the whole collection."
+         }
+      ]
+   },
+   {
+      "question": "What does np.arange(0, 20, 5) produce?",
+      "type": "multiple_choice",
+      "answers": [
+         {
+            "answer": "array([0, 5, 10, 15])",
+            "correct": true,
+            "feedback": "✅ Correct! arange counts up by the stride (5) starting at 0, and stops before reaching 20 — so 20 itself is excluded."
+         },
+         {
+            "answer": "array([0, 5, 10, 15, 20])",
+            "correct": false,
+            "feedback": "Close, but arange stops *before* the stop value — 20 is never included in the result."
+         },
+         {
+            "answer": "array([5, 10, 15, 20])",
+            "correct": false,
+            "feedback": "Not quite — arange starts counting from the first argument (0 here), so 0 is included and 20 is excluded."
+         }
+      ]
+   },
+   {
+      "question": "What does [x**2 for x in [1, 2, 3]] evaluate to?",
+      "type": "multiple_choice",
+      "answers": [
+         {
+            "answer": "[1, 4, 9]",
+            "correct": true,
+            "feedback": "✅ Yes! A list comprehension applies the expression x**2 to every element of the original list, producing a new list of squares."
+         },
+         {
+            "answer": "[1, 2, 3, 1, 2, 3]",
+            "correct": false,
+            "feedback": "Not quite — the comprehension transforms each value with x**2 rather than repeating the list."
+         },
+         {
+            "answer": "9",
+            "correct": false,
+            "feedback": "Not quite — a list comprehension always produces a new list, one result per element, not a single number."
+         }
+      ]
+   }
+]
