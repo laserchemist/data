@@ -1,0 +1,86 @@
+[
+   {
+      "question": "What's the key difference between an array and a Table?",
+      "type": "multiple_choice",
+      "answers": [
+         {
+            "answer": "An array holds one attribute for many things; a Table holds many attributes (columns) for many things",
+            "correct": true,
+            "feedback": "✅ Right! A Table is a collection of same-length arrays lined up as columns, so each row describes one entity across several attributes at once."
+         },
+         {
+            "answer": "An array can only hold numbers, while a Table can only hold text",
+            "correct": false,
+            "feedback": "Not quite — both arrays and Table columns can hold numbers or text. The real difference is one attribute (array) vs. many attributes together (Table)."
+         },
+         {
+            "answer": "They are exactly the same thing with different names",
+            "correct": false,
+            "feedback": "Not quite — a Table is built from one or more arrays (its columns), but a single array on its own is not a Table."
+         }
+      ]
+   },
+   {
+      "question": "Which method would you use to keep only some columns of a Table, discarding the rest?",
+      "type": "multiple_choice",
+      "answers": [
+         {
+            "answer": ".select()",
+            "correct": true,
+            "feedback": "✅ Correct! .select() returns a new Table containing only the columns you name."
+         },
+         {
+            "answer": ".column()",
+            "correct": false,
+            "feedback": "Not quite — .column() pulls out a single column as an array, not a Table with multiple columns."
+         },
+         {
+            "answer": ".where()",
+            "correct": false,
+            "feedback": "Not quite — .where() filters rows based on a condition; it doesn't choose which columns to keep."
+         }
+      ]
+   },
+   {
+      "question": "What does farmers_markets.where('State', are.equal_to('PA')) return?",
+      "type": "multiple_choice",
+      "answers": [
+         {
+            "answer": "A new Table with only the rows where State is 'PA'",
+            "correct": true,
+            "feedback": "✅ Yes! .where() filters the Table down to just the rows that satisfy the predicate, keeping all the original columns."
+         },
+         {
+            "answer": "An array of every State value in the Table",
+            "correct": false,
+            "feedback": "Not quite — that would be farmers_markets.column('State'). .where() filters rows, it doesn't extract a column."
+         },
+         {
+            "answer": "The number of markets located in PA",
+            "correct": false,
+            "feedback": "Not quite — .where() gives you back a filtered Table, not a count. You'd call .num_rows on the result to get a count."
+         }
+      ]
+   },
+   {
+      "question": "What's the difference between .column() and .select()?",
+      "type": "multiple_choice",
+      "answers": [
+         {
+            "answer": ".column() returns an array; .select() returns a Table",
+            "correct": true,
+            "feedback": "✅ Exactly! .column('X') pulls the raw values of one column out as an array, while .select('X') keeps 'X' wrapped inside a (smaller) Table."
+         },
+         {
+            "answer": "They do exactly the same thing",
+            "correct": false,
+            "feedback": "Not quite — they look similar but return different types: .column() → array, .select() → Table. This trips a lot of people up, so it's worth remembering!"
+         },
+         {
+            "answer": ".column() works on rows, .select() works on columns",
+            "correct": false,
+            "feedback": "Not quite — both operate on columns. The difference is the type of thing each one returns."
+         }
+      ]
+   }
+]
