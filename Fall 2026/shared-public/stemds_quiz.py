@@ -355,6 +355,54 @@ def open_quiz(questions_source, name, user,
     qid  = quiz_id      or QUIZ_ID
     mxa  = max_attempts or MAX_ATTEMPTS
 
+    # ── input validation ────────────────────────────────────────────────────
+    # Catches common setup mistakes (unfilled name cell, kernel not fully run,
+    # etc.) before anything gets written to disk, with a message students can
+    # actually act on instead of a raw traceback from deep inside json.dump.
+    problems = []
+
+    if not isinstance(name, str) or not name.strip() or name.strip() == "...":
+        problems.append(
+            "<code>name</code> isn't set to your name yet. Go back to the name cell "
+            "near the top of the notebook, replace <code>...</code> with your name in "
+            "quotes (e.g. <code>name = 'Alex'</code>), run that cell, then come back "
+            "and run this quiz cell again."
+        )
+
+    if not isinstance(user, str) or not user.strip():
+        problems.append(
+            "<code>user</code> isn't set. This should be defined automatically when "
+            "the notebook initializes — try <b>Kernel → Restart Kernel and Run All "
+            "Cells</b> and see if that resolves it. If it still doesn't, let your "
+            "instructor know."
+        )
+
+    if not isinstance(questions_source, (str, list)):
+        problems.append(
+            f"The quiz questions couldn't be loaded — expected a filename or a list "
+            f"of questions, but got {type(questions_source).__name__}. This is a "
+            f"notebook setup issue, not something you can fix — let your instructor know."
+        )
+
+    if problems:
+        item_html = "".join(f"<li style='margin:4px 0;'>{p}</li>" for p in problems)
+        display(HTML(
+            f'<div style="background:{_C["bg_lock"]};border-left:6px solid {_C["red"]};'
+            f'border-radius:8px;padding:16px 20px;margin:12px 0;">'
+            f'<b style="font-size:1.1em;">⚠️ Can\'t start the quiz yet</b>'
+            f'<ul style="margin:10px 0 0 0;padding-left:22px;">{item_html}</ul>'
+            f'</div>'
+        ))
+
+        class _InputError:
+            score  = 0
+            total  = 0
+            locked = False
+            def __iter__(self): yield 0; yield 0
+            def __repr__(self): return "QuizResult(not started — see message above)"
+
+        return _InputError()
+
     # ── instructor bypass ──────────────────────────────────────────────────
     is_instructor = (user in INSTRUCTOR_USERS)
     if is_instructor:
