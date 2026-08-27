@@ -22,8 +22,8 @@ test = {
           >>> # It looks like you didn't change the cell to define
           >>> # seconds_since_2000 appropriately.  It should be a number,
           >>> # computed using Python's arithmetic.  For example, this is
-          >>> # almost right:
-          >>> #   seconds_since_2000 = (7*366+19*365)*24*60*60
+          >>> # almost right (Not correct):
+          >>> #   seconds_since_2000 = (2*366+24*365)*24*60*60
           >>> seconds_since_2000 != ...
           True
           """,
@@ -33,7 +33,7 @@ test = {
         {
           'code': r"""
           >>> # It looks like you didn't account for leap years.
-          >>> # There were 6 leap years and 16 non-leap years in this period.
+          >>> # There were 7 leap years and 16 non-leap years in this period.
           >>> # Leap years have 366 days instead of 365.
           >>> seconds_since_2000 != 693792000
           True
@@ -43,7 +43,7 @@ test = {
         },
         {
           'code': r"""
-          >>> seconds_since_2000 == 694310400
+          >>> seconds_since_2000 == (7*366+19*365)*24*60*60
           True
           """,
           'hidden': False,
