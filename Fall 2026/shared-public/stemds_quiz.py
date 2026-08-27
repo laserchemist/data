@@ -76,22 +76,36 @@ def _read_open_record(user, quiz_id):
     path = _open_path(user, quiz_id)
     if not os.path.exists(path):
         return None
-    with open(path) as f:
-        return json.load(f)
+    try:
+        with open(path) as f:
+            return json.load(f)
+    except (json.JSONDecodeError, OSError):
+        # Corrupted or partially-written file (e.g. from an earlier crash
+        # mid-write). Treat it as if no record exists rather than crashing —
+        # it will be safely overwritten by the next successful attempt.
+        return None
 
 def _write_open_record(user, quiz_id, name):
     os.makedirs(ATTEMPTS_DIR, exist_ok=True)
     record = {"quiz_id": quiz_id, "user": user, "name": name,
               "timestamp": time.asctime()}
-    with open(_open_path(user, quiz_id), "w") as f:
+    tmp = _open_path(user, quiz_id) + ".tmp"
+    with open(tmp, "w") as f:
         json.dump(record, f, indent=2)
+    os.replace(tmp, _open_path(user, quiz_id))
 
 def _load_state(user, quiz_id):
     path = _state_path(user, quiz_id)
     if not os.path.exists(path):
         return None
-    with open(path) as f:
-        return json.load(f)
+    try:
+        with open(path) as f:
+            return json.load(f)
+    except (json.JSONDecodeError, OSError):
+        # Corrupted or partially-written file — fall back to no saved state
+        # rather than crashing. Some progress may be lost, but the quiz can
+        # still be taken.
+        return None
 
 def _save_state(user, quiz_id, state):
     os.makedirs(ATTEMPTS_DIR, exist_ok=True)
