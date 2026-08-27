@@ -23,7 +23,7 @@ test = {
           >>> # seconds_since_2000 appropriately.  It should be a number,
           >>> # computed using Python's arithmetic.  For example, this is
           >>> # almost right:
-          >>> #   seconds_since_2000 = 22*365*24*60*60
+          >>> #   seconds_since_2000 = (7*366+19*365)*24*60*60
           >>> seconds_since_2000 != ...
           True
           """,
