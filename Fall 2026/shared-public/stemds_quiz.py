@@ -43,7 +43,7 @@ QUIZ_ID      = "Quiz03"   # ← unique ID for this quiz
 MAX_ATTEMPTS = 1          # ← 1 = one shot; 2 = one retry per question
 
 # Hub usernames that bypass the lockout entirely (can re-run freely)
-INSTRUCTOR_USERS = {"laserchemist", "instructor", "admin"}
+INSTRUCTOR_USERS = {"laserchemist", "instructor", "admin", "jmsmith1@temple.edu"}
 
 # Where attempt files are stored (shared-public so kernel-restart-proof)
 ATTEMPTS_DIR = "/home/jovyan/shared-public/quiz_attempts"
@@ -85,10 +85,10 @@ def _read_open_record(user, quiz_id):
         # it will be safely overwritten by the next successful attempt.
         return None
 
-def _write_open_record(user, quiz_id, name):
+def _write_open_record(user, quiz_id, name, max_attempts=None):
     os.makedirs(ATTEMPTS_DIR, exist_ok=True)
     record = {"quiz_id": quiz_id, "user": user, "name": name,
-              "timestamp": time.asctime()}
+              "timestamp": time.asctime(), "max_attempts": max_attempts}
     tmp = _open_path(user, quiz_id) + ".tmp"
     with open(tmp, "w") as f:
         json.dump(record, f, indent=2)
@@ -431,6 +431,11 @@ def open_quiz(questions_source, name, user,
     if not is_instructor:
         rec = _read_open_record(user, qid)
         if rec:
+            attempts_note = (
+                f'You had up to <b>{rec["max_attempts"]}</b> attempt(s) per question '
+                f'during that session.<br>'
+                if rec.get("max_attempts") else ''
+            )
             display(HTML(
                 f'<div style="background:{_C["bg_lock"]};'
                 f'border-left:6px solid {_C["red"]};'
@@ -438,8 +443,9 @@ def open_quiz(questions_source, name, user,
                 f'<b style="font-size:1.1em;">🔒 Quiz already opened</b><br><br>'
                 f'This quiz was opened by <b>{rec["name"]}</b> '
                 f'on {rec["timestamp"]}.<br>'
-                f'Only one attempt is allowed. '
-                f'Contact your instructor if this is an error.'
+                f'{attempts_note}'
+                f'This quiz can only be started once — contact your instructor '
+                f'if this is an error.'
                 f'</div>'
             ))
 
@@ -451,7 +457,7 @@ def open_quiz(questions_source, name, user,
             return _Locked()
 
         # Record the opening — from this point the quiz is locked
-        _write_open_record(user, qid, name)
+        _write_open_record(user, qid, name, max_attempts=mxa)
 
     # ── load questions ─────────────────────────────────────────────────────
     if isinstance(questions_source, str):
