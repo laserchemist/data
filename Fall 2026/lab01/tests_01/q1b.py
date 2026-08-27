@@ -26,6 +26,21 @@ test = {
           """,
           'hidden': False,
           'locked': False
+        },
+        {
+          'code': r"""
+          >>> # Make sure average_distance is actually the average of whatever
+          >>> # distance variables you defined (d1, d2, ... -- your group can
+          >>> # have any number of people, not just 5).
+          >>> import re
+          >>> distance_vars = [v for k, v in vars().items() if re.fullmatch(r'd\d+', k)]
+          >>> len(distance_vars) >= 1
+          True
+          >>> np.abs(average_distance - sum(distance_vars) / len(distance_vars)) < 1e-9
+          True
+          """,
+          'hidden': False,
+          'locked': False
         }
       ],
       'scored': True,

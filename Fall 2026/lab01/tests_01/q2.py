@@ -32,17 +32,6 @@ test = {
         },
         {
           'code': r"""
-          >>> # It looks like you didn't account for leap years.
-          >>> # There were 7 leap years and 16 non-leap years in this period.
-          >>> # Leap years have 366 days instead of 365.
-          >>> seconds_since_2000 != 693792000
-          True
-          """,
-          'hidden': False,
-          'locked': False
-        },
-        {
-          'code': r"""
           >>> seconds_since_2000 == (7*366+19*365)*24*60*60
           True
           """,
