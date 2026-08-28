@@ -1,5 +1,5 @@
 test = {
-  'name': 'q10 open_ended',
+  'name': 'q11_open_ended',
   'points': 1,
   'suites': [
     {
@@ -7,7 +7,7 @@ test = {
         {
           'code': r"""
           >>> ### Testing answer to open ended question if answer is not there or too short, fails
-          >>> test_open('avoid this problem?', notebook, 60)==1
+          >>> test_open('imports a function called', notebook, 60)==1
           True
           """,
           'hidden': False,
