@@ -43,7 +43,7 @@ QUIZ_ID      = "Quiz03"   # ← unique ID for this quiz
 MAX_ATTEMPTS = 1          # ← 1 = one shot; 2 = one retry per question
 
 # Hub usernames that bypass the lockout entirely (can re-run freely)
-INSTRUCTOR_USERS = {"laserchemist", "instructor", "admin", "jmsmith1@temple.edu"}
+INSTRUCTOR_USERS = {"laserchemist", "instructor", "admin", "jmsmith1@temple.edu", "nyq@temple.edu"}
 
 # Where attempt files are stored (shared-public so kernel-restart-proof)
 ATTEMPTS_DIR = "/home/jovyan/shared-public/quiz_attempts"
