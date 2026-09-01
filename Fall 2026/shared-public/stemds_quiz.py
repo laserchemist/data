@@ -40,7 +40,7 @@ from IPython.display import display, HTML
 # ══════════════════════════════════════════════════════════════════════════════
 
 QUIZ_ID      = "Quiz03"   # ← unique ID for this quiz
-MAX_ATTEMPTS = 1          # ← 1 = one shot; 2 = one retry per question
+MAX_ATTEMPTS = 3          # ← 1 = one shot; 2 = one retry per question
 
 # Hub usernames that bypass the lockout entirely (can re-run freely)
 INSTRUCTOR_USERS = {"laserchemist", "instructor", "admin", "jmsmith1@temple.edu", "nyq@temple.edu"}
