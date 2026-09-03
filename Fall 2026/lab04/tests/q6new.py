@@ -1,5 +1,5 @@
 test = {
-  'name': 'Question 8',
+  'name': 'Question 6',
   'points': 1,
   'suites': [
     {
@@ -15,7 +15,7 @@ test = {
         {
           'code': r"""
           >>> # Need to use EDS.ptrend and the 2023 Table
-          >>> int(plotcheck) == int(364.0)
+          >>> plotcheck == True
           True
           """,
           'hidden': False,

@@ -1,5 +1,5 @@
 test = {
-  'name': 'q10c_open_ended',
+  'name': 'q9a2_open_ended',
   'points': 1,
   'suites': [
     {
@@ -7,7 +7,7 @@ test = {
         {
           'code': r"""
           >>> ### Testing answer to open ended question if answer is not there or too short, fails
-          >>> test_open('What do you notice?', notebook, 20) == 1
+          >>> test_open('Are there some anomalous minimum values', notebook, 20) == 1
           True
           """,
           'hidden': False,
@@ -21,4 +21,3 @@ test = {
     }
   ]
 }
-
