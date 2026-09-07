@@ -40,7 +40,7 @@ Returns from open_quiz()
     Supports tuple unpacking: score, total = open_quiz(...)
 """
 
-import json, os, time, glob
+import json, os, time, glob, random
 import ipywidgets as widgets
 from IPython.display import display, HTML
 
@@ -160,11 +160,21 @@ def reset_attempt(user, quiz_id=None):
 
 class _QuestionWidget:
 
-    def __init__(self, idx, q_data, max_attempts, on_change, init_state=None):
+    def __init__(self, idx, q_data, max_attempts, on_change, init_state=None,
+                 shuffle_seed=None):
         self.idx          = idx
-        self.data         = q_data
         self.max_attempts = max_attempts
         self._on_change   = on_change
+
+        # Shuffle answer order deterministically (seeded by student + quiz +
+        # question index) so it's randomized per student, but stable across
+        # kernel restarts / resumed sessions — the displayed order never
+        # shifts under a student who's already partway through.
+        self.data = dict(q_data)
+        if shuffle_seed is not None:
+            answers = list(q_data["answers"])
+            random.Random(shuffle_seed).shuffle(answers)
+            self.data["answers"] = answers
 
         self.attempts_used      = 0
         self.locked             = False
@@ -588,14 +598,15 @@ def open_quiz(questions_source, name, user,
         init = None
         if persisted and i < len(persisted.get("questions", [])):
             init = persisted["questions"][i]
-        qw = _QuestionWidget(i, q, mxa, _update, init)
+        qw = _QuestionWidget(i, q, mxa, _update, init,
+                             shuffle_seed=f"{user}:{qid}:{i}")
         q_widgets.append(qw)
 
     # ── submit button — the actual finalization action ──────────────────────
     submit_btn = widgets.Button(
         description = "✅ Submitted" if submit_state["submitted"] else "✅ Submit Quiz",
         button_style = "success",
-        disabled    = submit_state["submitted"] or is_instructor,
+        disabled    = submit_state["submitted"],
         tooltip     = ("Already submitted" if submit_state["submitted"]
                        else "Finalize your answers — locks any remaining questions"),
         layout      = widgets.Layout(width="220px", margin="12px 0"),
