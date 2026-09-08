@@ -2,18 +2,27 @@
 stemds_quiz.py
 ==============
 Self-contained quiz widget for STEMDS JupyterHub notebooks.
-All lockout logic lives here — quiz notebooks stay clean (2 lines of student code).
+All quiz logic lives here — quiz notebooks stay clean (2 lines of student code).
 
 Student notebook usage (all that students ever see or need)
 ────────────────────────────────────────────────────────────
     from stemds_quiz import open_quiz
     open_quiz("questions_quiz03.json", name, user)
 
+Restarting the kernel and re-running the cell is safe at any point — progress
+(per-question attempts, locked questions, submitted status) is restored from
+saved state, not treated as a new attempt. The quiz only becomes truly final
+when the student clicks the in-widget "Submit Quiz" button, which locks any
+remaining unanswered questions and marks the attempt as submitted.
+
 Instructor configuration (edit this file only)
 ───────────────────────────────────────────────
-    MAX_ATTEMPTS     — 1 (strict) or 2 (one retry per question)
-    QUIZ_ID          — unique string per quiz, e.g. "Quiz03"
-    INSTRUCTOR_USERS — set of hub usernames who bypass the lockout
+    MAX_ATTEMPTS     — default attempts per question (currently 3); pass
+                        max_attempts=N to open_quiz() to override per call
+    QUIZ_ID          — unique string per quiz, e.g. "Quiz03" (always override
+                        via quiz_id= in each notebook call)
+    INSTRUCTOR_USERS — set of hub usernames who bypass state-saving/submission
+                        entirely (always a fresh, unsubmitted quiz for testing)
     ATTEMPTS_DIR     — where attempt state files are stored
 
 Instructor reset (run in any notebook or terminal on the hub)
@@ -27,11 +36,11 @@ Returns from open_quiz()
     A QuizResult object with:
         .score   — int, number correct (live, updates as student answers)
         .total   — int, total questions
-        .locked  — bool, True if student was locked out before seeing quiz
+        .locked  — bool, True once the student has clicked Submit Quiz
     Supports tuple unpacking: score, total = open_quiz(...)
 """
 
-import json, os, time, glob
+import json, os, time, glob, random
 import ipywidgets as widgets
 from IPython.display import display, HTML
 
@@ -39,11 +48,11 @@ from IPython.display import display, HTML
 #  INSTRUCTOR CONFIGURATION — edit these values for each quiz
 # ══════════════════════════════════════════════════════════════════════════════
 
-QUIZ_ID      = "Quiz03"   # ← unique ID for this quiz
-MAX_ATTEMPTS = 3          # ← 1 = one shot; 2 = one retry per question
+QUIZ_ID      = "Quiz03"   # ← unique ID for this quiz (always override via quiz_id= in practice)
+MAX_ATTEMPTS = 3          # ← default attempts per question when a call doesn't override it
 
 # Hub usernames that bypass the lockout entirely (can re-run freely)
-INSTRUCTOR_USERS = {"laserchemist", "instructor", "admin", "jmsmith1@temple.edu", "nyq@temple.edu"}
+INSTRUCTOR_USERS = {"laserchemist", "instructor", "admin", "jmsmith1@temple.edu"}
 
 # Where attempt files are stored (shared-public so kernel-restart-proof)
 ATTEMPTS_DIR = "/home/jovyan/shared-public/quiz_attempts"
@@ -151,11 +160,21 @@ def reset_attempt(user, quiz_id=None):
 
 class _QuestionWidget:
 
-    def __init__(self, idx, q_data, max_attempts, on_change, init_state=None):
+    def __init__(self, idx, q_data, max_attempts, on_change, init_state=None,
+                 shuffle_seed=None):
         self.idx          = idx
-        self.data         = q_data
         self.max_attempts = max_attempts
         self._on_change   = on_change
+
+        # Shuffle answer order deterministically (seeded by student + quiz +
+        # question index) so it's randomized per student, but stable across
+        # kernel restarts / resumed sessions — the displayed order never
+        # shifts under a student who's already partway through.
+        self.data = dict(q_data)
+        if shuffle_seed is not None:
+            answers = list(q_data["answers"])
+            random.Random(shuffle_seed).shuffle(answers)
+            self.data["answers"] = answers
 
         self.attempts_used      = 0
         self.locked             = False
@@ -341,6 +360,44 @@ class _QuestionWidget:
                 "locked": self.locked,
                 "answered_correctly": self.answered_correctly}
 
+    def force_lock(self):
+        """
+        Lock this question without an answer being selected — used when the
+        student clicks Submit Quiz while questions are still open. Reveals
+        the correct answer, same visual treatment as running out of attempts.
+        """
+        if self.locked:
+            return
+        self.locked             = True
+        self.answered_correctly = False
+
+        correct_ans = next(a for a in self.data["answers"] if a["correct"])
+        for html_w, btn in self._answer_btns:
+            btn.disabled = True
+            ans = self.data["answers"][btn._ans_index]
+            if ans["correct"]:
+                html_w.value = (
+                    f'<div style="background:{_C["pale_green"]};color:#1a3a2e;'
+                    f'border-radius:6px;padding:9px 16px;'
+                    f'font-size:0.97em;font-weight:600;cursor:default;'
+                    f'border:1px solid {_C["green"]};line-height:1.4;">'
+                    f'{ans["answer"]}</div>'
+                )
+                btn.style.button_color = _C["pale_green"]
+
+        fb = (f'<div style="background:{_C["bg_lock"]};border-left:5px solid {_C["red"]};'
+              f'padding:10px 14px;border-radius:6px;margin:6px 0;">'
+              f'⏹️ <b>Not answered</b> — the quiz was submitted before this question '
+              f'was completed.'
+              f'<br><br>✅ <b>Correct answer:</b> {correct_ans["answer"]}'
+              + (f'<br><i>{correct_ans.get("feedback","")}</i>' if correct_ans.get("feedback") else '')
+              + '</div>')
+        with self._feedback:
+            self._feedback.clear_output(wait=True)
+            display(HTML(fb))
+
+        self._attempt_label.value = self._attempt_html(0)
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 #  Public API
@@ -427,36 +484,11 @@ def open_quiz(questions_source, name, user,
             f'</div>'
         ))
 
-    # ── lockout check (skip for instructors) ──────────────────────────────
-    if not is_instructor:
-        rec = _read_open_record(user, qid)
-        if rec:
-            attempts_note = (
-                f'You had up to <b>{rec["max_attempts"]}</b> attempt(s) per question '
-                f'during that session.<br>'
-                if rec.get("max_attempts") else ''
-            )
-            display(HTML(
-                f'<div style="background:{_C["bg_lock"]};'
-                f'border-left:6px solid {_C["red"]};'
-                f'border-radius:8px;padding:16px 20px;margin:12px 0;">'
-                f'<b style="font-size:1.1em;">🔒 Quiz already opened</b><br><br>'
-                f'This quiz was opened by <b>{rec["name"]}</b> '
-                f'on {rec["timestamp"]}.<br>'
-                f'{attempts_note}'
-                f'This quiz can only be started once — contact your instructor '
-                f'if this is an error.'
-                f'</div>'
-            ))
-
-            class _Locked:
-                score  = 0
-                total  = 0
-                locked = True
-                def __iter__(self): yield 0; yield 0
-            return _Locked()
-
-        # Record the opening — from this point the quiz is locked
+    # ── first-opened record (informational only — never blocks) ───────────
+    # Restarting the kernel and re-running the cell is completely normal
+    # (your own "Final Step" tells students to do exactly that). Progress is
+    # resumed from saved per-question state below instead of being blocked.
+    if not is_instructor and not _read_open_record(user, qid):
         _write_open_record(user, qid, name, max_attempts=mxa)
 
     # ── load questions ─────────────────────────────────────────────────────
@@ -479,6 +511,10 @@ def open_quiz(questions_source, name, user,
 
     # Restore per-question state (kernel-restart-proof)
     persisted = _load_state(user, qid) if not is_instructor else None
+    submit_state = {
+        "submitted":    bool(persisted and persisted.get("submitted")),
+        "submitted_at": persisted.get("submitted_at") if persisted else None,
+    }
 
     # ── score + completion ─────────────────────────────────────────────────
     score_bar  = widgets.HTML()
@@ -502,8 +538,11 @@ def open_quiz(questions_source, name, user,
         if not is_instructor:
             try:
                 _save_state(user, qid, {
-                    "quiz_id": qid, "user": user, "timestamp": time.asctime(),
+                    "quiz_id": qid, "user": user, "name": name,
+                    "timestamp": time.asctime(),
                     "score": score, "total": total,
+                    "submitted":    submit_state["submitted"],
+                    "submitted_at": submit_state["submitted_at"],
                     "questions": [qw.get_state() for qw in q_widgets],
                 })
             except Exception:
@@ -517,6 +556,17 @@ def open_quiz(questions_source, name, user,
                          "Well done! ✅"        if pct >= 80 else
                          "Good effort — review what you missed." if pct >= 60 else
                          "Review the material and speak with your instructor.")
+            if submit_state["submitted"]:
+                status_line = (
+                    f'Submitted on {submit_state["submitted_at"]}. '
+                    f'This quiz is final and cannot be changed.'
+                )
+            else:
+                status_line = (
+                    f'All questions answered. Click <b>Submit Quiz</b> above when '
+                    f'you\'re ready to finalize — until then you can still restart '
+                    f'the kernel and pick up where you left off.'
+                )
             with finish_out:
                 finish_out.clear_output(wait=True)
                 display(HTML(
@@ -526,8 +576,7 @@ def open_quiz(questions_source, name, user,
                     f'🎉 Quiz complete! &nbsp; {score}/{total} ({pct:.0f}%) &nbsp;— {grade_msg}'
                     f'</div>'
                     f'<div style="padding:4px 0;color:{_C["navy"]};font-size:0.92em;">'
-                    f'Your score (<b>{score}</b>) has been recorded. '
-                    f'Click <b>Submit Quiz</b> in the next cell.'
+                    f'{status_line}'
                     f'</div>'
                 ))
 
@@ -549,32 +598,61 @@ def open_quiz(questions_source, name, user,
         init = None
         if persisted and i < len(persisted.get("questions", [])):
             init = persisted["questions"][i]
-        qw = _QuestionWidget(i, q, mxa, _update, init)
+        qw = _QuestionWidget(i, q, mxa, _update, init,
+                             shuffle_seed=f"{user}:{qid}:{i}")
         q_widgets.append(qw)
+
+    # ── submit button — the actual finalization action ──────────────────────
+    submit_btn = widgets.Button(
+        description = "✅ Submitted" if submit_state["submitted"] else "✅ Submit Quiz",
+        button_style = "success",
+        disabled    = submit_state["submitted"],
+        tooltip     = ("Already submitted" if submit_state["submitted"]
+                       else "Finalize your answers — locks any remaining questions"),
+        layout      = widgets.Layout(width="220px", margin="12px 0"),
+    )
+
+    def _do_submit(b=None):
+        if submit_state["submitted"]:
+            return
+        for qw in q_widgets:
+            if not qw.locked:
+                qw.force_lock()
+        submit_state["submitted"]    = True
+        submit_state["submitted_at"] = time.asctime()
+        submit_btn.disabled    = True
+        submit_btn.description = "✅ Submitted"
+        _update()
+
+    submit_btn.on_click(_do_submit)
 
     _update()   # initial render
 
     display(widgets.VBox(
-        [header, score_bar] + [qw.widget for qw in q_widgets] + [finish_out],
+        [header, score_bar] + [qw.widget for qw in q_widgets]
+        + [submit_btn, finish_out],
         layout=widgets.Layout(width="100%", max_width="820px")
     ))
 
     # ── result object ──────────────────────────────────────────────────────
     class _Result:
-        def __init__(self, qws, n):
-            self._qws   = qws
-            self._total = n
-            self.locked = False
+        def __init__(self, qws, n, submit_state):
+            self._qws         = qws
+            self._total       = n
+            self._submit_state = submit_state
         @property
         def score(self):
             return sum(1 for qw in self._qws if qw.answered_correctly)
         @property
         def total(self):
             return self._total
+        @property
+        def locked(self):
+            return self._submit_state["submitted"]
         def __iter__(self):
             yield self.score
             yield self.total
         def __repr__(self):
             return f"QuizResult({self.score}/{self.total})"
 
-    return _Result(q_widgets, total)
+    return _Result(q_widgets, total, submit_state)
