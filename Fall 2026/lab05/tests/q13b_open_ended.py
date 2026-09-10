@@ -1,5 +1,5 @@
 test = {
-  'name': 'q13a_open_ended',
+  'name': 'q13b_open_ended',
   'points': 1,
   'suites': [
     {
@@ -7,7 +7,7 @@ test = {
         {
           'code': r"""
           >>> ### Testing answer to open ended question if answer is not there or too short, fails
-          >>> test_open('Written Q13b', notebook, 30) == 1
+          >>> test_open('Is Punxsutawney Phil a better predictor than chance', notebook, 30) == 1
           True
           """,
           'hidden': False,

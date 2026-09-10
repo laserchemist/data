@@ -6,7 +6,7 @@ test = {
       'cases': [
         {
           'code': r"""
-          >>> round(percent_correct, 2)  >= 51.13
+          >>> abs(percent_correct_q9 - 271/530*100) < 0.01
           True
           """,
           'hidden': False,
