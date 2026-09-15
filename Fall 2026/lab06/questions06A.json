@@ -1,0 +1,86 @@
+[
+   {
+      "question": "What does `population_rolls.sample(30, with_replacement=False)` return?",
+      "type": "multiple_choice",
+      "answers": [
+         {
+            "answer": "A new Table with 30 randomly chosen rows from population_rolls, with no row repeated",
+            "correct": true,
+            "feedback": "✅ Right! .sample() draws rows at random from an existing Table. With with_replacement=False, each row can only be picked once."
+         },
+         {
+            "answer": "The first 30 rows of population_rolls, in their original order",
+            "correct": false,
+            "feedback": "Not quite — that would just be population_rolls.take(np.arange(30)). .sample() picks rows at random, not in order."
+         },
+         {
+            "answer": "A single random number between 0 and 30",
+            "correct": false,
+            "feedback": "Not quite — .sample() always returns a Table (a collection of rows), not a single number."
+         }
+      ]
+   },
+   {
+      "question": "As you increase the sample size from 10 rows to 1,000 rows drawn from the same population, what generally happens to the sample mean?",
+      "type": "multiple_choice",
+      "answers": [
+         {
+            "answer": "It tends to land closer to the true population mean, on average",
+            "correct": true,
+            "feedback": "✅ Exactly! Larger samples average out random ups-and-downs, so bigger samples tend to give more reliable estimates of the population value."
+         },
+         {
+            "answer": "It always becomes exactly equal to the population mean once the sample is bigger than 10",
+            "correct": false,
+            "feedback": "Not quite — sample means still vary randomly from sample to sample, they just tend to vary less as the sample gets bigger."
+         },
+         {
+            "answer": "It becomes completely unrelated to the population mean",
+            "correct": false,
+            "feedback": "Not quite — it's the opposite. Bigger samples are generally MORE informative about the population, not less."
+         }
+      ]
+   },
+   {
+      "question": "Why is calling simulate_observations() a simulation rather than sampling from a real population?",
+      "type": "multiple_choice",
+      "answers": [
+         {
+            "answer": "It generates brand-new random data from a model (the die + modifier), rather than drawing rows that already exist in some dataset",
+            "correct": true,
+            "feedback": "✅ Correct! Simulation creates new data according to a model of chance; sampling draws existing rows out of a population that's already there (like darwin_population or population_rolls)."
+         },
+         {
+            "answer": "Because it happens to use np.random.choice() instead of some other function",
+            "correct": false,
+            "feedback": "Not quite — the specific function used isn't what makes it a simulation. It's whether the data already existed (sampling) or is being generated fresh (simulation)."
+         },
+         {
+            "answer": "Because it returns an array instead of a Table",
+            "correct": false,
+            "feedback": "Not quite — the data type returned isn't the distinguishing feature here. Simulation vs. sampling is about where the data comes from."
+         }
+      ]
+   },
+   {
+      "question": "In the Darwin's Origin of Species example, what is the 'population'?",
+      "type": "multiple_choice",
+      "answers": [
+         {
+            "answer": "Every single word in the book",
+            "correct": true,
+            "feedback": "✅ Right! darwin_population contains the length of every word in the entire text — that's our full population before we draw any sample."
+         },
+         {
+            "answer": "Just the 50 words in darwin_sample_50",
+            "correct": false,
+            "feedback": "Not quite — that's the sample, a smaller subset we drew FROM the population, not the population itself."
+         },
+         {
+            "answer": "Only the words that are exactly 5 letters long",
+            "correct": false,
+            "feedback": "Not quite — the population includes words of every length in the book, not a filtered subset."
+         }
+      ]
+   }
+]

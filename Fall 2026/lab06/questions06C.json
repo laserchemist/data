@@ -1,0 +1,107 @@
+[
+   {
+      "question": "A loop counts letters with `d[letter] = d.get(letter, 0) + 1`. What does the `0` do?",
+      "type": "multiple_choice",
+      "answers": [
+         {
+            "answer": "Provides a default count of 0 the first time a new letter is seen, so adding 1 doesn't fail on a missing key",
+            "correct": true,
+            "feedback": "✅ Exactly! .get(key, default) returns the key's value if it exists, otherwise the default — here 0 — so the running total always starts somewhere sensible."
+         },
+         {
+            "answer": "Resets every letter's count to 0 at the end of the loop",
+            "correct": false,
+            "feedback": "Not quite — the 0 only matters the very first time a key is looked up; it never resets an existing count."
+         },
+         {
+            "answer": "Removes letters that appear 0 times from the dictionary",
+            "correct": false,
+            "feedback": "Not quite — .get() never deletes anything; it just supplies a fallback value for missing keys."
+         }
+      ]
+   },
+   {
+      "question": "Why remove 'stop words' before analyzing word frequency in a text?",
+      "type": "multiple_choice",
+      "answers": [
+         {
+            "answer": "Stop words are common function words (like 'the', 'and', 'of') that don't reveal much about a text's specific topic",
+            "correct": true,
+            "feedback": "✅ Right! Removing stop words lets the frequency counts highlight content-carrying words instead of being dominated by words every text uses a lot."
+         },
+         {
+            "answer": "Stop words are misspelled words that need to be corrected",
+            "correct": false,
+            "feedback": "Not quite — stop words are perfectly valid, correctly spelled words; they're just too common to be informative about topic."
+         },
+         {
+            "answer": "Stop words make the text file too large to open",
+            "correct": false,
+            "feedback": "Not quite — file size isn't the reason; it's about what the words tell us (or don't) about the article's content."
+         }
+      ]
+   },
+   {
+      "question": "What's the key difference between Table.sample() with and without replacement?",
+      "type": "multiple_choice",
+      "answers": [
+         {
+            "answer": "Without replacement, no row can be chosen more than once; with replacement, the same row could be picked multiple times",
+            "correct": true,
+            "feedback": "✅ Correct! With replacement, each draw is independent of the others, so repeats are possible; without replacement, once a row is drawn it's set aside."
+         },
+         {
+            "answer": "Without replacement always runs faster",
+            "correct": false,
+            "feedback": "Not quite — speed isn't the defining difference; it's whether the same row can be drawn more than once."
+         },
+         {
+            "answer": "With replacement only works on numeric columns",
+            "correct": false,
+            "feedback": "Not quite — with_replacement works on Tables regardless of column type; it controls how rows are drawn, not what kind of data is in them."
+         }
+      ]
+   },
+   {
+      "question": "You draw a random sample of 50 words from Darwin's Origin of Species and compute the mean word length. If a classmate draws a different random sample of 50 words, would you expect their mean to be exactly the same as yours?",
+      "type": "multiple_choice",
+      "answers": [
+         {
+            "answer": "No — different random samples generally give somewhat different sample means, though both should land reasonably close to the true population mean",
+            "correct": true,
+            "feedback": "✅ Right! Sample means vary from sample to sample (this variation is exactly what Chapter 10 is about) — but larger samples tend to cluster more tightly around the true population value."
+         },
+         {
+            "answer": "Yes — every random sample from the same population always has exactly the same mean",
+            "correct": false,
+            "feedback": "Not quite — if that were true, sampling wouldn't involve any randomness at all. Different samples typically give slightly different means."
+         },
+         {
+            "answer": "No — sample means are always wildly different from each other and from the population mean",
+            "correct": false,
+            "feedback": "Not quite — that's overstated. Sample means do vary, but for a reasonably sized sample they tend to stay fairly close to the population mean."
+         }
+      ]
+   },
+   {
+      "question": "In the D&D example, why did increasing num_observations from 7 to 100 make the mean-based estimator of the modifier more reliable?",
+      "type": "multiple_choice",
+      "answers": [
+         {
+            "answer": "Larger samples average out the random ups and downs of individual die rolls, so the sample mean lands closer to the true underlying average",
+            "correct": true,
+            "feedback": "✅ Exactly! With only 7 rolls, one unlucky or lucky roll can skew the mean a lot. With 100, those extremes wash out and the average is far more stable."
+         },
+         {
+            "answer": "More observations guarantee a perfectly exact modifier estimate every time",
+            "correct": false,
+            "feedback": "Not quite — larger samples make estimates more reliable on average, but there's still some randomness left; 'perfectly exact' is too strong a claim."
+         },
+         {
+            "answer": "Increasing num_observations changes what the true modifier actually is",
+            "correct": false,
+            "feedback": "Not quite — the modifier is fixed once it's set; changing num_observations only affects how much data we use to estimate it, not the modifier's true value."
+         }
+      ]
+   }
+]

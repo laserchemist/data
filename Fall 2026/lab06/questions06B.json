@@ -1,0 +1,65 @@
+[
+   {
+      "question": "In `seq[0:10]`, what does the slice `0:10` select?",
+      "type": "multiple_choice",
+      "answers": [
+         {
+            "answer": "Characters starting at index 0, up to but not including index 10 (10 characters total)",
+            "correct": true,
+            "feedback": "✅ Correct! Just like np.arange, slicing stops *before* the second number — so seq[0:10] gives you exactly 10 characters."
+         },
+         {
+            "answer": "Characters 1 through 10, inclusive",
+            "correct": false,
+            "feedback": "Not quite — Python indexing starts at 0, and the slice stops before the end value, so this isn't quite what 0:10 selects."
+         },
+         {
+            "answer": "Every 10th character in the string",
+            "correct": false,
+            "feedback": "Not quite — that would need a step value, like seq[0::10]. A plain 0:10 grabs a contiguous chunk."
+         }
+      ]
+   },
+   {
+      "question": "calcGC slides a window of size `samplesize` across the sequence. What does increasing samplesize from 10 to 50 primarily change?",
+      "type": "multiple_choice",
+      "answers": [
+         {
+            "answer": "How much each window's GC fraction gets smoothed — larger windows average over more nucleotides, so the fraction changes less from window to window",
+            "correct": true,
+            "feedback": "✅ Right! Bigger windows are less sensitive to any one nucleotide, which smooths out the GC-fraction curve but can hide small GC-rich regions."
+         },
+         {
+            "answer": "Nothing — the GC fraction is identical no matter the window size",
+            "correct": false,
+            "feedback": "Not quite — window size changes how localized vs. smoothed the GC-fraction plot looks."
+         },
+         {
+            "answer": "The total length of the sequence seq itself",
+            "correct": false,
+            "feedback": "Not quite — samplesize only controls the sliding window; seq's length never changes."
+         }
+      ]
+   },
+   {
+      "question": "Which method call counts how many times the letter 'G' appears in a string s?",
+      "type": "multiple_choice",
+      "answers": [
+         {
+            "answer": "s.count('G')",
+            "correct": true,
+            "feedback": "✅ Yes! .count() scans the whole string and returns how many times the substring appears."
+         },
+         {
+            "answer": "s.find('G')",
+            "correct": false,
+            "feedback": "Not quite — .find() returns the index of the FIRST match (or -1), not a total count."
+         },
+         {
+            "answer": "len(s['G'])",
+            "correct": false,
+            "feedback": "Not quite — strings can't be indexed with a letter like that; this would raise an error."
+         }
+      ]
+   }
+]
