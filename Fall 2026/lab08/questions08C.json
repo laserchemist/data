@@ -1,0 +1,210 @@
+[
+  {
+    "question": "For Old Faithful the regression line is about wait = 10.7 × duration + 33.5. What is the predicted wait after a <b>3-minute</b> eruption?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "About 43 minutes",
+        "correct": false,
+        "feedback": "Multiply the slope by 3 first: 10.7 × 3 = 32.1."
+      },
+      {
+        "answer": "About 10.7 minutes",
+        "correct": false,
+        "feedback": "That's just the slope."
+      },
+      {
+        "answer": "About 76.4 minutes",
+        "correct": false,
+        "feedback": "That's the prediction for a 4-minute eruption."
+      },
+      {
+        "answer": "About 65.6 minutes",
+        "correct": true,
+        "feedback": "Correct: 10.7 × 3 + 33.5 ≈ 65.6."
+      }
+    ]
+  },
+  {
+    "question": "Which code computes the correlation coefficient <i>r</i> from arrays <code>x</code> and <code>y</code>, using your <code>standard_units</code> function?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "<code>standard_units(x * y)</code>",
+        "correct": false,
+        "feedback": "That standardizes the products instead of averaging them."
+      },
+      {
+        "answer": "<code>np.std(x) / np.std(y)</code>",
+        "correct": false,
+        "feedback": "That's a ratio of spreads, not a correlation."
+      },
+      {
+        "answer": "<code>np.mean(x * y)</code>",
+        "correct": false,
+        "feedback": "The arrays must be converted to standard units first."
+      },
+      {
+        "answer": "<code>np.mean(standard_units(x) * standard_units(y))</code>",
+        "correct": true,
+        "feedback": "Right: the average product in standard units."
+      }
+    ]
+  },
+  {
+    "question": "The alcohol data has <i>r</i> ≈ 0.87 between MW and bp. Which conclusion is justified?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "There is a strong positive straight-line association between MW and boiling point",
+        "correct": true,
+        "feedback": "Correct: this is exactly what <i>r</i> measures."
+      },
+      {
+        "answer": "87% of alcohols have a high boiling point",
+        "correct": false,
+        "feedback": "<i>r</i> is not a percentage of data points."
+      },
+      {
+        "answer": "Boiling point increases by 0.87 K per g/mol",
+        "correct": false,
+        "feedback": "That would be the slope, and the slope is about 1.46 K per g/mol."
+      },
+      {
+        "answer": "MW is the only cause of an alcohol's boiling point",
+        "correct": false,
+        "feedback": "Correlation doesn't establish cause, and shape clearly matters too."
+      }
+    ]
+  },
+  {
+    "question": "1-butanol, isobutanol, 2-butanol and tert-butanol all have MW = 74.12 g/mol, but boiling points from 391 K to 355 K. The best explanation is:",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Compact, branched shapes (smaller radius of gyration) have less surface contact, so weaker dispersion forces",
+        "correct": true,
+        "feedback": "Right: shape matters, not just mass."
+      },
+      {
+        "answer": "Measurement errors in the data set",
+        "correct": false,
+        "feedback": "These differences are large and real."
+      },
+      {
+        "answer": "Heavier isomers boil at higher temperatures",
+        "correct": false,
+        "feedback": "All four have the same MW."
+      },
+      {
+        "answer": "They have different numbers of –OH groups",
+        "correct": false,
+        "feedback": "Each has exactly one –OH group."
+      }
+    ]
+  },
+  {
+    "question": "What does the SMILES string <code>CC(C)(C)O</code> represent?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "A straight chain of four carbons",
+        "correct": false,
+        "feedback": "Parentheses indicate branches off the second carbon."
+      },
+      {
+        "answer": "tert-butanol: a central carbon bonded to three CH₃ groups and one –OH",
+        "correct": true,
+        "feedback": "Correct."
+      },
+      {
+        "answer": "A ring of four carbons",
+        "correct": false,
+        "feedback": "Rings are shown with matching digits, like C1CCC1."
+      },
+      {
+        "answer": "An aromatic alcohol",
+        "correct": false,
+        "feedback": "Aromatic atoms are written in lowercase."
+      }
+    ]
+  },
+  {
+    "question": "What does <code>np.polyfit(x, y, 1)</code> return?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "The correlation coefficient <i>r</i>",
+        "correct": false,
+        "feedback": "It returns line coefficients, not <i>r</i>."
+      },
+      {
+        "answer": "An array <code>[slope, intercept]</code> of the least-squares straight line",
+        "correct": true,
+        "feedback": "Right: coefficients start with the highest power of x."
+      },
+      {
+        "answer": "An array <code>[intercept, slope]</code>",
+        "correct": false,
+        "feedback": "np.polyfit lists the highest power first, so the slope comes first."
+      },
+      {
+        "answer": "A plot of the regression line",
+        "correct": false,
+        "feedback": "It returns numbers only; you plot them yourself."
+      }
+    ]
+  },
+  {
+    "question": "A data set follows a perfect U-shaped curve, and <i>r</i> ≈ 0. What should you conclude?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "The calculation of <i>r</i> must be wrong",
+        "correct": false,
+        "feedback": "<i>r</i> ≈ 0 is correct for a symmetric curve."
+      },
+      {
+        "answer": "There is a strong relationship, but it isn't linear, so <i>r</i> and a straight regression line are the wrong tools",
+        "correct": true,
+        "feedback": "Correct: always look at the scatter plot."
+      },
+      {
+        "answer": "x and y are unrelated",
+        "correct": false,
+        "feedback": "They are perfectly related, just not along a straight line."
+      },
+      {
+        "answer": "The regression line is a good model",
+        "correct": false,
+        "feedback": "A flat line would badly fit a U-shaped curve."
+      }
+    ]
+  },
+  {
+    "question": "Your line from the sliders has SSE = 6,000 and the regression line has SSE = 9,500. What should you conclude?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "SSE doesn't measure the quality of a fit",
+        "correct": false,
+        "feedback": "SSE is exactly the least-squares criterion."
+      },
+      {
+        "answer": "The data aren't correlated",
+        "correct": false,
+        "feedback": "Comparing SSEs doesn't tell you about <i>r</i>."
+      },
+      {
+        "answer": "Your slider line is better than the regression line",
+        "correct": false,
+        "feedback": "No straight line can beat the least-squares line."
+      },
+      {
+        "answer": "There is a mistake in a calculation, because the regression line has the smallest possible SSE of any straight line",
+        "correct": true,
+        "feedback": "Right: recheck your formulas and the arrays you used."
+      }
+    ]
+  }
+]

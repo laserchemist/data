@@ -1,0 +1,158 @@
+[
+  {
+    "question": "Why should you make a scatter plot before calculating r?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "r cannot be calculated without a plot",
+        "correct": false,
+        "feedback": "r can be calculated from the numbers alone."
+      },
+      {
+        "answer": "r only measures straight-line association, so a plot reveals curves, clusters, or outliers that r would miss",
+        "correct": true,
+        "feedback": "Correct: a perfect curve can have r close to 0."
+      },
+      {
+        "answer": "Plotting makes r larger",
+        "correct": false,
+        "feedback": "Plotting doesn't change the data."
+      },
+      {
+        "answer": "The plot tells you the exact value of r",
+        "correct": false,
+        "feedback": "A plot lets you estimate r, but not exactly."
+      }
+    ]
+  },
+  {
+    "question": "In standard units, a point in the upper-left quadrant contributes a product x*y that is...",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "positive",
+        "correct": false,
+        "feedback": "Upper-left has x below average (negative) and y above average (positive)."
+      },
+      {
+        "answer": "negative",
+        "correct": true,
+        "feedback": "Right: negative times positive is negative, pulling r down."
+      },
+      {
+        "answer": "zero",
+        "correct": false,
+        "feedback": "Only points on an axis give zero."
+      },
+      {
+        "answer": "always equal to r",
+        "correct": false,
+        "feedback": "r is the average of all the products."
+      }
+    ]
+  },
+  {
+    "question": "Old Faithful has r ≈ 0.90. In standard units, an eruption 2 SDs longer than average predicts a wait that is...",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "2 SDs above average",
+        "correct": false,
+        "feedback": "That would require r = 1."
+      },
+      {
+        "answer": "about 1.8 SDs above average",
+        "correct": true,
+        "feedback": "Correct: the regression line in standard units is y = r * x = 0.9 * 2."
+      },
+      {
+        "answer": "0.9 SDs above average",
+        "correct": false,
+        "feedback": "Multiply r by the x value of 2."
+      },
+      {
+        "answer": "exactly average",
+        "correct": false,
+        "feedback": "That would be true only if r = 0."
+      }
+    ]
+  },
+  {
+    "question": "What is the slope of the regression line in original units?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "r",
+        "correct": false,
+        "feedback": "That's the slope in standard units."
+      },
+      {
+        "answer": "r * SD_y / SD_x",
+        "correct": true,
+        "feedback": "Right: stretch vertically by SD_y and horizontally by SD_x."
+      },
+      {
+        "answer": "r * SD_x / SD_y",
+        "correct": false,
+        "feedback": "The ratio is upside down."
+      },
+      {
+        "answer": "mean_y / mean_x",
+        "correct": false,
+        "feedback": "The slope depends on r and the SDs, not the ratio of means."
+      }
+    ]
+  },
+  {
+    "question": "The regression line always passes through which point?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "(0, 0) in original units",
+        "correct": false,
+        "feedback": "It passes through (0, 0) in standard units."
+      },
+      {
+        "answer": "(mean of x, mean of y)",
+        "correct": true,
+        "feedback": "Correct: that point is (0, 0) in standard units."
+      },
+      {
+        "answer": "The first data point",
+        "correct": false,
+        "feedback": "The line need not pass through any data point."
+      },
+      {
+        "answer": "(SD of x, SD of y)",
+        "correct": false,
+        "feedback": "Try (mean of x, mean of y)."
+      }
+    ]
+  },
+  {
+    "question": "Why is the regression line called the least-squares line?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "It uses the fewest data points",
+        "correct": false,
+        "feedback": "It uses all the data points."
+      },
+      {
+        "answer": "Of all straight lines, it has the smallest sum of squared errors",
+        "correct": true,
+        "feedback": "Right: you tested this against your slider line."
+      },
+      {
+        "answer": "Its slope is always less than 1",
+        "correct": false,
+        "feedback": "Slopes in original units can be any size."
+      },
+      {
+        "answer": "It passes through the smallest number of squares on graph paper",
+        "correct": false,
+        "feedback": "Not quite!"
+      }
+    ]
+  }
+]
