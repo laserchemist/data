@@ -1,0 +1,158 @@
+[
+  {
+    "question": "What does temps.where('year', 1850) return?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "A new Table containing only the rows whose year is 1850",
+        "correct": true,
+        "feedback": "Right — .where() keeps the rows that satisfy the condition and returns a new Table."
+      },
+      {
+        "answer": "The single temperature value recorded in 1850",
+        "correct": false,
+        "feedback": ".where() returns a Table of rows, not a single value."
+      },
+      {
+        "answer": "The temps Table sorted so that 1850 comes first",
+        "correct": false,
+        "feedback": "Sorting is done with .sort(); .where() filters rows."
+      },
+      {
+        "answer": "A Table with only the year column",
+        "correct": false,
+        "feedback": "Choosing columns is done with .select()."
+      }
+    ]
+  },
+  {
+    "question": "Why did we remove rows such as Africa, Europe, and Netherlands (Europe)?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "They are too hot or too cold to be realistic",
+        "correct": false,
+        "feedback": "The values are realistic — the problem is what the rows represent."
+      },
+      {
+        "answer": "They are continents or duplicates, so keeping them would count some land more than once",
+        "correct": true,
+        "feedback": "Correct — each row should represent one country exactly once."
+      },
+      {
+        "answer": "The datascience library cannot read names with parentheses",
+        "correct": false,
+        "feedback": "The library reads them fine; this is a data-cleaning decision."
+      },
+      {
+        "answer": "They have no temperature data",
+        "correct": false,
+        "feedback": "They do have data; they just aren't individual countries."
+      }
+    ]
+  },
+  {
+    "question": "After T_1850.join('country', T_2000, 'country'), which countries appear in the result?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Every country in either table",
+        "correct": false,
+        "feedback": "A join only keeps values that match in both tables."
+      },
+      {
+        "answer": "Only countries in the 1850 table",
+        "correct": false,
+        "feedback": "Countries missing from the 2000 table are dropped too."
+      },
+      {
+        "answer": "Only countries with data in both 1850 and 2000, one row each with both temperatures",
+        "correct": true,
+        "feedback": "Yes — that's why the second avg column is renamed from avg_2 to T2."
+      },
+      {
+        "answer": "All rows of temps with 1850 and 2000 stacked on top of each other",
+        "correct": false,
+        "feedback": "Joining puts matching rows side by side, not stacked."
+      }
+    ]
+  },
+  {
+    "question": "What is the difference between weather and climate?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Weather is short-term conditions; climate is the long-term average of weather (typically 30+ years)",
+        "correct": true,
+        "feedback": "Correct — so one cold winter doesn't disprove a warming climate."
+      },
+      {
+        "answer": "Weather is measured on land; climate is measured in the ocean",
+        "correct": false,
+        "feedback": "Both can be measured anywhere; the difference is time scale."
+      },
+      {
+        "answer": "They mean the same thing",
+        "correct": false,
+        "feedback": "They differ in time scale."
+      },
+      {
+        "answer": "Climate is only about temperature; weather includes rain and wind",
+        "correct": false,
+        "feedback": "Climate includes precipitation, wind, and more — averaged over long periods."
+      }
+    ]
+  },
+  {
+    "question": "The figure of solar activity and global temperature in the Background section shows that...",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Recent warming is fully explained by a brighter sun",
+        "correct": false,
+        "feedback": "Look again: solar activity has not risen while temperature has."
+      },
+      {
+        "answer": "Solar activity has not increased while temperatures rose, so the sun is an unlikely explanation for recent warming",
+        "correct": true,
+        "feedback": "Right — an alternative explanation that doesn't fit the data."
+      },
+      {
+        "answer": "Temperature and solar activity have both been falling",
+        "correct": false,
+        "feedback": "Global temperature has been rising."
+      },
+      {
+        "answer": "The sun has no effect on Earth's temperature at all",
+        "correct": false,
+        "feedback": "The sun matters a great deal; it just hasn't changed enough to explain recent warming."
+      }
+    ]
+  },
+  {
+    "question": "According to scientific assessments such as NASA and the IPCC, what is the main human cause of warming since the mid-20th century?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Heat released directly by car engines and power plants",
+        "correct": false,
+        "feedback": "Direct waste heat is small compared with the greenhouse effect."
+      },
+      {
+        "answer": "The hole in the ozone layer",
+        "correct": false,
+        "feedback": "Ozone depletion is a separate issue."
+      },
+      {
+        "answer": "Increased greenhouse gases, mainly CO₂ from burning fossil fuels",
+        "correct": true,
+        "feedback": "Correct — more greenhouse gases trap more outgoing heat."
+      },
+      {
+        "answer": "More volcanic eruptions",
+        "correct": false,
+        "feedback": "Large eruptions actually cool the planet briefly."
+      }
+    ]
+  }
+]

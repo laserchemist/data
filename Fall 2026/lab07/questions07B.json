@@ -1,0 +1,184 @@
+[
+  {
+    "question": "Which statement best describes a p-value?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "The probability that the null hypothesis is true",
+        "correct": false,
+        "feedback": "A common misconception — the p-value is computed assuming the null is true."
+      },
+      {
+        "answer": "The probability, assuming the null hypothesis is true, of a test statistic at least as extreme as the one observed",
+        "correct": true,
+        "feedback": "Correct — see Inferential Thinking Ch. 11.3."
+      },
+      {
+        "answer": "The probability that the observed warming is real",
+        "correct": false,
+        "feedback": "The p-value doesn't give the probability that any hypothesis is true."
+      },
+      {
+        "answer": "The size of the temperature change",
+        "correct": false,
+        "feedback": "That's the effect size; the p-value measures surprise under the null."
+      }
+    ]
+  },
+  {
+    "question": "Why is a paired t-test appropriate for comparing 1850 and 2000 temperatures?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Because we have more than 30 countries",
+        "correct": false,
+        "feedback": "Sample size doesn't decide pairing — study design does."
+      },
+      {
+        "answer": "Because temperatures are normally distributed",
+        "correct": false,
+        "feedback": "Normality is an assumption of both versions."
+      },
+      {
+        "answer": "Because each country is measured twice, so each country serves as its own control",
+        "correct": true,
+        "feedback": "Exactly — subtracting within each country removes its baseline climate."
+      },
+      {
+        "answer": "Because the 1850 and 2000 samples are independent",
+        "correct": false,
+        "feedback": "They are not independent — that's the point of pairing."
+      }
+    ]
+  },
+  {
+    "question": "On our data, the unpaired t is about 1.4 but the paired t is about 27. What explains the huge difference?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "The paired test uses more data",
+        "correct": false,
+        "feedback": "Both use the same 160 countries in both years."
+      },
+      {
+        "answer": "The unpaired test's noise includes the ~10 °C spread between countries; the paired test's noise is only the spread of the changes (under 1 °C)",
+        "correct": true,
+        "feedback": "Right — same signal, much smaller noise."
+      },
+      {
+        "answer": "One of the calculations has an arithmetic error",
+        "correct": false,
+        "feedback": "Both are correct; they measure noise differently."
+      },
+      {
+        "answer": "The paired test always gives larger values of t",
+        "correct": false,
+        "feedback": "Not always — pairing helps when pairs share a lot of variation, as countries do here."
+      }
+    ]
+  },
+  {
+    "question": "How many degrees of freedom does a paired t-test on 160 countries have?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "318",
+        "correct": false,
+        "feedback": "That's n₁ + n₂ − 2 for an unpaired test."
+      },
+      {
+        "answer": "160",
+        "correct": false,
+        "feedback": "We subtract one for the estimated mean difference."
+      },
+      {
+        "answer": "320",
+        "correct": false,
+        "feedback": "There are 160 pairs, not 320 independent observations."
+      },
+      {
+        "answer": "159",
+        "correct": true,
+        "feedback": "Correct — number of pairs minus 1."
+      }
+    ]
+  },
+  {
+    "question": "In the simulation, why may we randomly flip the sign of each country's temperature difference?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "If there is no warming, the labels '1850' and '2000' are interchangeable, so each difference is equally likely to be positive or negative",
+        "correct": true,
+        "feedback": "Yes — that's the chance model described by the null hypothesis."
+      },
+      {
+        "answer": "To make the simulation run faster",
+        "correct": false,
+        "feedback": "Speed isn't the reason; the sign flip is the null model."
+      },
+      {
+        "answer": "Because half of the countries cooled",
+        "correct": false,
+        "feedback": "Most countries warmed; the flipping represents a world where there is no warming."
+      },
+      {
+        "answer": "To remove outliers",
+        "correct": false,
+        "feedback": "Every country is kept; only the sign is randomized."
+      }
+    ]
+  },
+  {
+    "question": "With a 5% cutoff, a p-value of 0.002 means we should...",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Accept the null hypothesis",
+        "correct": false,
+        "feedback": "A small p-value is evidence against the null."
+      },
+      {
+        "answer": "Reject the null hypothesis: the data are hard to explain by chance alone",
+        "correct": true,
+        "feedback": "Correct."
+      },
+      {
+        "answer": "Conclude that the alternative hypothesis is proven",
+        "correct": false,
+        "feedback": "Hypothesis tests never prove — they weigh evidence against the null."
+      },
+      {
+        "answer": "Collect exactly 5% more data",
+        "correct": false,
+        "feedback": "The cutoff is a decision threshold, not a data-collection rule."
+      }
+    ]
+  },
+  {
+    "question": "Rejecting the null hypothesis in our warming test shows that...",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Human activity caused the warming",
+        "correct": false,
+        "feedback": "The test detects a change; it says nothing about its cause."
+      },
+      {
+        "answer": "Temperatures will keep rising at the same rate",
+        "correct": false,
+        "feedback": "The test says nothing about the future."
+      },
+      {
+        "answer": "The observed warming is unlikely to be due to chance, but the test alone doesn't tell us why it happened",
+        "correct": true,
+        "feedback": "Right — attributing cause needs other evidence, like physical models."
+      },
+      {
+        "answer": "Every country warmed",
+        "correct": false,
+        "feedback": "Some countries cooled; the test is about the average."
+      }
+    ]
+  }
+]

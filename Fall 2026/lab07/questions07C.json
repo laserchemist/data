@@ -1,0 +1,210 @@
+[
+  {
+    "question": "What does <code>np.random.choice(make_array(1, -1), 160)</code> produce?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "The numbers 1 and -1 repeated 80 times each, in order",
+        "correct": false,
+        "feedback": "Each draw is random, so the counts are rarely exactly 80 and 80."
+      },
+      {
+        "answer": "An array of 160 values, each randomly 1 or -1 with equal chance",
+        "correct": true,
+        "feedback": "Correct — one coin flip per country."
+      },
+      {
+        "answer": "A single random number between -1 and 1",
+        "correct": false,
+        "feedback": "The second argument asks for 160 draws."
+      },
+      {
+        "answer": "An error, because 160 is larger than the array",
+        "correct": false,
+        "feedback": "<code>np.random.choice</code> samples with replacement by default."
+      }
+    ]
+  },
+  {
+    "question": "In the sign test (Part 5), what is the test statistic?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "The average temperature change per year",
+        "correct": false,
+        "feedback": "The sign test ignores the size of changes."
+      },
+      {
+        "answer": "The largest temperature increase",
+        "correct": false,
+        "feedback": "Only directions are counted."
+      },
+      {
+        "answer": "The number of countries that warmed",
+        "correct": false,
+        "feedback": "Close, but we count every two-year change, not countries."
+      },
+      {
+        "answer": "The number of two-year increases minus the number of two-year decreases",
+        "correct": true,
+        "feedback": "Right — it depends only on the direction of change."
+      }
+    ]
+  },
+  {
+    "question": "Under the null hypothesis of the sign test, what value do we expect the test statistic to be near?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "0",
+        "correct": true,
+        "feedback": "Correct — increases and decreases are equally likely, so they roughly cancel."
+      },
+      {
+        "answer": "The number of countries",
+        "correct": false,
+        "feedback": "That would mean every country had one more increase than decrease."
+      },
+      {
+        "answer": "0.5",
+        "correct": false,
+        "feedback": "0.5 is the chance of an increase, not the expected value of increases minus decreases."
+      },
+      {
+        "answer": "The observed <code>test_stat</code>",
+        "correct": false,
+        "feedback": "The observed value is what we compare <i>against</i> the null distribution."
+      }
+    ]
+  },
+  {
+    "question": "Which line computes the p-value from an array <code>samples</code> of simulated test statistics?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "<code>np.mean(samples) / test_stat</code>",
+        "correct": false,
+        "feedback": "That's a ratio of averages, not a probability."
+      },
+      {
+        "answer": "<code>np.count_nonzero(samples == test_stat) / len(samples)</code>",
+        "correct": false,
+        "feedback": "We need values <i>at least as extreme</i>, not exactly equal."
+      },
+      {
+        "answer": "<code>np.count_nonzero(samples >= test_stat) / len(samples)</code>",
+        "correct": true,
+        "feedback": "Correct — the fraction of simulations at least as large as what we observed."
+      },
+      {
+        "answer": "<code>max(samples) - test_stat</code>",
+        "correct": false,
+        "feedback": "This is a distance, not a proportion."
+      }
+    ]
+  },
+  {
+    "question": "Which Table method applies your <code>changes</code> function to each country's temperatures?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "<code>temps.select('country', 'avg').group('country', changes)</code>",
+        "correct": true,
+        "feedback": "Right — <code>.group()</code> collects each country's values and applies the function."
+      },
+      {
+        "answer": "<code>temps.sort('country', changes)</code>",
+        "correct": false,
+        "feedback": "<code>.sort()</code> reorders rows; it doesn't apply a function to groups."
+      },
+      {
+        "answer": "<code>temps.where('country', changes)</code>",
+        "correct": false,
+        "feedback": "<code>.where()</code> filters rows by a condition."
+      },
+      {
+        "answer": "<code>temps.column('country').changes()</code>",
+        "correct": false,
+        "feedback": "Arrays don't have a <code>changes</code> method."
+      }
+    ]
+  },
+  {
+    "question": "Which of these is an assumption of the <b>unpaired</b> two-sample <i>t</i>-test but <b>not</b> of the paired test?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "The data come from random samples",
+        "correct": false,
+        "feedback": "Both tests assume random sampling."
+      },
+      {
+        "answer": "The values are roughly normally distributed",
+        "correct": false,
+        "feedback": "Both tests assume (approximate) normality — of the groups or of the differences."
+      },
+      {
+        "answer": "There is a meaningful null hypothesis",
+        "correct": false,
+        "feedback": "Every hypothesis test needs one."
+      },
+      {
+        "answer": "The two groups are independent of each other",
+        "correct": true,
+        "feedback": "Correct — the paired test is designed for groups that are <i>not</i> independent."
+      }
+    ]
+  },
+  {
+    "question": "Your simulation of 10,000 repetitions gives a p-value of exactly 0.0. The most accurate statement is:",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "The probability of this result under the null is exactly zero",
+        "correct": false,
+        "feedback": "A simulation can't show an event is impossible."
+      },
+      {
+        "answer": "None of the 10,000 simulated values reached the observed value, so p is smaller than about 1/10,000",
+        "correct": true,
+        "feedback": "Right — report it as p < 0.0001."
+      },
+      {
+        "answer": "The simulation must have a bug",
+        "correct": false,
+        "feedback": "It's expected when the observed statistic is far from the null distribution."
+      },
+      {
+        "answer": "We should accept the null hypothesis",
+        "correct": false,
+        "feedback": "A tiny p-value is strong evidence against the null."
+      }
+    ]
+  },
+  {
+    "question": "Which is a real limitation of the tests in this lab for measuring <b>global</b> warming?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Neighboring countries' temperatures are related, so they are not truly independent observations",
+        "correct": true,
+        "feedback": "Correct — correlated observations make our tests overconfident."
+      },
+      {
+        "answer": "The p-values were too small to be meaningful",
+        "correct": false,
+        "feedback": "Small p-values are meaningful; they indicate strong evidence against the null."
+      },
+      {
+        "answer": "Temperature can't be measured in °C",
+        "correct": false,
+        "feedback": "°C is a perfectly good unit."
+      },
+      {
+        "answer": "Simulation can never be used for hypothesis testing",
+        "correct": false,
+        "feedback": "Simulation is a fully valid approach to testing."
+      }
+    ]
+  }
+]
