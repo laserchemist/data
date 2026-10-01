@@ -14,12 +14,10 @@ test = {
         }, 
           {
           'code': r"""
-          >>> changes_by_country.take(np.arange(4))
-          country        | avg changes
-          Afghanistan    | 18
-          Albania        | -22
-          Algeria        | 9
-          American Samoa | -3
+          >>> changes_by_country.labels
+          ('country', 'avg changes')
+          >>> changes_by_country.column('avg changes').take(np.arange(4)).tolist()
+          [18, -22, 9, -3]
           """,
           'hidden': False,
           'locked': False
