@@ -1,5 +1,5 @@
 test = {
-  'name': 'q3',
+  'name': 'q5b',
   'points': 1,
   'suites': [
     {
@@ -7,13 +7,12 @@ test = {
         {
           'code': r"""
           >>> ### Testing answer to open ended question if answer is not there or too short, fails
-          >>> test_open('Can we reject the null hypothesis? Why or why not?',notebook,60)==1
+          >>> test_open('the sign of `T_diff_sim` sometimes matches',notebook,60)==1
           True
           """,
           'hidden': False,
           'locked': False
         }
-    
       ],
       'scored': True,
       'setup': '',

@@ -1,12 +1,12 @@
 test = {
-  'name': 'Question 1',
+  'name': 'Question 15',
   'points': 1,
   'suites': [
     {
       'cases': [
         {
           'code': r"""
-          >>> 1.45 <= mean_diff <= 1.50
+          >>> 0 <= pvalue < 0.001
           True
           """,
           'hidden': False,

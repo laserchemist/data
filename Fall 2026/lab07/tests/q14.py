@@ -6,7 +6,7 @@ test = {
       'cases': [
         {
           'code': r"""
-          >>> simulate_under_null(100) > -25 and simulate_under_null(100) < 25
+          >>> -40 < simulate_under_null(100) < 40
           True
           """,
           'hidden': False,
@@ -17,6 +17,8 @@ test = {
           >>> max(samples) < 1200
           True
           >>> min(samples) > -1200
+          True
+          >>> 180 < np.std(samples) < 230
           True
           """,
           'hidden': False,

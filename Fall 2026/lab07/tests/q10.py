@@ -1,5 +1,5 @@
 test = {
-  'name': 'q9',
+  'name': 'q10',
   'points': 1,
   'suites': [
     {
@@ -7,7 +7,7 @@ test = {
         {
           'code': r"""
           >>> ### Testing answer to open ended question if answer is not there or too short, fails
-          >>> test_open('Describe one observation from the figure you generated',notebook,60)==1
+          >>> test_open('write the null hypothesis in the cell below',notebook,60)==1
           True
           """,
           'hidden': False,

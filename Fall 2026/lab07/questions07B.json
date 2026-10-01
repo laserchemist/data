@@ -177,7 +177,7 @@
       {
         "answer": "Every country warmed",
         "correct": false,
-        "feedback": "Some countries cooled; the test is about the average."
+        "feedback": "True for these 160 countries, but the test didn't show it — it's about the average change, and rejecting the null says nothing about each individual country."
       }
     ]
   }
