@@ -44,14 +44,15 @@ except ImportError:
 
 # ── standard data-science stack ───────────────────────────────────────────────
 import numpy as np
-import matplotlib
-import matplotlib.pyplot as plt
-get_ipython().run_line_magic("matplotlib", "inline")
-plt.style.use("ggplot")
+
 import math
 import json, glob
 import nbformat as nbf
 from datascience import *
+import matplotlib
+import matplotlib.pyplot as plt
+get_ipython().run_line_magic("matplotlib", "inline")
+plt.style.use("ggplot")
 from gofer.ok import check
 from IPython.display import display
 from jupyterquiz import display_quiz
