@@ -1,0 +1,210 @@
+[
+  {
+    "question": "What does <code>close_novas.sample()</code> return?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "A Table with the same number of rows, drawn at random <b>with replacement</b>",
+        "correct": true,
+        "feedback": "Right: that's one bootstrap resample."
+      },
+      {
+        "answer": "The original Table in a random order, with each row exactly once",
+        "correct": false,
+        "feedback": "That would be sampling without replacement."
+      },
+      {
+        "answer": "A single random row",
+        "correct": false,
+        "feedback": "With no argument, the resample has the same size as the Table."
+      },
+      {
+        "answer": "A Table with only half the rows",
+        "correct": false,
+        "feedback": "The resample is the same size as the original."
+      }
+    ]
+  },
+  {
+    "question": "Why does a bootstrap resample give a slightly different slope than the original data?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Because some supernovae appear more than once and others not at all",
+        "correct": true,
+        "feedback": "Correct: each resample is a slightly different sample."
+      },
+      {
+        "answer": "Because the bootstrap uses a different formula for slope",
+        "correct": false,
+        "feedback": "The same toolbox is used every time."
+      },
+      {
+        "answer": "Because the supernova data change each time",
+        "correct": false,
+        "feedback": "The data are fixed; only which rows we draw changes."
+      },
+      {
+        "answer": "Because <code>fit_line</code> adds random noise",
+        "correct": false,
+        "feedback": "<code>fit_line</code> is not random."
+      }
+    ]
+  },
+  {
+    "question": "Which code gives the lower end of a 95% confidence interval from <code>bootstrap_ages</code>?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "<code>np.mean(bootstrap_ages) - 0.95</code>",
+        "correct": false,
+        "feedback": "Confidence intervals come from percentiles here."
+      },
+      {
+        "answer": "<code>min(bootstrap_ages)</code>",
+        "correct": false,
+        "feedback": "The minimum includes the extreme 0% tail, not 2.5%."
+      },
+      {
+        "answer": "<code>percentile(2.5, bootstrap_ages)</code>",
+        "correct": true,
+        "feedback": "Right: the interval runs from the 2.5th to the 97.5th percentile."
+      },
+      {
+        "answer": "<code>percentile(5, bootstrap_ages)</code>",
+        "correct": false,
+        "feedback": "A 95% interval leaves 2.5% in each tail."
+      }
+    ]
+  },
+  {
+    "question": "Your 95% confidence interval for the age is about [13.6, 14.5] billion years. What is the best interpretation?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "There is a 95% chance the bootstrap is wrong",
+        "correct": false,
+        "feedback": "Not what confidence means."
+      },
+      {
+        "answer": "The true age is exactly 14.05 billion years",
+        "correct": false,
+        "feedback": "The interval shows the uncertainty around the estimate."
+      },
+      {
+        "answer": "The method we used captures the true age in about 95% of samples, and these are the plausible values from this sample",
+        "correct": true,
+        "feedback": "Correct."
+      },
+      {
+        "answer": "95% of supernovae are between 13.6 and 14.5 billion years old",
+        "correct": false,
+        "feedback": "The interval is about the universe's age, not the supernovae."
+      }
+    ]
+  },
+  {
+    "question": "The bootstrap confidence interval for the slope does <b>not</b> include 0. What can you conclude?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Speed causes distance",
+        "correct": false,
+        "feedback": "A confidence interval doesn't establish causation."
+      },
+      {
+        "answer": "Reject the null hypothesis that there is no linear relationship between speed and distance",
+        "correct": true,
+        "feedback": "Right: a slope of 0 isn't a plausible value."
+      },
+      {
+        "answer": "The slope is exactly 14,100",
+        "correct": false,
+        "feedback": "The interval gives a range, not an exact value."
+      },
+      {
+        "answer": "The data must contain errors",
+        "correct": false,
+        "feedback": "Nothing about the interval suggests that."
+      }
+    ]
+  },
+  {
+    "question": "Which change would most likely make the confidence interval for the age <b>narrower</b>?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Observing many more supernovae",
+        "correct": true,
+        "feedback": "Correct: more data means less sampling variability, just like the SD of sample means in Lab 8."
+      },
+      {
+        "answer": "Using a 99% interval instead of 95%",
+        "correct": false,
+        "feedback": "A higher confidence level gives a wider interval."
+      },
+      {
+        "answer": "Using 10,000 bootstrap resamples instead of 1,000",
+        "correct": false,
+        "feedback": "More resamples make the histogram smoother but don't shrink its spread."
+      },
+      {
+        "answer": "Rounding the speeds",
+        "correct": false,
+        "feedback": "Rounding loses information."
+      }
+    ]
+  },
+  {
+    "question": "The Planck value of 13.787 billion years is inside your interval. Which statement is justified?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Our sample was perfectly random",
+        "correct": false,
+        "feedback": "Agreement doesn't show the sample was random."
+      },
+      {
+        "answer": "The two methods must have used the same data",
+        "correct": false,
+        "feedback": "Planck used the cosmic microwave background, not supernovae."
+      },
+      {
+        "answer": "Our supernova estimate is consistent with the Planck measurement",
+        "correct": true,
+        "feedback": "Right: the Planck value is a plausible value given our data."
+      },
+      {
+        "answer": "Our estimate proves the Planck value is exact",
+        "correct": false,
+        "feedback": "Our interval is much wider than Planck's ± 0.020."
+      }
+    ]
+  },
+  {
+    "question": "Our supernovae were the ones easiest to observe, not a random sample. How does this affect the bootstrap interval?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "The interval becomes a 100% interval",
+        "correct": false,
+        "feedback": "Not quite!"
+      },
+      {
+        "answer": "It has no effect, because the bootstrap fixes any sampling problem",
+        "correct": false,
+        "feedback": "The bootstrap only accounts for random sampling variability."
+      },
+      {
+        "answer": "The interval must be exactly twice as wide",
+        "correct": false,
+        "feedback": "There's no fixed adjustment."
+      },
+      {
+        "answer": "The interval may be off-target, because the bootstrap assumes the sample is like a random sample from the population",
+        "correct": true,
+        "feedback": "Correct: bias in how data are collected isn't removed by resampling."
+      }
+    ]
+  }
+]

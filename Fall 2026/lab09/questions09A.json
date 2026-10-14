@@ -1,0 +1,184 @@
+[
+  {
+    "question": "In the drivers example, why is the slope of distance versus speed equal to the time since the drivers left?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Because distance = time × speed, so distance ÷ speed = time",
+        "correct": true,
+        "feedback": "Right: the slope is distance per unit of speed, which is time."
+      },
+      {
+        "answer": "Because the intercept is always zero",
+        "correct": false,
+        "feedback": "The intercept tells you where the line crosses the y-axis, not the time."
+      },
+      {
+        "answer": "Because speed and distance are measured in the same units",
+        "correct": false,
+        "feedback": "They're in different units: miles and miles per hour."
+      },
+      {
+        "answer": "Because r is close to 1",
+        "correct": false,
+        "feedback": "A high r means the points are close to a line, but it doesn't make the slope a time."
+      }
+    ]
+  },
+  {
+    "question": "Distance is in millions of parsecs and speed is in parsecs per year. What are the units of the slope?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Parsecs",
+        "correct": false,
+        "feedback": "Divide the units: (million parsecs) ÷ (parsecs/year)."
+      },
+      {
+        "answer": "Million years",
+        "correct": true,
+        "feedback": "Correct: the parsecs cancel, leaving millions of years."
+      },
+      {
+        "answer": "Years per parsec",
+        "correct": false,
+        "feedback": "That would be speed's units flipped."
+      },
+      {
+        "answer": "Billion parsecs",
+        "correct": false,
+        "feedback": "Dividing a distance by a speed gives a time."
+      }
+    ]
+  },
+  {
+    "question": "The supernova slope is about 14,100. What age of the universe does that suggest?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "14,100 years",
+        "correct": false,
+        "feedback": "Remember the slope is in millions of years."
+      },
+      {
+        "answer": "14.1 million years",
+        "correct": false,
+        "feedback": "14,100 million years is more than that."
+      },
+      {
+        "answer": "About 14.1 billion years",
+        "correct": true,
+        "feedback": "Right: 14,100 million years = 14.1 billion years."
+      },
+      {
+        "answer": "1.41 billion years",
+        "correct": false,
+        "feedback": "Check the conversion: 1,000 million = 1 billion."
+      }
+    ]
+  },
+  {
+    "question": "What is a residual?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "The slope of the regression line",
+        "correct": false,
+        "feedback": "A residual belongs to each data point."
+      },
+      {
+        "answer": "Actual y minus the y predicted by the line, for one data point",
+        "correct": true,
+        "feedback": "Correct: what the line leaves unexplained."
+      },
+      {
+        "answer": "The distance from a point to the origin",
+        "correct": false,
+        "feedback": "Residuals are measured vertically from the line."
+      },
+      {
+        "answer": "The correlation between x and y",
+        "correct": false,
+        "feedback": "r describes the whole data set, not one point."
+      }
+    ]
+  },
+  {
+    "question": "Almost all residuals of a trial line are negative, and more negative at high speeds. What does this mean?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "The line is too steep: it predicts distances that are too large",
+        "correct": true,
+        "feedback": "Right: actual minus predicted is negative, so the predictions are too high."
+      },
+      {
+        "answer": "The line is not steep enough",
+        "correct": false,
+        "feedback": "Then predictions would be too low and residuals positive."
+      },
+      {
+        "answer": "The line is perfect",
+        "correct": false,
+        "feedback": "A good line has residuals centered on 0."
+      },
+      {
+        "answer": "The data aren't correlated",
+        "correct": false,
+        "feedback": "The residuals tell you about the line, not the strength of correlation."
+      }
+    ]
+  },
+  {
+    "question": "Which residual plot shows that a straight line is a good model?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Residuals that form a U-shaped curve",
+        "correct": false,
+        "feedback": "A curve in the residuals means the relationship isn't straight."
+      },
+      {
+        "answer": "Residuals that rise steadily from left to right",
+        "correct": false,
+        "feedback": "A trend means the slope is off."
+      },
+      {
+        "answer": "Residuals scattered randomly around 0 with no pattern",
+        "correct": true,
+        "feedback": "Correct."
+      },
+      {
+        "answer": "Residuals that are all positive",
+        "correct": false,
+        "feedback": "Then the line is too low everywhere."
+      }
+    ]
+  },
+  {
+    "question": "For the supernovae, r² ≈ 0.96. What does this mean?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "96% of the supernovae lie exactly on the line",
+        "correct": false,
+        "feedback": "r² isn't a count of points on the line."
+      },
+      {
+        "answer": "About 96% of the variation in distance is accounted for by the straight-line relationship with speed",
+        "correct": true,
+        "feedback": "Right."
+      },
+      {
+        "answer": "The age estimate is 96% certain",
+        "correct": false,
+        "feedback": "Uncertainty in the age comes from the bootstrap, not from r²."
+      },
+      {
+        "answer": "The slope is 0.96",
+        "correct": false,
+        "feedback": "The slope is about 14,100."
+      }
+    ]
+  }
+]
