@@ -1,20 +1,20 @@
 [
   {
-    "question": "The population SD of salaries is about $51,700. About what SD do you expect for the means of random samples of 400 salaries?",
+    "question": "The population SD of salaries is about \\$51,700. About what SD do you expect for the means of random samples of 400 salaries?",
     "type": "multiple_choice",
     "answers": [
       {
-        "answer": "About $51,700",
+        "answer": "About \\$51,700",
         "correct": false,
         "feedback": "That's the spread of individual salaries, not of averages of 400 of them."
       },
       {
-        "answer": "About $2,585",
+        "answer": "About \\$2,585",
         "correct": true,
         "feedback": "Right: 51,700 / sqrt(400) = 51,700 / 20."
       },
       {
-        "answer": "About $129",
+        "answer": "About \\$129",
         "correct": false,
         "feedback": "That divides by 400 instead of by sqrt(400)."
       },
@@ -92,7 +92,7 @@
         "feedback": "Right: z = (x - mean) / SD = 1.5."
       },
       {
-        "answer": "The salary is $1.50 above the mean",
+        "answer": "The salary is \\$1.50 above the mean",
         "correct": false,
         "feedback": "Standard units have no dollar units."
       },
