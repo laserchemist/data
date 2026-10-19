@@ -8,7 +8,8 @@ test = {
           'code': r"""
           >>> 0 <= my_slope <= 20 and 0 <= my_intercept <= 80
           True
-          >>> np.isclose(my_sse, np.sum(line_errors(faithful.column('duration'), faithful.column('wait'), my_slope, my_intercept)**2))
+          >>> ### allow for an SSE copied from the slider title, which is rounded to a whole number
+          >>> np.isclose(my_sse, np.sum(line_errors(faithful.column('duration'), faithful.column('wait'), my_slope, my_intercept)**2), atol=1)
           True
           >>> ### no straight line can beat the least-squares SSE of 9,443
           >>> my_sse >= 9443
