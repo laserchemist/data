@@ -1,13 +1,13 @@
 test = {
-  'name': '',
+  'name': 'q7d',
   'points': 1,
   'suites': [
     {
       'cases': [
         {
           'code': r"""
-          >>> ### Testing answer to open ended question if answer is not there or too short, fails
-          >>> test_open('Question 7. Discussion',notebook,60)==1
+          >>> ### Open-ended: fails if the answer cell is missing or under 60 characters
+          >>> test_open('At the end of each lab, please include a reflection', notebook, 60) == 1
           True
           """,
           'hidden': False,

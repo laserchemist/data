@@ -1,13 +1,14 @@
 test = {
-  'name': '',
+  'name': 'q4.1',
   'points': 1,
   'suites': [
     {
       'cases': [
         {
           'code': r"""
-          >>> ### Look carefully at the slope and multiply by x change of 20 g/mol
-          >>> bp_change > 20 and bp_change < 50
+          >>> np.isclose(faithful_slope, 10.7296, atol=0.001)
+          True
+          >>> np.isclose(faithful_intercept, 33.4744, atol=0.001)
           True
           """,
           'hidden': False,

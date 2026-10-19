@@ -1,17 +1,17 @@
 test = {
-  'name': '',
+  'name': 'q5.3',
   'points': 1,
   'suites': [
     {
       'cases': [
         {
           'code': r"""
-          >>> bootstrap_sampled_SD == 3
+          >>> np.isclose(bp_change, 29.27, atol=0.05)
           True
           """,
           'hidden': False,
           'locked': False
-        },
+        }
       ],
       'scored': True,
       'setup': '',

@@ -1,13 +1,13 @@
 test = {
-  'name': '',
+  'name': 'q1.4',
   'points': 1,
   'suites': [
     {
       'cases': [
         {
           'code': r"""
-          >>> "%.2f" % round(r,2)
-          '0.90'
+          >>> pop_vs_sample == 3
+          True
           """,
           'hidden': False,
           'locked': False

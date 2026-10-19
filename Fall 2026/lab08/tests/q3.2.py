@@ -1,13 +1,12 @@
 test = {
-  'name': '',
+  'name': 'q3.2',
   'points': 1,
   'suites': [
     {
       'cases': [
         {
           'code': r"""
-          >>> ### Testing answer to open ended question if answer is not there or too short, fails
-          >>> test_open('Question 11 discussion.',notebook,60)==1
+          >>> np.isclose(r, 0.9008, atol=0.0005)
           True
           """,
           'hidden': False,
