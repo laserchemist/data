@@ -1,12 +1,12 @@
 test = {
-  'name': 'Question',
+  'name': 'q6d',
   'points': 1,
   'suites': [
     {
       'cases': [
         {
           'code': r"""
-          >>> 10*10**9 <= first_guess_universe_age_years <= 20*10**9
+          >>> test_open('write your reflection on this lab', notebook, 60) == 1
           True
           """,
           'hidden': False,

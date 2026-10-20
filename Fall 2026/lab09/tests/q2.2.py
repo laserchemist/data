@@ -1,13 +1,13 @@
 test = {
-  'name': '',
+  'name': 'q2.2',
   'points': 1,
   'suites': [
     {
       'cases': [
         {
           'code': r"""
-          >>> ### Testing answer to open ended question if answer is not there or too short, fails
-          >>> test_open('Nice work, data astronomer!',notebook,60)==1
+          >>> # the slope of the drivers' regression line, in hours
+          >>> abs(driving_start_time_hours - 1.6838) < 0.001
           True
           """,
           'hidden': False,

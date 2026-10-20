@@ -1,13 +1,12 @@
 test = {
-  'name': '',
+  'name': 'q1.2d',
   'points': 1,
   'suites': [
     {
       'cases': [
         {
           'code': r"""
-          >>> ### Testing answer to open ended question if answer is not there or too short, fails
-          >>> test_open('What was our determined age?',notebook,60)==1
+          >>> test_open('In your own words, describe Hubble', notebook, 60) == 1
           True
           """,
           'hidden': False,

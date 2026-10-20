@@ -1,12 +1,13 @@
 test = {
-  'name': 'Question',
+  'name': 'q3.2',
   'points': 1,
   'suites': [
     {
       'cases': [
         {
           'code': r"""
-          >>> np.round(example_errors.item(0), 2) >= -25
+          >>> # between 10 and 20 billion years -- check your units (years, not billions)
+          >>> 10e9 <= first_guess_universe_age_years <= 20e9
           True
           """,
           'hidden': False,
