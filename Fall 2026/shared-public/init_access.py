@@ -312,7 +312,14 @@ def test_open(text, notebook, length):
                     break
                 if nxt.cell_type == "markdown":
                     answer += _open_answer_text(nxt.source)
-            return 1 if len(answer) >= length else 0
+            if len(answer) >= length:
+                return 1
+            print(f"Found the question in {nb_path}, but your answer there has "
+                  f"{len(answer)} characters (at least {length} needed, not counting "
+                  f"'ANSWER'). Save the notebook (File > Save), then run this check again.")
+            return 0
+    print(f"Couldn't find this question in {nb_path}, the most recently saved "
+          f"notebook in this folder. Save this notebook (File > Save), then run this check again.")
     return 0
 
 
