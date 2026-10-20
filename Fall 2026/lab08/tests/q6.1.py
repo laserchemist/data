@@ -1,18 +1,14 @@
 test = {
-  'name': '',
+  'name': 'q6.1',
   'points': 1,
   'suites': [
     {
       'cases': [
         {
           'code': r"""
-          >>> test = Table.read_table('sf_salaries_2014.csv').select("salary")
-          >>> call = simulate_sample_mean(test, 'salary', 100, 100)
-          >>> len(call) == 100
+          >>> np.isclose(pf_slope, 10.7296, atol=0.001) and np.isclose(pf_intercept, 33.4744, atol=0.001)
           True
-          >>> min(call) > -618
-          True
-          >>> max(call) < 471952.64
+          >>> bool(matches)
           True
           """,
           'hidden': False,

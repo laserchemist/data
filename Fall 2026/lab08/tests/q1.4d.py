@@ -1,17 +1,18 @@
 test = {
-  'name': '',
+  'name': 'q1.4d',
   'points': 1,
   'suites': [
     {
       'cases': [
         {
           'code': r"""
-          >>> pop_vs_sample == 3
+          >>> ### Open-ended: fails if the answer cell is missing or under 60 characters
+          >>> test_open('Question 1.4 Discussion', notebook, 60) == 1
           True
           """,
           'hidden': False,
           'locked': False
-        },
+        }
       ],
       'scored': True,
       'setup': '',

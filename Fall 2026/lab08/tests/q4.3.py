@@ -1,15 +1,13 @@
 test = {
-  'name': '',
+  'name': 'q4.3',
   'points': 1,
   'suites': [
     {
       'cases': [
         {
           'code': r"""
-          >>> (slope*13 - 100)/98 <= 0.5
+          >>> np.isclose(wait_after_4, 76.393, atol=0.01)
           True
-          >>> (182 + intercept*(-4)) / 201 >= 0.3
-          False
           """,
           'hidden': False,
           'locked': False
