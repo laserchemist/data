@@ -74,13 +74,57 @@ user = os.getenv("JUPYTERHUB_USER", "student")
 
 
 # ── open-ended answer checker ──────────────────────────────────────────────────
+def _open_answer_text(source):
+    """Student text in one markdown cell, with course placeholders removed."""
+    import re
+    kept = []
+    for line in source.splitlines():
+        s = line.strip()
+        if s in ("---", "***", "<br>"):
+            continue
+        if re.fullmatch(r"#+\s*save notebook before check\.?", s, re.I):
+            continue
+        kept.append(line)
+    text = "\n".join(kept).strip()
+    text = re.sub(r"<font color=['\"]?blue['\"]?>\s*\*Write your answer here, replacing this text\.\*\s*</font>",
+                  "", text, flags=re.I)
+    for placeholder in ("*Your answer — double-click to edit*", "YOUR FEEDBACK..."):
+        text = text.replace(placeholder, "")
+    text = text.strip()
+    if text.upper().startswith("ANSWER"):
+        text = text[len("ANSWER"):].lstrip(" :.-\n")
+    if text.upper().startswith("HERE"):
+        text = text[len("HERE"):].lstrip(" :.-\n")
+    if text == "...":
+        text = ""
+    return text.strip()
+
+
 def test_open(text, notebook, length):
-    """Check that the markdown cell after the one containing `text`
-    has at least `length` characters."""
+    """Check that the student wrote at least `length` characters in answer to
+    the question in the first cell containing `text`.
+
+    The answer may be in the cell right after the question (the ANSWER
+    placeholder, overwritten or not) or in any markdown cells the student
+    added below it. The answer region ends at the next code cell, the next
+    heading (e.g. "#### Save notebook before check"), or a cell that starts
+    with '---' followed by more text. Placeholders ("ANSWER", "...", etc.)
+    and separators don't count. The original rule (next cell >= length) is
+    kept, so nothing that passed before can fail now."""
     nb_path = max(glob.glob("*.ipynb"), key=os.path.getmtime)
     ntbk = nbf.read(nb_path, nbf.NO_CONVERT)
     for i, cell in enumerate(ntbk.cells):
         if text in cell.source:
-            nxt = ntbk.cells[i + 1]
-            return 1 if len(nxt.source) >= length else 0
+            if i + 1 < len(ntbk.cells) and len(ntbk.cells[i + 1].source) >= length:
+                return 1                      # original rule
+            answer = ""
+            for nxt in ntbk.cells[i + 1:]:
+                src = nxt.source.strip()
+                if nxt.cell_type == "code" or src.startswith("#"):
+                    break
+                if src.startswith("---") and src.lstrip("-").strip():
+                    break
+                if nxt.cell_type == "markdown":
+                    answer += _open_answer_text(nxt.source)
+            return 1 if len(answer) >= length else 0
     return 0
