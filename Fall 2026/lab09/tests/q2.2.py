@@ -6,8 +6,13 @@ test = {
       'cases': [
         {
           'code': r"""
-          >>> # the slope of the drivers' regression line, in hours
-          >>> abs(driving_start_time_hours - 1.6838) < 0.001
+          >>> # driver_slope is item 0 of driver_line
+          >>> abs(driver_slope - 1.68377) < 0.0001
+          True
+          >>> # driver_intercept is item 1 of driver_line
+          >>> abs(driver_intercept - (-1.12137)) < 0.0001
+          True
+          >>> abs(driving_start_time_hours - 1.68377) < 0.0001
           True
           """,
           'hidden': False,
