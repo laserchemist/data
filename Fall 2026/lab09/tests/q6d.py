@@ -1,13 +1,12 @@
 test = {
-  'name': '',
+  'name': 'q6d',
   'points': 1,
   'suites': [
     {
       'cases': [
         {
           'code': r"""
-          >>> ### Testing answer to open ended question if answer is not there or too short, fails
-          >>> test_open('Question 2.',notebook,60)==1
+          >>> test_open('write your reflection on this lab', notebook, 60) == 1
           True
           """,
           'hidden': False,

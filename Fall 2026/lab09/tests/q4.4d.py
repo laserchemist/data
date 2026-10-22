@@ -1,13 +1,12 @@
 test = {
-  'name': '',
+  'name': 'q4.4d',
   'points': 1,
   'suites': [
     {
       'cases': [
         {
           'code': r"""
-          >>> ### Testing answer to open ended question if answer is not there or too short, fails
-          >>> test_open('Question 9 Discussion',notebook,60)==1
+          >>> test_open('Describe the residual plot of the regression line', notebook, 60) == 1
           True
           """,
           'hidden': False,

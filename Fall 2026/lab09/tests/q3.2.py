@@ -1,13 +1,13 @@
 test = {
-  'name': '',
+  'name': 'q3.2',
   'points': 1,
   'suites': [
     {
       'cases': [
         {
           'code': r"""
-          >>> ### Testing answer to open ended question if answer is not there or too short, fails
-          >>> test_open('Nice work, data astronomer!',notebook,60)==1
+          >>> # between 10 and 20 billion years -- check your units (years, not billions)
+          >>> 10e9 <= first_guess_universe_age_years <= 20e9
           True
           """,
           'hidden': False,

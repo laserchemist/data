@@ -1,14 +1,12 @@
 test = {
-  'name': 'Question',
+  'name': 'q1.2d',
   'points': 1,
   'suites': [
     {
       'cases': [
         {
           'code': r"""
-          >>> abs(upper_end - 14.5) < .3
-          True
-          >>> abs(lower_end - 13.5) < .3
+          >>> test_open('In your own words, describe Hubble', notebook, 60) == 1
           True
           """,
           'hidden': False,

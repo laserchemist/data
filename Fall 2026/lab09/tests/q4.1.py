@@ -1,13 +1,17 @@
 test = {
-  'name': '',
+  'name': 'q4.1',
   'points': 1,
   'suites': [
     {
       'cases': [
         {
           'code': r"""
-          >>> ### Testing answer to open ended question if answer is not there or too short, fails
-          >>> test_open('What was our determined age?',notebook,60)==1
+          >>> len(example_errors) == 156
+          True
+          >>> # error = actual - predicted (check the sign)
+          >>> abs(example_errors.item(0) - (-22.43)) < 0.01
+          True
+          >>> abs(np.mean(example_errors) - (-15.41)) < 0.01
           True
           """,
           'hidden': False,
