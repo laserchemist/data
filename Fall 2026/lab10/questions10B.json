@@ -1,0 +1,132 @@
+[
+  {
+    "question": "Why should features be converted to standard units before computing kNN distances?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "So that features with large numbers don't dominate the distance",
+        "correct": true,
+        "feedback": "Correct: in standard units, every feature is measured in SDs and counts on equal terms."
+      },
+      {
+        "answer": "Because kNN only works with negative numbers",
+        "correct": false,
+        "feedback": "Standard units can be positive or negative, but that's not the reason."
+      },
+      {
+        "answer": "To make the target easier to predict",
+        "correct": false,
+        "feedback": "We scale the features, not the target."
+      },
+      {
+        "answer": "Because standard units remove outliers",
+        "correct": false,
+        "feedback": "Outliers are still present, just measured in SDs."
+      }
+    ]
+  },
+  {
+    "question": "When standardizing the validation and test sets, whose mean and SD should we use?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "The training set's",
+        "correct": true,
+        "feedback": "Correct: using the held-out sets' own statistics would leak information from them into the model."
+      },
+      {
+        "answer": "Each set's own mean and SD",
+        "correct": false,
+        "feedback": "That lets information from the held-out data leak into the model."
+      },
+      {
+        "answer": "The test set's",
+        "correct": false,
+        "feedback": "The test set must stay hidden until the very end."
+      },
+      {
+        "answer": "It makes no difference",
+        "correct": false,
+        "feedback": "It can matter, and the training set is the honest choice."
+      }
+    ]
+  },
+  {
+    "question": "What is the validation set for?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Comparing choices such as the value of k",
+        "correct": true,
+        "feedback": "Correct: the validation set is the practice exam."
+      },
+      {
+        "answer": "Providing the neighbors that make predictions",
+        "correct": false,
+        "feedback": "That is the training set."
+      },
+      {
+        "answer": "Reporting the final performance of the chosen model",
+        "correct": false,
+        "feedback": "That is the job of the test set, used once."
+      },
+      {
+        "answer": "Replacing the test set entirely",
+        "correct": false,
+        "feedback": "We still need an untouched test set for an honest final score."
+      }
+    ]
+  },
+  {
+    "question": "Validation RMSE is large when k = 1, smallest around k = 9, and large again at k = 25. Why does a very large k do poorly?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Each prediction averages over many molecules that aren't very similar",
+        "correct": true,
+        "feedback": "Correct: with too many neighbors, the prediction drifts toward the overall average."
+      },
+      {
+        "answer": "Large k values are not allowed in kNN",
+        "correct": false,
+        "feedback": "They are allowed, they just aren't always helpful."
+      },
+      {
+        "answer": "The distances become negative",
+        "correct": false,
+        "feedback": "Distances are never negative."
+      },
+      {
+        "answer": "The training set gets smaller",
+        "correct": false,
+        "feedback": "k doesn't change the training set."
+      }
+    ]
+  },
+  {
+    "question": "A kNN classifier labels acids 'stronger' or 'weaker'. It gets 72% of test molecules right, and always guessing 'stronger' gets 62% right. Which statement is best?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "kNN beats the baseline, but by a modest margin",
+        "correct": true,
+        "feedback": "Correct: always compare with a baseline before deciding a model is good."
+      },
+      {
+        "answer": "72% is high, so the classifier is excellent",
+        "correct": false,
+        "feedback": "Compared with the 62% baseline, the improvement is modest."
+      },
+      {
+        "answer": "The classifier is worse than guessing",
+        "correct": false,
+        "feedback": "72% is higher than 62%."
+      },
+      {
+        "answer": "Accuracy can't be compared between models",
+        "correct": false,
+        "feedback": "Comparing accuracy on the same test set is exactly how we compare classifiers."
+      }
+    ]
+  }
+]

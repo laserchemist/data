@@ -1,0 +1,132 @@
+[
+  {
+    "question": "What is the Euclidean distance between the points (1, 2) and (4, 6)?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "5",
+        "correct": true,
+        "feedback": "Correct: sqrt(3² + 4²) = sqrt(25) = 5."
+      },
+      {
+        "answer": "7",
+        "correct": false,
+        "feedback": "That adds the differences 3 + 4. Square them, add, then take the square root."
+      },
+      {
+        "answer": "25",
+        "correct": false,
+        "feedback": "That is the squared distance. Take the square root."
+      },
+      {
+        "answer": "3.5",
+        "correct": false,
+        "feedback": "Not quite. Find the difference in each coordinate first."
+      }
+    ]
+  },
+  {
+    "question": "In kNN regression, how is the prediction for a new molecule made?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "The average target value of its k nearest training molecules",
+        "correct": true,
+        "feedback": "Correct: neighbors are averaged for a numerical target."
+      },
+      {
+        "answer": "The target value of the single farthest training molecule",
+        "correct": false,
+        "feedback": "kNN uses the nearest molecules, not the farthest."
+      },
+      {
+        "answer": "A straight line fit to all of the training data",
+        "correct": false,
+        "feedback": "That is the regression line from Lab 8."
+      },
+      {
+        "answer": "The average target value of the whole training set",
+        "correct": false,
+        "feedback": "That ignores the features entirely. It is a useful baseline, not kNN."
+      }
+    ]
+  },
+  {
+    "question": "Why do we split the data into a training set and a test set?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "To judge predictions on molecules the model has not seen",
+        "correct": true,
+        "feedback": "Correct: grading a model on data it already knows makes it look better than it is."
+      },
+      {
+        "answer": "To make the data set larger",
+        "correct": false,
+        "feedback": "Splitting does not add data."
+      },
+      {
+        "answer": "Because kNN can only handle small tables",
+        "correct": false,
+        "feedback": "kNN can handle large tables; it just gets slower."
+      },
+      {
+        "answer": "To remove outliers from the data",
+        "correct": false,
+        "feedback": "A random split doesn't remove anything."
+      }
+    ]
+  },
+  {
+    "question": "Three alcohols in the training set have the same molecular weight as a test alcohol but different boiling points. With MW as the only feature, what happens?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "They are all at distance 0, so kNN can't tell them apart",
+        "correct": true,
+        "feedback": "Correct: a feature that differs between them, such as degree, is needed to tell them apart."
+      },
+      {
+        "answer": "kNN automatically uses their 3D shape",
+        "correct": false,
+        "feedback": "kNN only uses the features we give it."
+      },
+      {
+        "answer": "kNN predicts the highest of the three boiling points",
+        "correct": false,
+        "feedback": "kNN averages the neighbors' values."
+      },
+      {
+        "answer": "The distance between them is undefined",
+        "correct": false,
+        "feedback": "The distance is 0, which is perfectly well defined."
+      }
+    ]
+  },
+  {
+    "question": "A model has test RMSE = 15 K for boiling point. What does this tell you?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Its predictions are typically off by roughly 15 K",
+        "correct": true,
+        "feedback": "Correct: RMSE has the units of the target and measures a typical error size."
+      },
+      {
+        "answer": "Exactly 15 test molecules were predicted wrongly",
+        "correct": false,
+        "feedback": "RMSE is not a count."
+      },
+      {
+        "answer": "Every prediction is off by exactly 15 K",
+        "correct": false,
+        "feedback": "Some errors are bigger and some smaller; 15 K is a typical size."
+      },
+      {
+        "answer": "The model is 15% accurate",
+        "correct": false,
+        "feedback": "RMSE is measured in kelvin, not percent."
+      }
+    ]
+  }
+]

@@ -1,0 +1,158 @@
+[
+  {
+    "question": "Which of these is the <b>target</b> in the pKa part of this lab?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "The SMILES string",
+        "correct": false,
+        "feedback": "SMILES describes the structure but isn't used in the distance here."
+      },
+      {
+        "answer": "Bond Order",
+        "correct": false,
+        "feedback": "Bond Order is one of the features."
+      },
+      {
+        "answer": "SASA",
+        "correct": false,
+        "feedback": "SASA is one of the features."
+      },
+      {
+        "answer": "pKa",
+        "correct": true,
+        "feedback": "Correct: it is the value we want to predict."
+      }
+    ]
+  },
+  {
+    "question": "With k = 3, the three nearest training molecules have pKa values 4.0, 5.0 and 9.0. What does kNN regression predict?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "9.0",
+        "correct": false,
+        "feedback": "That is just the largest neighbor."
+      },
+      {
+        "answer": "5.0",
+        "correct": false,
+        "feedback": "That is the median. kNN regression uses the mean."
+      },
+      {
+        "answer": "4.0",
+        "correct": false,
+        "feedback": "That is just the nearest neighbor (k = 1)."
+      },
+      {
+        "answer": "6.0",
+        "correct": true,
+        "feedback": "Correct: (4.0 + 5.0 + 9.0) / 3 = 6.0."
+      }
+    ]
+  },
+  {
+    "question": "A student tries 20 values of k and reports the <b>test</b> RMSE of the best one. What is wrong?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "k must always be 5",
+        "correct": false,
+        "feedback": "There is no single correct k; it depends on the data."
+      },
+      {
+        "answer": "The test set was used to make a choice, so the reported error is likely too optimistic",
+        "correct": true,
+        "feedback": "Correct: choices belong on the validation set; the test set is used once."
+      },
+      {
+        "answer": "Nothing — trying more values is always better",
+        "correct": false,
+        "feedback": "Trying values is fine, but on the validation set."
+      },
+      {
+        "answer": "RMSE can't be computed on a test set",
+        "correct": false,
+        "feedback": "It can; the issue is using it for choosing."
+      }
+    ]
+  },
+  {
+    "question": "Feature A has an SD of 400 and feature B has an SD of 0.05. Without scaling, what happens to the distance?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "The distance can't be computed",
+        "correct": false,
+        "feedback": "It can, it's just dominated by one feature."
+      },
+      {
+        "answer": "It depends almost entirely on feature B",
+        "correct": false,
+        "feedback": "B's differences are tiny, so they barely change the distance."
+      },
+      {
+        "answer": "Both features count equally",
+        "correct": false,
+        "feedback": "Only after converting to standard units."
+      },
+      {
+        "answer": "It depends almost entirely on feature A",
+        "correct": true,
+        "feedback": "Correct: differences in A are thousands of times larger."
+      }
+    ]
+  },
+  {
+    "question": "What is the main difference between kNN <b>classification</b> and kNN <b>regression</b>?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "Classification doesn't use distances",
+        "correct": false,
+        "feedback": "Both use the same distances."
+      },
+      {
+        "answer": "Classification only works with one feature",
+        "correct": false,
+        "feedback": "It works with any number of features."
+      },
+      {
+        "answer": "Classification takes a majority vote of the neighbors; regression averages them",
+        "correct": true,
+        "feedback": "Correct: the neighbor search is identical, only the final step differs."
+      },
+      {
+        "answer": "Regression needs a validation set but classification doesn't",
+        "correct": false,
+        "feedback": "Both benefit from a validation set for choosing k."
+      }
+    ]
+  },
+  {
+    "question": "Why might kNN predict pKa only modestly better than guessing the average?",
+    "type": "multiple_choice",
+    "answers": [
+      {
+        "answer": "kNN only works for boiling points",
+        "correct": false,
+        "feedback": "kNN works for any numerical target."
+      },
+      {
+        "answer": "pKa can't be predicted by any method",
+        "correct": false,
+        "feedback": "Better models with more features do much better; see the Raddi & Voelz paper."
+      },
+      {
+        "answer": "The five features capture only part of what controls acidity",
+        "correct": true,
+        "feedback": "Correct: acidity depends on details of the structure that these few numbers may not capture."
+      },
+      {
+        "answer": "The training set is too similar to the test set",
+        "correct": false,
+        "feedback": "If anything, similarity would help."
+      }
+    ]
+  }
+]
