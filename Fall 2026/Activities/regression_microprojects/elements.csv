@@ -1,0 +1,84 @@
+symbol,name,atomic number,period,group,category,electronegativity,ionization energy (kJ/mol)
+H,Hydrogen,1,1,1,diatomic nonmetal,2.2,1312
+Li,Lithium,3,2,1,alkali metal,0.98,520.2
+Be,Beryllium,4,2,2,alkaline earth metal,1.57,899.5
+B,Boron,5,2,13,metalloid,2.04,800.6
+C,Carbon,6,2,14,polyatomic nonmetal,2.55,1086.5
+N,Nitrogen,7,2,15,diatomic nonmetal,3.04,1402.3
+O,Oxygen,8,2,16,diatomic nonmetal,3.44,1313.9
+F,Fluorine,9,2,17,diatomic nonmetal,3.98,1681
+Na,Sodium,11,3,1,alkali metal,0.93,495.8
+Mg,Magnesium,12,3,2,alkaline earth metal,1.31,737.7
+Al,Aluminium,13,3,13,post-transition metal,1.61,577.5
+Si,Silicon,14,3,14,metalloid,1.9,786.5
+P,Phosphorus,15,3,15,polyatomic nonmetal,2.19,1011.8
+S,Sulfur,16,3,16,polyatomic nonmetal,2.58,999.6
+Cl,Chlorine,17,3,17,diatomic nonmetal,3.16,1251.2
+K,Potassium,19,4,1,alkali metal,0.82,418.8
+Ca,Calcium,20,4,2,alkaline earth metal,1,589.8
+Sc,Scandium,21,4,3,transition metal,1.36,633.1
+Ti,Titanium,22,4,4,transition metal,1.54,658.8
+V,Vanadium,23,4,5,transition metal,1.63,650.9
+Cr,Chromium,24,4,6,transition metal,1.66,652.9
+Mn,Manganese,25,4,7,transition metal,1.55,717.3
+Fe,Iron,26,4,8,transition metal,1.83,762.5
+Co,Cobalt,27,4,9,transition metal,1.88,760.4
+Ni,Nickel,28,4,10,transition metal,1.91,737.1
+Cu,Copper,29,4,11,transition metal,1.9,745.5
+Zn,Zinc,30,4,12,transition metal,1.65,906.4
+Ga,Gallium,31,4,13,post-transition metal,1.81,578.8
+Ge,Germanium,32,4,14,metalloid,2.01,762
+As,Arsenic,33,4,15,metalloid,2.18,947
+Se,Selenium,34,4,16,polyatomic nonmetal,2.55,941
+Br,Bromine,35,4,17,diatomic nonmetal,2.96,1139.9
+Kr,Krypton,36,4,18,noble gas,3,1350.8
+Rb,Rubidium,37,5,1,alkali metal,0.82,403
+Sr,Strontium,38,5,2,alkaline earth metal,0.95,549.5
+Y,Yttrium,39,5,3,transition metal,1.22,600
+Zr,Zirconium,40,5,4,transition metal,1.33,640.1
+Nb,Niobium,41,5,5,transition metal,1.6,652.1
+Mo,Molybdenum,42,5,6,transition metal,2.16,684.3
+Tc,Technetium,43,5,7,transition metal,1.9,702
+Ru,Ruthenium,44,5,8,transition metal,2.2,710.2
+Rh,Rhodium,45,5,9,transition metal,2.28,719.7
+Pd,Palladium,46,5,10,transition metal,2.2,804.4
+Ag,Silver,47,5,11,transition metal,1.93,731
+Cd,Cadmium,48,5,12,transition metal,1.69,867.8
+In,Indium,49,5,13,post-transition metal,1.78,558.3
+Sn,Tin,50,5,14,post-transition metal,1.96,708.6
+Sb,Antimony,51,5,15,metalloid,2.05,834
+Te,Tellurium,52,5,16,metalloid,2.1,869.3
+I,Iodine,53,5,17,diatomic nonmetal,2.66,1008.4
+Xe,Xenon,54,5,18,noble gas,2.6,1170.4
+Cs,Cesium,55,6,1,alkali metal,0.79,375.7
+Ba,Barium,56,6,2,alkaline earth metal,0.89,502.9
+La,Lanthanum,57,6,3,lanthanide,1.1,538.1
+Ce,Cerium,58,6,3,lanthanide,1.12,534.4
+Pr,Praseodymium,59,6,3,lanthanide,1.13,527
+Nd,Neodymium,60,6,3,lanthanide,1.14,533.1
+Pm,Promethium,61,6,3,lanthanide,1.13,540
+Sm,Samarium,62,6,3,lanthanide,1.17,544.5
+Eu,Europium,63,6,3,lanthanide,1.2,547.1
+Gd,Gadolinium,64,6,3,lanthanide,1.2,593.4
+Tb,Terbium,65,6,3,lanthanide,1.1,565.8
+Dy,Dysprosium,66,6,3,lanthanide,1.22,573
+Ho,Holmium,67,6,3,lanthanide,1.23,581
+Er,Erbium,68,6,3,lanthanide,1.24,589.3
+Tm,Thulium,69,6,3,lanthanide,1.25,596.7
+Yb,Ytterbium,70,6,3,lanthanide,1.1,603.4
+Lu,Lutetium,71,6,3,lanthanide,1.27,523.5
+Hf,Hafnium,72,6,4,transition metal,1.3,658.5
+Ta,Tantalum,73,6,5,transition metal,1.5,761
+W,Tungsten,74,6,6,transition metal,2.36,770
+Re,Rhenium,75,6,7,transition metal,1.9,760
+Os,Osmium,76,6,8,transition metal,2.2,840
+Ir,Iridium,77,6,9,transition metal,2.2,880
+Pt,Platinum,78,6,10,transition metal,2.28,870
+Au,Gold,79,6,11,transition metal,2.54,890.1
+Hg,Mercury,80,6,12,transition metal,2,1007.1
+Tl,Thallium,81,6,13,post-transition metal,1.62,589.4
+Pb,Lead,82,6,14,post-transition metal,1.87,715.6
+Bi,Bismuth,83,6,15,post-transition metal,2.02,703
+Po,Polonium,84,6,16,post-transition metal,2,812.1
+At,Astatine,85,6,17,metalloid,2.2,899.003
+Rn,Radon,86,6,18,noble gas,2.2,1037
