@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Regression Microprojects</title>
+  <link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="../../../favicon-32.png">
+  <link rel="icon" type="image/x-icon" href="../../../favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="../../../favicon-180.png">
+  <style>
+    * { box-sizing: border-box; }
+    :root {
+      --cherry: #A41E35;
+      --cherry-dark: #7A1626;
+      --black: #222222;
+      --silver: #A7A8AA;
+      --silver-light: #E7E7E8;
+      --white: #FFFFFF;
+    }
+    html { -webkit-text-size-adjust: 100%; overflow-x: hidden; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      max-width: 960px; width: 100%; margin: 0 auto; padding: 24px 20px 48px;
+      line-height: 1.5; background: var(--white); color: var(--black); overflow-x: hidden;
+    }
+    a { color: inherit; }
+    hr { border: none; border-top: 1px solid var(--silver-light); margin: 24px 0; }
+    ol { padding-left: 1.4em; }
+    li { margin: 6px 0; }
+    code { background: rgba(255,255,255,0.12); padding: 1px 6px; border-radius: 4px; }
+    .nav-tabs { margin: 4px 0 20px; }
+    .nav-tab {
+      display: inline-block; padding: 8px 18px; margin: 4px 6px 4px 0; border-radius: 999px;
+      font-weight: 700; font-size: 0.95em; text-decoration: none; border: 1px solid var(--silver);
+    }
+    .nav-tab.active { background: var(--cherry); color: var(--white); }
+    .nav-tab.inactive { background: transparent; color: var(--silver-light); }
+    .lab-grid { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0; }
+    .lab-btn {
+      flex: 1 1 260px; max-width: 420px; min-width: 0; width: 100%;
+      background: var(--cherry); color: var(--white); border-radius: 10px; padding: 16px 24px;
+      box-shadow: 2px 2px 6px rgba(0,0,0,0.35); border: 1px solid var(--silver);
+      text-decoration: none; display: block;
+    }
+    .lab-btn.instructor { background: #3a3a3a; }
+    .lab-btn .lab-title { font-size: 1.25em; font-weight: 700; }
+    .lab-btn .lab-desc { font-size: 1.0em; opacity: 0.92; }
+    @media (max-width: 420px) { .lab-btn { flex-basis: 100%; } }
+  </style>
+</head>
+<body>
+<div style="background:var(--black);color:var(--white);padding:24px 28px;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.25);">
+<div style="background:linear-gradient(135deg,var(--cherry-dark),var(--cherry));border-radius:14px;padding:28px 32px;margin-bottom:18px;box-shadow:0 4px 24px rgba(164,30,53,0.35);border:1px solid var(--silver);">
+  <img src="../../../Temple_flag_morn.png" alt="Temple University" style="width:140px;float:right;margin:0 0 8px 16px;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,0.4);"/>
+  <span style="font-size:2.2em;font-weight:900;color:var(--white);display:block;line-height:1.2;">📈 Regression Microprojects</span>
+  <span style="color:var(--silver-light);font-size:1.15em;font-weight:600;text-shadow:0 1px 4px rgba(0,0,0,0.5);">Put your Lab 8 regression toolbox to work on real data</span>
+</div>
+
+<div class="nav-tabs">
+  <a class="nav-tab inactive" href="../../../index.html">🏠 Labs</a>
+  <a class="nav-tab active" href="./index.html">📈 Microprojects</a>
+</div>
+
+<hr style="border-top:1px solid var(--silver);">
+
+<h2 style="color:var(--silver-light);">🧭 How it works</h2>
+<ol>
+  <li>Your instructor randomly assigns you to <strong>one</strong> microproject. Open <strong>only your assigned notebook</strong> below.</li>
+  <li>Run the first cells, set <code>name</code>, and run <code>my_project(name)</code> to confirm your assignment.</li>
+  <li>Paste in your Lab 8 toolbox, explore the data, fit and check your line, and dig into the twist.</li>
+  <li>Make one publication-quality figure and send it to the class gallery with <code>submit_plot(...)</code>.</li>
+</ol>
+<p><em>Click a button to open the notebook on the hub.</em></p>
+
+<h2 style="color:var(--silver-light);">🧪 Student Microprojects</h2>
+<div class="lab-grid">
+<a class="lab-btn" href="https://temple.2i2c.cloud/hub/user-redirect/git-pull?repo=https%3A%2F%2Fgithub.com%2Flaserchemist%2Fdata&urlpath=lab%2Ftree%2Fdata%2FFall%202026%2FActivities%2Fregression_microprojects%2Fmp1_co2_mauna_loa.ipynb&branch=main" target="_blank"><span class="lab-title">🌍 Microproject 1</span><br><span class="lab-desc">Carbon Dioxide at Mauna Loa — how fast is CO₂ rising, and is it speeding up?</span></a>
+<a class="lab-btn" href="https://temple.2i2c.cloud/hub/user-redirect/git-pull?repo=https%3A%2F%2Fgithub.com%2Flaserchemist%2Fdata&urlpath=lab%2Ftree%2Fdata%2FFall%202026%2FActivities%2Fregression_microprojects%2Fmp2_galton_heights.ipynb&branch=main" target="_blank"><span class="lab-title">📏 Microproject 2</span><br><span class="lab-desc">Galton's Heights — predicting children's heights and regression to the mean</span></a>
+<a class="lab-btn" href="https://temple.2i2c.cloud/hub/user-redirect/git-pull?repo=https%3A%2F%2Fgithub.com%2Flaserchemist%2Fdata&urlpath=lab%2Ftree%2Fdata%2FFall%202026%2FActivities%2Fregression_microprojects%2Fmp3_births.ipynb&branch=main" target="_blank"><span class="lab-title">👶 Microproject 3</span><br><span class="lab-desc">Birth Weight &amp; Gestation — and the effect of maternal smoking</span></a>
+<a class="lab-btn" href="https://temple.2i2c.cloud/hub/user-redirect/git-pull?repo=https%3A%2F%2Fgithub.com%2Flaserchemist%2Fdata&urlpath=lab%2Ftree%2Fdata%2FFall%202026%2FActivities%2Fregression_microprojects%2Fmp4_penguins.ipynb&branch=main" target="_blank"><span class="lab-title">🐧 Microproject 4</span><br><span class="lab-desc">Palmer Penguins — one line or three? Flipper length vs body mass</span></a>
+<a class="lab-btn" href="https://temple.2i2c.cloud/hub/user-redirect/git-pull?repo=https%3A%2F%2Fgithub.com%2Flaserchemist%2Fdata&urlpath=lab%2Ftree%2Fdata%2FFall%202026%2FActivities%2Fregression_microprojects%2Fmp5_periodic_trends.ipynb&branch=main" target="_blank"><span class="lab-title">⚛️ Microproject 5</span><br><span class="lab-desc">Periodic Trends — electronegativity vs first ionization energy</span></a>
+</div>
+
+<hr>
+<h2 style="color:var(--silver-light);">🧑‍🏫 Instructor</h2>
+<div class="lab-grid">
+<a class="lab-btn instructor" href="https://temple.2i2c.cloud/hub/user-redirect/git-pull?repo=https%3A%2F%2Fgithub.com%2Flaserchemist%2Fdata&urlpath=lab%2Ftree%2Fdata%2FFall%202026%2FActivities%2Fregression_microprojects%2Finstructor_demo_auto_mpg.ipynb&branch=main" target="_blank"><span class="lab-title">🚗 Instructor Demo</span><br><span class="lab-desc">Car weight &amp; fuel economy — ten regression tricks, fully worked</span></a>
+<a class="lab-btn instructor" href="https://temple.2i2c.cloud/hub/user-redirect/git-pull?repo=https%3A%2F%2Fgithub.com%2Flaserchemist%2Fdata&urlpath=lab%2Ftree%2Fdata%2FFall%202026%2FActivities%2Fregression_microprojects%2Finstructor_microprojects.ipynb&branch=main" target="_blank"><span class="lab-title">🧑‍🏫 Instructor Dashboard</span><br><span class="lab-desc">Random assignment from the class list &amp; the live submission gallery</span></a>
+</div>
+<p style="color:var(--silver);font-size:0.9em;">Review: <a href="https://inferentialthinking.com/chapters/15/Prediction.html" target="_blank">Inferential Thinking, Chapter 15 — Prediction</a></p>
+</div>
+</body>
+</html>
