@@ -5,9 +5,10 @@ Five short, lightly scaffolded notebooks where students apply their Lab 8 regres
 to a shared class gallery.
 
 ## Install on the hub
-1. Copy `shared-public/microproject_tools.py` to `/home/jovyan/shared-public/` (next to `init.py`).
+1. `microproject_tools.py` lives in the repo at `Fall 2026/shared-public/` (next to `init.py`); nbgitpuller delivers it.
+   Submissions and assignments are written to `/home/jovyan/shared-public/microprojects/` on the hub (created automatically).
 2. Distribute the five `mp*.ipynb` notebooks **with their CSV files in the same folder** (like the labs).
-3. Keep `instructor_microprojects.ipynb`, `class_list.csv`, and `keys/` out of the student distribution.
+3. Keep the answer keys (`keys/`) out of the public repo. Never commit a real roster: `.gitignore` here blocks `class_*.csv`.
 
 ## Instructor demo (run before students start)
 `instructor_demo_auto_mpg.ipynb` (with `auto_mpg.csv` and `anscombe.csv`) is a fully worked example on car
@@ -17,11 +18,13 @@ guessing r, unit choice, swapped x/y, regression to the mean, error plots and tr
 figure to the gallery under the id `DEMO`.
 
 ## In class
-1. Instructor: put the roster in `class_list.csv` (`first_name`, optional `last_name`), run
-   `instructor_microprojects.ipynb` Parts 1–2 → writes `shared-public/microprojects/assignments.csv`.
-2. Students: open their notebook, set `name`, run `my_project(name)` to confirm, work Parts 1–7,
+1. Instructor: upload one roster per class to this folder **on the hub**, named `class_<section>.csv`
+   (e.g. `class_03.csv`, `class_08.csv`). Each is read in its exported layout (registrar export with no header,
+   Canvas gradebook export, or a First/Last/Username table). Run `instructor_microprojects.ipynb` Parts 1–2:
+   each class is dealt separately into `shared-public/microprojects/assignments.csv`; classes already saved keep their groups.
+2. Students: open their notebook, set `name`, run `my_project(name)` to confirm (matched by hub login, with name as fallback), work Parts 1–7,
    then `submit_plot(...)` → `shared-public/microprojects/submissions/MP#_FirstL.png` + `.json`.
-3. Instructor: rerun Part 3 for the live status table and gallery; Part 4 for discussion.
+3. Instructor: rerun Part 3 for the live status table and gallery (set `show_class` to one class); Part 4 for discussion.
 
 | Notebook | Data (file) | Source |
 |---|---|---|
