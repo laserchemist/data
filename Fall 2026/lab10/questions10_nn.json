@@ -1,0 +1,207 @@
+[
+ {
+  "question": "A neuron multiplies each input by a weight and adds a bias. What happens next?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "The sum passes through an activation function",
+    "correct": true,
+    "feedback": "Right! Weighted sum + bias, then activation. The activation is what lets a neuron bend."
+   },
+   {
+    "answer": "The neuron keeps only its largest input",
+    "correct": false,
+    "feedback": "Not quite. Every input contributes through its weight."
+   },
+   {
+    "answer": "The neuron compares its sum to the test set",
+    "correct": false,
+    "feedback": "The test set is never used while computing or training a neuron."
+   },
+   {
+    "answer": "Nothing. The weighted sum is the output",
+    "correct": false,
+    "feedback": "That's the 'identity' activation, which is just a regression line. Usually an activation comes next."
+   }
+  ]
+ },
+ {
+  "question": "Why does a network with activation='identity' draw a straight line, no matter how many neurons it has?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "Weighted sums of weighted sums are still one weighted sum",
+    "correct": true,
+    "feedback": "Exactly. Without a curved activation, stacking neurons can never bend the line."
+   },
+   {
+    "answer": "It needs more training steps (max_iter)",
+    "correct": false,
+    "feedback": "More steps won't help: the shape itself is limited to a straight line."
+   },
+   {
+    "answer": "The random seed forces it to be straight",
+    "correct": false,
+    "feedback": "The seed only sets the starting weights."
+   },
+   {
+    "answer": "sklearn doesn't allow identity networks to bend on purpose",
+    "correct": false,
+    "feedback": "It's math, not a rule: identity neurons are linear, so the sum is linear."
+   }
+  ]
+ },
+ {
+  "question": "The alkane regression line's errors formed an upside-down U. What does that pattern tell you?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "A straight line is the wrong shape for this data",
+    "correct": true,
+    "feedback": "Yes. Errors with a pattern (like a U) mean the relationship is curved."
+   },
+   {
+    "answer": "The line fits perfectly",
+    "correct": false,
+    "feedback": "A perfect fit would have errors scattered randomly around zero (or all zero)."
+   },
+   {
+    "answer": "There are too few alkanes to fit a line",
+    "correct": false,
+    "feedback": "Fifteen points is plenty for a line. The issue is the shape of the trend."
+   },
+   {
+    "answer": "The test set was chosen badly",
+    "correct": false,
+    "feedback": "This pattern is in the training errors: it's about the model's shape."
+   }
+  ]
+ },
+ {
+  "question": "For the alcohols, a neural network using only MW did no better than the regression line. What is the best explanation?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "Molecules with the same MW have different boiling points, so MW alone lacks the information",
+    "correct": true,
+    "feedback": "Right. No curve through MW alone can tell those molecules apart. More features helped."
+   },
+   {
+    "answer": "The network needed many more neurons",
+    "correct": false,
+    "feedback": "More neurons can't create information that isn't in the input."
+   },
+   {
+    "answer": "Neural networks never beat regression lines",
+    "correct": false,
+    "feedback": "The alkane example showed a big win when the trend was curved."
+   },
+   {
+    "answer": "tanh is the wrong activation for chemistry",
+    "correct": false,
+    "feedback": "tanh worked very well for the alkanes."
+   }
+  ]
+ },
+ {
+  "question": "A network with 1 input, one hidden layer of 4 neurons, and 1 output (like the alkane network). How many weights AND biases does it learn?",
+  "type": "numeric",
+  "precision": 0,
+  "answers": [
+   {
+    "type": "value",
+    "value": 13,
+    "correct": true,
+    "feedback": "Correct: 1\u00d74 + 4\u00d71 = 8 weights, plus 4 + 1 = 5 biases = 13."
+   },
+   {
+    "type": "value",
+    "value": 8,
+    "correct": false,
+    "feedback": "That's just the weights. Add one bias for each hidden neuron and one for the output."
+   },
+   {
+    "type": "default",
+    "feedback": "Count weights between layers (inputs \u00d7 neurons), then add one bias per neuron, including the output."
+   }
+  ]
+ },
+ {
+  "question": "With features MW, degree, cyclic and hidden_layer_sizes=(8,), what is the shape of model.coefs_[0]?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "(3, 8)",
+    "correct": true,
+    "feedback": "Yes: rows = 3 input features, columns = 8 hidden neurons."
+   },
+   {
+    "answer": "(8, 3)",
+    "correct": false,
+    "feedback": "Backwards. sklearn uses rows = 'from', columns = 'to'."
+   },
+   {
+    "answer": "(8, 1)",
+    "correct": false,
+    "feedback": "That's coefs_[1]: 8 hidden neurons into 1 output."
+   },
+   {
+    "answer": "(3, 1)",
+    "correct": false,
+    "feedback": "The inputs connect to the 8 hidden neurons, not straight to the output."
+   }
+  ]
+ },
+ {
+  "question": "In a weight heatmap, the cell in row 'cyclic', column 'n2' is dark red. What does it mean?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "Having a ring strongly increases the signal into neuron 2",
+    "correct": true,
+    "feedback": "Right. Red = large positive weight."
+   },
+   {
+    "answer": "Having a ring strongly decreases the signal into neuron 2",
+    "correct": false,
+    "feedback": "Blue means negative; red means positive."
+   },
+   {
+    "answer": "Neuron 2 ignores rings",
+    "correct": false,
+    "feedback": "Ignoring shows as white (weight near zero)."
+   },
+   {
+    "answer": "Ring alcohols always have the highest boiling points",
+    "correct": false,
+    "feedback": "One weight describes one connection, not a final conclusion about boiling points."
+   }
+  ]
+ },
+ {
+  "question": "A model has train RMSE = 3 K and test RMSE = 20 K. What best describes it?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "It overfit: it memorized the training molecules",
+    "correct": true,
+    "feedback": "Correct. A big train-test gap is the classic sign of overfitting."
+   },
+   {
+    "answer": "It's excellent because the training error is tiny",
+    "correct": false,
+    "feedback": "Only the test error tells you how it does on new molecules."
+   },
+   {
+    "answer": "It underfit: it's too simple",
+    "correct": false,
+    "feedback": "An underfit model has high error on BOTH training and test sets."
+   },
+   {
+    "answer": "The two RMSEs should always be equal",
+    "correct": false,
+    "feedback": "Test error is usually a bit higher; a big gap is the warning sign."
+   }
+  ]
+ }
+]
