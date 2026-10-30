@@ -261,3 +261,81 @@ def submit_plot(fig, name, project, r, slope, intercept, caption=''):
     for p in problems:
         print('   Tip:', p)
     return None
+
+
+# ----------------------------------------------------------------------------- reflections
+REFLECT_DIR = os.path.join(MICRO_ROOT, 'reflections')
+_PLACEHOLDERS = {'', 'answer', '...', 'ellipsis'}
+
+
+def _my_notebook(project=None):
+    "Path of the student's microproject notebook (the one they are running, if Jupyter says so)."
+    session = os.environ.get('JPY_SESSION_NAME', '')        # set by JupyterLab to the running notebook
+    if session.endswith('.ipynb') and os.path.exists(session):
+        return session
+    candidates = sorted(f for f in os.listdir(os.getcwd()) if re.match(r'mp[1-5]_.*\.ipynb$', f)
+                        and 'KEY' not in f)
+    if project:
+        wanted = PROJECTS.get(str(project).upper(), (None, None))[1]
+        if wanted in candidates:
+            return os.path.join(os.getcwd(), wanted)
+    return os.path.join(os.getcwd(), candidates[0]) if len(candidates) == 1 else None
+
+
+def _reflection_from_notebook(path):
+    "The text the student wrote in the cell under the '8. Reflection' heading."
+    with open(path, encoding='utf-8') as f:
+        cells = json.load(f).get('cells', [])
+    for i, c in enumerate(cells):
+        if c.get('cell_type') == 'markdown' and ''.join(c.get('source', '')).lstrip().startswith('## 8. Reflection'):
+            for nxt in cells[i + 1:]:
+                if nxt.get('cell_type') == 'markdown':
+                    text = ''.join(nxt.get('source', '')).strip()
+                    return '' if text.lower().strip('*_ ') in _PLACEHOLDERS or text == '---' else text
+    return ''
+
+
+def submit_reflection(name, text=None, project=None):
+    """Send your reflection to the class gallery.
+    Save your notebook first (💾 or Ctrl+S): the reflection is read from the saved file.
+    You can also pass the text directly: submit_reflection(name, text='...')."""
+    first, last_initial = _name_parts(name)
+    explicit_project = project
+    me = _current_user_key()
+    mine = [a for a in _read_assignments() if me and a.get('user_key') == me]
+    section = ''
+    if mine:
+        first, last_initial = mine[0]['first_name'], mine[0]['last_initial']
+        section = mine[0].get('section', '')
+        project = project or mine[0].get('project')
+    path = None
+    if text is None:
+        path = _my_notebook(project)
+        if path is None:
+            print("Couldn't find your notebook. Save it, then try  submit_reflection(name, project='MP3')")
+            return None
+        text = _reflection_from_notebook(path)
+        m = re.match(r'(mp[1-5])_', os.path.basename(path))
+        if m and not explicit_project:          # the notebook they worked in is the project they did
+            project = m.group(1).upper()
+    text = str(text).strip()
+    if not text or text.lower() in _PLACEHOLDERS:
+        print('Your reflection is empty. Write it in the cell under "8. Reflection", save the notebook (💾), '
+              'then run this cell again.')
+        return None
+    stem = f"{(project or 'MP').upper()}_{section + '_' if section else ''}{_clean(first).capitalize()}{last_initial.upper()}"
+    if me:
+        stem += '_' + me[:4]
+    record = {'name': str(name).strip(), 'first_name': first, 'project': (project or '').upper(),
+              'user_key': me, 'section': section, 'reflection': text,
+              'submitted': datetime.datetime.now().isoformat(timespec='seconds')}
+    try:
+        os.makedirs(REFLECT_DIR, exist_ok=True)
+        with open(os.path.join(REFLECT_DIR, stem + '.json'), 'w') as f:
+            json.dump(record, f, indent=1)
+    except PermissionError:
+        print('⚠️ Could not write to the shared folder — tell your instructor.')
+        return None
+    words = len(text.split())
+    print(f'✅ Reflection submitted ({words} words). Resubmitting replaces it.')
+    return None
