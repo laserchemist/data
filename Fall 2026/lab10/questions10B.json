@@ -78,7 +78,7 @@
     ]
   },
   {
-    "question": "Validation RMSE is large when k = 1, smallest around k = 9, and large again at k = 25. Why does a very large k do poorly?",
+    "question": "Validation RMSE is large when k = 1, smallest around k = 5, and rises again at k = 25. Why does a very large k do poorly?",
     "type": "multiple_choice",
     "answers": [
       {
@@ -104,23 +104,23 @@
     ]
   },
   {
-    "question": "A kNN classifier labels acids 'stronger' or 'weaker'. It gets 72% of test molecules right, and always guessing 'stronger' gets 62% right. Which statement is best?",
+    "question": "A kNN classifier labels acids 'stronger' or 'weaker'. It gets 72% of test molecules right, and always guessing 'stronger' gets 53% right. Which statement is best?",
     "type": "multiple_choice",
     "answers": [
       {
-        "answer": "kNN beats the baseline, but by a modest margin",
+        "answer": "kNN has learned something real: it beats the baseline by about 19 percentage points",
         "correct": true,
-        "feedback": "Correct: always compare with a baseline before deciding a model is good."
+        "feedback": "Correct: 72% means little on its own. Next to the 53% baseline, it shows the features carry real information about acid strength."
       },
       {
-        "answer": "72% is high, so the classifier is excellent",
+        "answer": "kNN is only slightly better than guessing",
         "correct": false,
-        "feedback": "Compared with the 62% baseline, the improvement is modest."
+        "feedback": "Guessing 'stronger' every time gets 53%. A gain of 19 percentage points is not slight."
       },
       {
-        "answer": "The classifier is worse than guessing",
+        "answer": "72% is a good score, so no baseline is needed to judge it",
         "correct": false,
-        "feedback": "72% is higher than 62%."
+        "feedback": "The baseline is what gives 72% its meaning. If 70% of the acids were 'stronger', 72% would be almost no improvement."
       },
       {
         "answer": "Accuracy can't be compared between models",
