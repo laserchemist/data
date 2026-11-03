@@ -15,7 +15,8 @@ run in any order, any number of times.
     slideshow('03')               stand-alone results slide show
     add_submission(...)           put a student's figure in the gallery by hand
     compare_lines('03')           did everyone on a project get the same line?
-    export_canvas('03')           Canvas gradebook CSV: full points for every complete submission
+    export_canvas('03')           Canvas gradebook CSV, with partial credit
+    link_submissions('01')        drag-and-drop: attach or discard unlinked figures and reflections
 
 Wherever a function takes a class: '03', 3 and '3' all mean class 03; 'all' means every class.
 """
@@ -138,13 +139,24 @@ def _link(record, t, by_name, known):
     if key in known:
         if not sec:
             sec = t.where('user_key', key).column('section').item(0)
-        return key, sec, 'login'
+        return key, sec, ('linked by you' if record.get('linked_by_instructor') else 'login')
+    if str(record.get('project', '')).upper() == 'DEMO':
+        return key, sec, 'demo'
     words = str(record.get('name', '')).replace('.', ' ').split()
     first = words[0].lower() if words else ''
-    initial = words[-1][0].lower() if len(words) > 1 else ''
-    hits = by_name.get((first, initial), [])
+    hits = {}
+    for w in words[1:]:                                # 'Isabelle Van Wert' tries V and W
+        for k, s_ in by_name.get((first, w[0].lower()), []):
+            hits[k] = s_
+    if not hits:                                       # no last name typed: a first name unique across classes
+        only = by_name.get((first, ''), [])
+        if len(only) == 1:
+            hits = {only[0][0]: only[0][1]}
+        elif len(only) > 1:
+            return key, sec, 'ambiguous name'
     if len(hits) == 1:
-        return hits[0][0], hits[0][1], 'name'
+        k, s_ = next(iter(hits.items()))
+        return k, s_, 'name'
     return key, sec, ('ambiguous name' if hits else 'unmatched')
 
 
@@ -180,6 +192,11 @@ def load_submissions(t=None):
                      ' | '.join(r.get('figure_warnings', []) or [])])
     labels = ['project', 'section', 'name', 'user_key', 'matched', 'r', 'slope', 'intercept',
               'caption', 'submitted', 'file', 'png', 'warnings']
+    newest = {}
+    for row in sorted(rows, key=lambda r: str(r[9])):
+        linked = row[4] in ('login', 'name', 'linked by you')
+        newest[(row[3], row[0]) if linked else ('file', row[10])] = row
+    rows = list(newest.values())
     return Table().with_columns(*sum([[lab, make_array(*[row[i] for row in rows])]
                                       for i, lab in enumerate(labels)], []))
 
@@ -530,12 +547,14 @@ def who_submitted(which='all'):
     n_ref = np.count_nonzero(status.column('reflection') == '✅')
     print(f'{class_name(sec)}: {n_fig} of {status.num_rows} figures, {n_ref} of {status.num_rows} reflections')
     problems = subs.where('matched', are.contained_in(make_array('unmatched', 'ambiguous name')))
-    if problems.num_rows:
-        print("⚠️ These figures aren't linked to a roster student (they show only in gallery('all')). "
-              'Ask the student to rerun submit_plot, or use add_submission():')
-        display(problems.select('file', 'name', 'project', 'matched'))
-    display(status.select('section', 'project', 'display_name', 'figure', 'reflection')
-                  .relabeled('display_name', 'student').sort('student').sort('project').sort('section'))
+    lost_refl = refl.where('user_key', are.not_contained_in(make_array(*t.column('user_key')))) if refl.num_rows else refl
+    if problems.num_rows or lost_refl.num_rows:
+        print(f"⚠️ {_plural(problems.num_rows, 'figure')} and {_plural(lost_refl.num_rows, 'reflection')} aren't linked "
+              "to a roster student. Attach or discard them with link_submissions('01'):")
+        if problems.num_rows:
+            problems.select('file', 'name', 'project', 'matched').show()
+    status.select('section', 'project', 'display_name', 'figure', 'reflection') \
+          .relabeled('display_name', 'student').sort('student').sort('project').sort('section').show()
 
 
 def class_name(sec):
@@ -804,13 +823,30 @@ def _shorten(warning):
     return warning
 
 
-def export_canvas(which='all', points=5, assignment='Regression Microproject', incomplete=0,
-                  require_reflection=False, strict_figure=True):
-    """Write a Canvas gradebook import file: `points` for every complete submission.
-    Complete = a figure linked to the student, with a caption, and (strict_figure=True) passing the
-    figure check: axis labels, title, scatter points, regression line, legend. Any project counts.
-      incomplete=0                  score for everyone else ('' leaves their Canvas grade unchanged)
-      require_reflection=True       also require a submitted reflection
+GRAPH_PROBLEMS = {'empty figure', 'no scatter points', 'no regression line'}
+
+
+def _grade(caption, warnings, points, element_penalty, graph_penalty):
+    "Score one submission: -element_penalty per missing element, -graph_penalty once for an incomplete graph."
+    missing = []
+    if not str(caption).strip() or str(caption).strip() in ('...', 'Ellipsis'):
+        missing.append('no caption')
+    problems = [_shorten(w) for w in str(warnings).split(' | ') if w.strip()]
+    graph = [w for w in problems if w in GRAPH_PROBLEMS]
+    elements = [w for w in problems if w not in GRAPH_PROBLEMS and w != 'empty figure']
+    missing += elements
+    deduct = element_penalty * len(missing) + (graph_penalty if graph else 0)
+    return max(0.0, points - deduct), missing + graph
+
+
+def export_canvas(which='all', points=5, element_penalty=1, graph_penalty=2.5, incomplete=0,
+                  require_reflection=False, assignment='Regression Microproject'):
+    """Write a Canvas gradebook import file for the microproject.
+    Each student's best submission (any project) starts at `points` and loses
+      element_penalty (1) for each missing element: caption, x-axis label, y-axis label, title, legend
+      graph_penalty (2.5) once if the graph itself is incomplete: empty, no scatter points, or no regression line
+    never going below 0. Students with no figure get `incomplete` (0; '' leaves their Canvas grade unchanged).
+      require_reflection=True       a missing reflection also costs element_penalty
       assignment='...'              the Canvas column name; to update an existing assignment, copy its
                                     header from a Canvas gradebook export, e.g. 'Regression Microproject (123456)'
     Needs the class_*.csv rosters in this folder (they hold the SIS Login IDs Canvas matches on)."""
@@ -828,45 +864,206 @@ def export_canvas(which='all', points=5, assignment='Regression Microproject', i
     for s in students:
         key = user_key(s['login']) or user_key(f"{s['section']}|{s['first']}|{s['last']}")
         mine = subs.where('user_key', key)
-        best, reasons = None, ['no figure']
-        for i in range(mine.num_rows):                    # any complete submission counts
-            why = []
-            caption = str(mine.column('caption').item(i)).strip()
-            if not caption or caption in ('...', 'Ellipsis'):
-                why.append('no caption')
-            if strict_figure and mine.column('warnings').item(i):
-                why += [_shorten(w) for w in mine.column('warnings').item(i).split(' | ')]
-            if not why:
-                best = mine.column('project').item(i)
-                break
-            reasons = why
-        if best and require_reflection and key not in refl_keys:
-            best, reasons = None, ['no reflection']
-        score = points if best else incomplete
+        best = None                                       # (score, project, missing)
+        for i in range(mine.num_rows):
+            score, missing = _grade(mine.column('caption').item(i), mine.column('warnings').item(i),
+                                    points, element_penalty, graph_penalty)
+            if require_reflection and key not in refl_keys:
+                score, missing = max(0.0, score - element_penalty), missing + ['no reflection']
+            if best is None or score > best[0]:
+                best = (score, mine.column('project').item(i), missing)
+        score = (round(best[0], 2) if best else incomplete)
         rows.append([s['full'], '', '', s['login'], s['roster_section'] or s['section'], score])
-        review.append([s['section'], f"{s['first']} {s['last'][:1]}.", best or '—',
-                       '✅' if best else '', '' if best else ', '.join(dict.fromkeys(reasons))])
+        review.append([s['section'], f"{s['first']} {s['last'][:1]}.", best[1] if best else '—',
+                       f'{score:g}' if best else '', ', '.join(best[2]) if best else 'no figure', score if best else None])
 
     out_file = f'canvas_microproject_{sec or "all"}.csv'
     with open(out_file, 'w', newline='', encoding='utf-8') as f:
         w = csv.writer(f)
         w.writerow(['Student', 'ID', 'SIS User ID', 'SIS Login ID', 'Section', assignment])
         w.writerows(rows)
-    n_full = sum(1 for r in review if r[3])
-    print(f'{class_name(sec)}: {n_full} of {len(rows)} complete → {points} points; '
-          f'{len(rows) - n_full} → {incomplete if incomplete != "" else "left blank"}.')
+    full = sum(1 for r in review if r[5] is not None and r[5] >= points)
+    partial = sum(1 for r in review if r[5] is not None and r[5] < points)
+    none = len(review) - full - partial
+    print(f'{class_name(sec)}: {full} full credit ({points}) · {partial} partial · {none} no figure '
+          f'({incomplete if incomplete != "" else "left blank"}).')
     display(HTML(f'<p style="font-size:1.15em">💾 Saved <b>{out_file}</b> — '
                  f'<a href="{out_file}" target="_blank" download>download it</a>, then in Canvas: '
                  '<b>Grades → Import</b>. 🔒 It holds names and logins: keep it off GitHub.</p>'))
     table = Table().with_columns('class', make_array(*[r[0] for r in review]), 'student', make_array(*[r[1] for r in review]),
-                                 'project', make_array(*[r[2] for r in review]), 'complete', make_array(*[r[3] for r in review]),
+                                 'project', make_array(*[r[2] for r in review]), 'score', make_array(*[r[3] for r in review]),
                                  'what is missing', make_array(*[r[4] for r in review]))
-    missing = table.where('complete', '')
-    fixable = missing.where('what is missing', are.not_equal_to('no figure'))
-    if fixable.num_rows:
-        print(f'⚠️ {_plural(fixable.num_rows, "student")} submitted but are not complete (check before importing):')
-        display(fixable.drop('complete').sort('student').sort('class'))
-    none = missing.where('what is missing', 'no figure')
-    for c in np.unique(none.column('class')):
-        names = sorted(none.where('class', c).column('student'))
+    part = table.where('score', are.not_equal_to('')).where('what is missing', are.not_equal_to(''))
+    if part.num_rows:
+        print(f'⚠️ Partial credit ({_plural(part.num_rows, "student")}) — check before importing:')
+        part.sort('student').sort('class').show()
+    nofig = table.where('what is missing', 'no figure')
+    for c in np.unique(nofig.column('class')):
+        names = sorted(nofig.where('class', c).column('student'))
         print(f'No figure yet, class {c} ({len(names)}): ' + ', '.join(names))
+
+
+# ============================================================================ link unlinked submissions
+DISCARD_DIR = os.path.join(MICRO_ROOT, 'discarded')
+
+
+def _unlinked(t):
+    "Figures and reflections not linked to any roster student (instructor DEMO figures excluded)."
+    by_name, known = _name_index(t)
+    items = []
+    for kind, folder in (('figure', SUBMIT_DIR), ('reflection', REFLECT_DIR)):
+        for p in sorted(glob.glob(os.path.join(folder, '*.json'))):
+            try:
+                r = json.load(open(p))
+            except ValueError:
+                continue
+            key, sec, how = _link(r, t, by_name, known)
+            if how in ('unmatched', 'ambiguous name'):
+                words = str(r.get('name', '')).replace('.', ' ').split()
+                first = words[0].lower() if words else ''
+                suggest = [k for k, _ in by_name.get((first, ''), [])]
+                thumb = (_img64(p[:-5] + '.png') if kind == 'figure' and os.path.exists(p[:-5] + '.png') else '')
+                items.append({'id': f'{kind}:{os.path.basename(p)}', 'kind': kind, 'name': str(r.get('name', '')),
+                              'project': r.get('project', ''), 'why': how, 'suggest': suggest, 'thumb': thumb,
+                              'text': (str(r.get('reflection', '')) if kind == 'reflection' else str(r.get('caption', '')))[:140]})
+    return items
+
+
+def link_submissions(which):
+    """Drag-and-drop board: attach unlinked figures and reflections to the right student in one class,
+    or drop them on 🗑 Discard (e.g. your trial runs). Nothing changes until you click Save.
+    Suggested students (same first name) are outlined in gold."""
+    import ipywidgets as widgets
+    t = load_assignments()
+    sec = _section(which)
+    if sec is None:
+        print("link_submissions() needs one class, e.g. link_submissions('01').")
+        return
+    if not _check_class(t, sec):
+        return
+    items = _unlinked(t)
+    if not items:
+        print('✅ Every figure and reflection is linked to a student. Nothing to do.')
+        return
+    one = t.where('section', sec)
+    roster = sorted([{'key': k, 'name': n, 'project': p} for k, n, p in
+                     zip(one.column('user_key'), one.column('display_name'), one.column('project'))], key=lambda r: r['name'])
+    uid = uuid.uuid4().hex[:8]
+    board = f'''
+<div id="ln-{uid}" style="font-family:sans-serif">
+<style>
+  #ln-{uid} .ln-wrap {{ display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap; }}
+  #ln-{uid} .ln-items {{ flex:1 1 380px; display:flex; flex-direction:column; gap:8px; }}
+  #ln-{uid} .ln-item {{ display:flex; gap:10px; align-items:center; border:2px solid #ccc; border-radius:10px; padding:6px 10px;
+                        background:#fff; cursor:grab; user-select:none; }}
+  #ln-{uid} .ln-item.done {{ border-color:#2E7D50; background:#EEF7F0; }}
+  #ln-{uid} .ln-item.trash {{ border-color:#A41E35; background:#FBEDEF; opacity:.75; }}
+  #ln-{uid} .ln-item img {{ width:120px; border-radius:6px; border:1px solid #ddd; }}
+  #ln-{uid} .ln-item .ln-ref {{ font-size:28px; width:120px; text-align:center; }}
+  #ln-{uid} .ln-target {{ font-weight:800; color:#2E7D50; }}
+  #ln-{uid} .ln-item.trash .ln-target {{ color:#A41E35; }}
+  #ln-{uid} .ln-names {{ flex:1 1 420px; display:flex; flex-wrap:wrap; gap:5px; align-content:flex-start; }}
+  #ln-{uid} .ln-chip {{ padding:5px 10px; border:1px solid #bbb; border-radius:16px; background:#FBF9F6; font-size:.98em; }}
+  #ln-{uid} .ln-chip.suggest {{ border:2px solid #F2B705; background:#FFF8DC; font-weight:700; }}
+  #ln-{uid} .ln-chip.over, #ln-{uid} .ln-bin.over {{ box-shadow:0 0 12px #F2B705; border-color:#F2B705; }}
+  #ln-{uid} .ln-bin {{ width:100%; margin-top:8px; padding:14px; text-align:center; border:3px dashed #A41E35; border-radius:12px;
+                       color:#A41E35; font-weight:800; font-size:1.1em; }}
+  #ln-{uid} button {{ padding:3px 9px; border-radius:7px; border:1px solid #888; background:#fff; cursor:pointer; }}
+</style>
+<div style="font-size:1.3em;font-weight:800;margin-bottom:8px">Drag each item onto the student it belongs to (class {sec}), or onto 🗑 Discard</div>
+<div class="ln-wrap"><div class="ln-items"></div><div class="ln-names"></div></div>
+</div>
+<script>
+(function () {{
+  const root = document.getElementById('ln-{uid}');
+  const items = {json.dumps(items)}, roster = {json.dumps(roster)};
+  const choice = {{}}; let dragged = null;
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}})[c]);
+  const nameOf = k => (roster.find(r => r.key === k) || {{}}).name || k;
+  function sync() {{
+    const box = document.querySelector('.lnsync-{uid} input, .lnsync-{uid} textarea');
+    if (box) {{ box.value = JSON.stringify(choice); box.dispatchEvent(new Event('input', {{bubbles:true}}));
+               box.dispatchEvent(new Event('change', {{bubbles:true}})); }}
+  }}
+  function paint(card, it) {{
+    const c = choice[it.id];
+    card.classList.toggle('done', !!c && c !== 'DISCARD'); card.classList.toggle('trash', c === 'DISCARD');
+    card.querySelector('.ln-target').textContent = !c ? '' : (c === 'DISCARD' ? '🗑 discard' : '→ ' + nameOf(c));
+    card.querySelector('.ln-undo').style.display = c ? '' : 'none';
+  }}
+  items.forEach(it => {{
+    const card = document.createElement('div'); card.className = 'ln-item'; card.draggable = true;
+    card.innerHTML = (it.thumb ? '<img src="data:image/png;base64,' + it.thumb + '">' : '<div class="ln-ref">💬</div>') +
+      '<div style="flex:1"><div><b>' + esc(it.name || '(no name)') + '</b> · ' + esc(it.project) + ' · ' + it.kind +
+      ' <span style="color:#999">(' + it.why + ')</span></div><div style="font-size:.9em;color:#555">' + esc(it.text) +
+      '</div><div class="ln-target"></div></div><button class="ln-undo">undo</button>';
+    card.addEventListener('dragstart', () => {{ dragged = it; }});
+    card.querySelector('.ln-undo').onclick = () => {{ delete choice[it.id]; paint(card, it); sync(); }};
+    it.card = card; paint(card, it); root.querySelector('.ln-items').appendChild(card);
+  }});
+  const targets = roster.map(r => ({{key: r.key, label: r.name + ' · ' + r.project}}));
+  targets.forEach(r => {{
+    const chip = document.createElement('div'); chip.className = 'ln-chip'; chip.textContent = r.label; chip.dataset.key = r.key;
+    if (items.some(it => it.suggest.includes(r.key))) chip.classList.add('suggest');
+    root.querySelector('.ln-names').appendChild(chip);
+  }});
+  const bin = document.createElement('div'); bin.className = 'ln-bin'; bin.dataset.key = 'DISCARD'; bin.textContent = '🗑 Discard (trial runs)';
+  root.querySelector('.ln-names').appendChild(bin);
+  root.querySelectorAll('.ln-chip, .ln-bin').forEach(el => {{
+    el.addEventListener('dragover', e => {{ e.preventDefault(); el.classList.add('over'); }});
+    el.addEventListener('dragleave', () => el.classList.remove('over'));
+    el.addEventListener('drop', e => {{ e.preventDefault(); el.classList.remove('over');
+      if (dragged) {{ choice[dragged.id] = el.dataset.key; paint(dragged.card, dragged); dragged = null; sync(); }} }});
+  }});
+}})();
+</script>'''
+    pending = {}
+    sync_box = widgets.Text(value='{}', layout=widgets.Layout(display='none'))
+    sync_box.add_class(f'lnsync-{uid}')
+    save = widgets.Button(description='💾 Save links', button_style='danger', layout=widgets.Layout(width='200px', height='40px'))
+    out = widgets.Output()
+
+    def on_change(change):
+        try:
+            pending.clear()
+            pending.update(json.loads(change['new']))
+        except ValueError:
+            pass
+
+    def on_save(_):
+        current = load_assignments()
+        linked = discarded = 0
+        for item_id, target in pending.items():
+            kind, fname = item_id.split(':', 1)
+            folder = SUBMIT_DIR if kind == 'figure' else REFLECT_DIR
+            path = os.path.join(folder, fname)
+            if not os.path.exists(path):
+                continue
+            if target == 'DISCARD':
+                dest = os.path.join(DISCARD_DIR, kind + 's')
+                os.makedirs(dest, exist_ok=True)
+                for f in (path, path[:-5] + '.png'):
+                    if os.path.exists(f):
+                        shutil.move(f, os.path.join(dest, os.path.basename(f)))
+                discarded += 1
+                continue
+            student = current.where('user_key', target)
+            if student.num_rows != 1:
+                continue
+            with open(path) as f:
+                r = json.load(f)
+            first, initial = student.column('first_name').item(0), student.column('last_initial').item(0)
+            r.update({'user_key': target, 'section': student.column('section').item(0), 'first_name': first,
+                      'name': f'{first} {initial}.', 'linked_by_instructor': True})
+            with open(path, 'w') as f:
+                json.dump(r, f, indent=1)
+            linked += 1
+        with out:
+            out.clear_output()
+            print(f'Saved: {_plural(linked, "item")} linked, {_plural(discarded, "item")} discarded '
+                  f'(discarded files are kept in {DISCARD_DIR}). Run who_submitted() to see the result.')
+
+    sync_box.observe(on_change, names='value')
+    save.on_click(on_save)
+    display(HTML(board))
+    display(widgets.VBox([sync_box, save, out]))
