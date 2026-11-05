@@ -8,7 +8,7 @@ one small file per student per round, so simultaneous submissions never overwrit
 
 Students:   submit_button('Arena', 'arena_rmse')          (Neighbor Games)
             smackdown_spin()   smackdown_check_in()   smackdown_summary()     (Bootstrap Smackdown)
-Instructor: stoplight()   neighbor_scoreboard()   smackdown_teams()   smackdown_scoreboard()   smackdown_players()   smackdown_summaries()   manual_score(...)   reset_game(...)
+Instructor: stoplight()   neighbor_scoreboard()   smackdown_teams()   smackdown_scoreboard()   smackdown_team_race()   smackdown_players()   smackdown_summaries()   manual_score(...)   reset_game(...)
 """
 import os, re, json, glob, time, hashlib, datetime, threading, shutil, html
 
@@ -711,6 +711,103 @@ def smackdown_players(interval=10):
 
 
 # ============================================================================ team summaries (student box + instructor board)
+
+# ============================================================================ Smackdown: collective team race
+def _team_progress(game='bootstrap_smackdown'):
+    """Each team's collective progress. Members are everyone who spun onto the team (so a teammate who hasn't
+    checked in counts as 0 points), plus anyone who checked in for it without spinning."""
+    n_steps = len(SMACK_STEPS)
+    spins = {x.get('player'): x.get('team') for x in load_team_spins(game) if x.get('player')}
+    best = {}                                          # player -> their check-in for their current team
+    for x in load(game):
+        if x.get('round') != 'Smackdown':
+            continue
+        pl = x.get('player')
+        if spins.get(pl, x['team']) != x['team']:      # an old check-in from before move_to_team
+            continue
+        if pl not in best or x['score'] > best[pl]['score']:
+            best[pl] = x
+    members = {}
+    for pl, team in spins.items():
+        members.setdefault(team, set()).add(pl)
+    for pl, x in best.items():
+        members.setdefault(x['team'], set()).add(pl)
+    order = [t for t in SMACK_TEAMS if t in members] + sorted(t for t in members if t not in SMACK_TEAMS)
+    out = []
+    for i, team in enumerate(order):
+        rows = []
+        for pl in members[team]:
+            x = best.get(pl, {})
+            possible = x.get('possible', 13)
+            score = x.get('score', 0)
+            rows.append({'score': score, 'possible': possible, 'done': bool(x) and score >= possible,
+                         'steps': (x.get('steps') or [0] * n_steps), 'at': x.get('first_at', '')})
+        rows.sort(key=lambda r: (-r['score'], r['at']))
+        total, possible = sum(r['score'] for r in rows), sum(r['possible'] for r in rows)
+        n_done = sum(r['done'] for r in rows)
+        step_counts = [sum(1 for r in rows if r['steps'][k]) for k in range(n_steps)]
+        out.append({'team': team, 'color': WHEEL_COLORS[SMACK_TEAMS.index(team) % len(WHEEL_COLORS)] if team in SMACK_TEAMS
+                    else WHEEL_COLORS[i % len(WHEEL_COLORS)],
+                    'members': rows, 'n': len(rows), 'n_done': n_done, 'points': total, 'possible': possible,
+                    'pct': 100 * total / possible if possible else 0, 'steps': step_counts,
+                    'all_done_at': max(r['at'] for r in rows) if rows and n_done == len(rows) else ''})
+    out.sort(key=lambda t: (not t['all_done_at'], t['all_done_at'] or '', -t['pct'], -t['n_done']))
+    return out
+
+
+def _race_html():
+    teams = _team_progress()
+    winners = [t for t in teams if t['all_done_at']]
+    rows = ''
+    for i, t in enumerate(teams):
+        c = t['color']
+        rank = ('🏆' if i == 0 else MEDALS[i] if i < 3 else '✅') if t['all_done_at'] else f'<span style="color:#999">{i + 1}</span>'
+        segs = ''.join(
+            f'<div style="flex:1;background:#ECE8E1;border-radius:6px;height:34px;position:relative;overflow:hidden">'
+            f'<div style="position:absolute;left:0;top:0;bottom:0;width:{100 * m["score"] / m["possible"]:.0f}%;'
+            f'background:{"#2E7D50" if m["done"] else c};opacity:{1 if m["done"] else .75}"></div>'
+            f'<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;'
+            f'font-weight:900;font-size:16px;text-shadow:0 0 3px #0006">{"✓" if m["done"] else ""}</div></div>'
+            for m in t['members'])
+        strip = ''.join(
+            f'<div style="flex:1;text-align:center;border-radius:5px;padding:3px 0;font-size:11px;'
+            f'background:{"#2E7D50" if k_n == t["n"] else c if k_n else "#ECE8E1"};'
+            f'opacity:{1 if k_n in (0, t["n"]) else .35 + .5 * k_n / max(t["n"], 1)};color:{"#fff" if k_n else "#999"}">'
+            f'{name}<br><b style="font-size:13px">{k_n}/{t["n"]}</b></div>'
+            for name, k_n in zip(SMACK_STEPS, t['steps']))
+        right = (f'<div style="color:#2E7D50;font-weight:900;font-size:17px">🏁 ALL FINISHED</div>'
+                 f'<div style="color:#2E7D50;font-weight:700">{_since_go(t["all_done_at"])}</div>' if t['all_done_at'] else
+                 f'<div style="font-size:30px;font-weight:900;color:{c}">{t["pct"]:.0f}%</div>'
+                 f'<div style="font-size:12px;color:#888">of team points</div>')
+        rows += (f'<div style="display:flex;gap:14px;align-items:center;background:#fff;border:3px solid {c if not t["all_done_at"] else "#2E7D50"};'
+                 f'border-radius:12px;padding:12px 16px;margin-bottom:10px">'
+                 f'<div style="font-size:30px;width:44px;text-align:center">{rank}</div>'
+                 f'<div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;align-items:baseline">'
+                 f'<span style="font-size:21px;font-weight:900;color:{c}">{html.escape(t["team"])}</span>'
+                 f'<span style="font-size:15px;color:#444"><b>{t["n_done"]} of {t["n"]}</b> finished</span></div>'
+                 f'<div style="display:flex;gap:5px;margin:7px 0">{segs}</div>'
+                 f'<div style="display:flex;gap:4px">{strip}</div></div>'
+                 f'<div style="width:150px;text-align:center">{right}</div></div>')
+    if not rows:
+        rows = '<div style="padding:14px;color:#999;font-style:italic">No teams yet: students spin the wheel first.</div>'
+    banner = ''
+    if winners:
+        w = winners[0]
+        banner = (f'<div style="background:#2E7D50;color:#fff;border-radius:12px;padding:14px 20px;margin-bottom:12px;'
+                  f'font-size:24px;font-weight:900">🏆 {html.escape(w["team"])} wins — everyone finished, '
+                  f'{_since_go(w["all_done_at"])}!</div>')
+    return (_header('🤝 SMACKDOWN · TEAM RACE', f'{_light_chip("bootstrap_smackdown")} · The first team with <b>every member</b> '
+                    'at 13 points wins · one block per teammate · the strip shows how many teammates have each step')
+            + banner + rows)
+
+
+def smackdown_team_race(interval=10):
+    """Live collective board: each team's progress toward EVERYONE finishing, with no student names.
+    One block per teammate (green ✓ = all 13 points), the share of the team's possible points earned,
+    and how many teammates have each step. The first team with every member finished wins."""
+    _game_dir('bootstrap_smackdown')
+    return _live(_race_html, interval, 'Smackdown Team Race', 'bootstrap_smackdown_team_race.html')
+
 SUMMARY_FIELDS = [
     ('ideas', '🔑 Key ideas about our dataset',
      'What are the variables? What do the data show? Anything surprising about this data set?'),
@@ -958,6 +1055,13 @@ def save_results(game='bootstrap_smackdown', section=None):
         written.append(_write_csv(f'{stem}_players.csv',
                                   ['section', 'team', 'name', 'points', *[f'step_{s_}' for s_ in SMACK_STEPS],
                                    'firsts', 'checkins', 'best_reached_at', 'last_checkin', 'summary_posted'], player_rows))
+        race = _team_progress(game)
+        written.append(_write_csv(f'{stem}_team_race.csv',
+                                  ['section', 'place', 'team', 'members', 'members_finished', 'team_points', 'possible',
+                                   'percent', 'all_finished_after_go'] + [f'have_{s_}' for s_ in SMACK_STEPS],
+                                  [[section, i, t['team'], t['n'], t['n_done'], t['points'], t['possible'], round(t['pct'], 1),
+                                    _since_go(t['all_done_at']) if t['all_done_at'] else '', *t['steps']]
+                                   for i, t in enumerate(race, start=1)]))
         spins = load_team_spins()
         written.append(_write_csv(f'{stem}_roster.csv', ['section', 'team', 'name', 'spun_at'],
                                   sorted([[section, x.get('team', ''), x.get('name', ''), str(x.get('at', ''))[11:16]]
