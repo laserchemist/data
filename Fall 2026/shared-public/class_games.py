@@ -71,21 +71,33 @@ def load(game):
     return out
 
 
-def reset_game(game):
-    "Clear a game's scoreboard (and posted summaries). Everything is moved to an archive folder, not deleted."
+def reset_game(game, section=None):
+    """Clear a game's boards for the next class. Saves the class's results to CSV first (see save_results),
+    then moves everything to an archive folder; nothing is deleted."""
     folder = os.path.join(GAMES_ROOT, game)
     files = glob.glob(os.path.join(folder, '*.json'))
     posts = glob.glob(os.path.join(folder, 'summaries', '*.json'))
     if not files and not posts:
         print(f'{game}: nothing to clear.')
         return
-    archive = os.path.join(GAMES_ROOT, '_archive', f"{game}_{datetime.datetime.now():%Y%m%d-%H%M%S}")
+    section = _norm_section(section) or SECTION
+    if not section:
+        print("Set the class first, e.g. set_section('08'), so the saved results are labeled. Nothing was cleared.")
+        return
+    saved = save_results(game, section)
+    if not saved:
+        print('Saving failed, so nothing was cleared.')
+        return
+    archive = os.path.join(GAMES_ROOT, '_archive', f"{game}_{section}_{datetime.datetime.now():%Y%m%d-%H%M%S}")
     os.makedirs(os.path.join(archive, 'summaries'), exist_ok=True)
     for p in files:
         shutil.move(p, archive)
     for p in posts:
         shutil.move(p, os.path.join(archive, 'summaries'))
-    print(f'{game}: cleared {len(files)} scores and {len(posts)} summaries (saved in {archive}).')
+    for f in saved:
+        shutil.copy(f, archive)
+    print(f'{game}: cleared {len(files)} scores and {len(posts)} summaries for class {section}. '
+          f'Boards are empty and ready for the next class. (Raw files archived in {archive}.)')
 
 
 def manual_score(game, team, round_name, score, **extra):
@@ -298,8 +310,9 @@ def _live(render, interval, title, page_file):
 
 
 def _header(title, subtitle):
+    tag = (f'<span style="float:right;color:#fff;font-size:.6em;margin-top:10px">Class {SECTION}</span>' if SECTION else '')
     return (f'<div style="background:linear-gradient(135deg,#1a1a2e 0%,#2d0a16 100%);padding:18px 24px;border-radius:12px;'
-            f'margin-bottom:14px"><div style="color:{GOLD};font-size:2em;font-weight:900;letter-spacing:2px">{title}</div>'
+            f'margin-bottom:14px"><div style="color:{GOLD};font-size:2em;font-weight:900;letter-spacing:2px">{title}{tag}</div>'
             f'<div style="color:#ddd">{subtitle}</div></div>')
 
 
@@ -637,3 +650,105 @@ def smackdown_summaries(interval=15):
 def smackdown_summary():
     "Student side: the summary box for the Bootstrap Smackdown."
     summary_box('bootstrap_smackdown')
+
+
+
+# ============================================================================ class section + saving results
+SECTION = None
+
+
+def _norm_section(which):
+    if which is None:
+        return None
+    text = str(which).strip()
+    return text.zfill(2) if text.isdigit() else text
+
+
+def set_section(which):
+    "Label this session's boards and saved results with a class section, e.g. set_section('08')."
+    global SECTION
+    SECTION = _norm_section(which)
+    print(f'Class section set to {SECTION}. Boards show it, and save_results() / reset_game() label files with it.')
+
+
+def _write_csv(path, header, rows):
+    import csv
+    def tidy(v):
+        if isinstance(v, float) and v.is_integer():
+            return int(v)
+        return round(v, 4) if isinstance(v, float) else v
+    with open(path, 'w', newline='', encoding='utf-8-sig') as f:     # -sig: Excel shows emoji and accents correctly
+        w = csv.writer(f)
+        w.writerow(header)
+        w.writerows([[tidy(v) for v in row] for row in rows])
+    return path
+
+
+def save_results(game='bootstrap_smackdown', section=None):
+    """Save the current boards to CSV files in this folder, labeled with the class section and date.
+    bootstrap_smackdown -> ..._teams.csv, ..._players.csv, ..._summaries.csv
+    neighbor_games      -> ..._scores.csv
+    Returns the list of files written."""
+    section = _norm_section(section) or SECTION
+    if not section:
+        print("Set the class first, e.g. set_section('08') or save_results(section='08').")
+        return []
+    stem = f'{game}_{section}_{datetime.date.today():%Y-%m-%d}'
+    written = []
+    if game == 'neighbor_games':
+        scores = load(game)
+        rows = []
+        for rnd in NEIGHBOR_ROUNDS:
+            for rank, e in enumerate(_best_per_team(scores, rnd), start=1):
+                rows.append([section, rnd, rank, e['team'], round(e['score'], 3), e.get('k', ''),
+                             ' '.join(e.get('features', []) or []), e.get('time', ''), 'yes' if e.get('manual') else ''])
+        written.append(_write_csv(f'{stem}_scores.csv',
+                                  ['section', 'round', 'rank', 'team', 'score_K', 'k', 'features', 'time', 'manual'], rows))
+    elif game == 'bootstrap_smackdown':
+        scores = [x for x in load(game) if x.get('round') == 'Smackdown']
+        posts = load_summaries(game)
+        posted = {p.get('player') for p in posts}
+        teams = {}
+        for x in scores:
+            teams.setdefault(x['team'], []).append(x)
+        team_rows, player_rows = [], []
+        n = len(SMACK_STEPS)
+        for team, members in teams.items():
+            top = max(m['score'] for m in members)
+            best = min((m for m in members if m['score'] == top), key=lambda m: m.get('first_at', ''))
+            finished = [m for m in members if m['score'] >= m.get('possible', 13)]
+            ci = best.get('ci') or ['', '']
+            team_rows.append([team, top, best.get('possible', 13), best.get('first_at', '')[11:19] if finished else '',
+                              len(members), len(finished), round(best.get('slope', float('nan')), 4), ci[0], ci[1]])
+            firsts = []
+            for k in range(n):
+                stamped = [((m.get('step_times') or [''] * n)[k], i) for i, m in enumerate(members)]
+                stamped = [t for t in stamped if t[0]]
+                firsts.append(min(stamped)[1] if stamped else None)
+            for i, m in enumerate(members):
+                steps = (m.get('steps') or [0] * n)
+                player_rows.append([section, team, m.get('name') or f'student {m.get("player", "")[:4]}', m['score'],
+                                    *steps, sum(1 for f in firsts if f == i), m.get('checkins', 1),
+                                    str(m.get('first_at', ''))[11:19], str(m.get('submitted', ''))[11:19],
+                                    'yes' if m.get('player') in posted else ''])
+        team_rows.sort(key=lambda r: (-r[1], r[3] or '99'))
+        team_rows = [[section, rank, *r] for rank, r in enumerate(team_rows, start=1)]
+        written.append(_write_csv(f'{stem}_teams.csv',
+                                  ['section', 'rank', 'team', 'best_points', 'possible', 'finished_at', 'members',
+                                   'members_finished', 'slope', 'ci_low', 'ci_high'], team_rows))
+        player_rows.sort(key=lambda r: (r[1], -r[3], r[2]))
+        written.append(_write_csv(f'{stem}_players.csv',
+                                  ['section', 'team', 'name', 'points', *[f'step_{s_}' for s_ in SMACK_STEPS],
+                                   'firsts', 'checkins', 'best_reached_at', 'last_checkin', 'summary_posted'], player_rows))
+        written.append(_write_csv(f'{stem}_summaries.csv',
+                                  ['section', 'team', 'name', 'key_ideas', 'conclusions', 'posted'],
+                                  sorted([[section, p.get('team', ''), p.get('name', ''), p.get('ideas', ''),
+                                           p.get('conclusions', ''), str(p.get('submitted', ''))[11:16]] for p in posts],
+                                         key=lambda r: (r[1], r[2]))))
+    else:
+        print(f'Unknown game {game!r}.')
+        return []
+    for f in written:
+        print('💾 Saved', f)
+    print('🔒 These files hold students\' names: download them from this folder and keep them off GitHub.')
+    return written
