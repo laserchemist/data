@@ -8,7 +8,7 @@ one small file per student per round, so simultaneous submissions never overwrit
 
 Students:   submit_button('Arena', 'arena_rmse')          (Neighbor Games)
             smackdown_check_in()                           (Bootstrap Smackdown)
-Instructor: neighbor_scoreboard()   smackdown_scoreboard()   manual_score(...)   reset_game(...)
+Instructor: neighbor_scoreboard()   smackdown_scoreboard()   smackdown_players()   manual_score(...)   reset_game(...)
 """
 import os, re, json, glob, time, hashlib, datetime, threading, shutil, html
 
@@ -216,17 +216,26 @@ def smackdown_check_in():
             old = json.load(f)
     except (OSError, ValueError):
         old = None
-    kept = ''
-    if old and old.get('score', -1) > points:          # e.g. after a kernel restart: keep your best
-        kept = f" Your best, {old['score']:g}/{possible}, stays on the board."
-    else:
-        if old and old.get('score') == points:
-            first_at = old.get('first_at', first_at)    # same score again: keep the time you first reached it
-        name = str(val('my_name') or '').strip()
-        submit('bootstrap_smackdown', team, 'Smackdown', points,
-               {'possible': possible, 'first_at': first_at, 'name': '' if name in ('...', 'Ellipsis') else name,
-                'slope': float(true_slope), 'ci': [float(left), float(right)] if ok4 else None,
-                'steps': [s[2] for s in steps]})
+    # Merge with what you earned before: a step, once earned, stays earned (e.g. after a kernel restart),
+    # and each step remembers when YOU first earned it (the players board uses this).
+    now = first_at
+    earned = [s_[2] for s_ in steps]
+    old_steps = (old or {}).get('steps') or [0] * len(steps)
+    best_steps = [max(a, b) for a, b in zip(earned, old_steps)]
+    step_times = list((old or {}).get('step_times') or [''] * len(steps))
+    for k, pts in enumerate(best_steps):
+        if pts and not step_times[k]:
+            step_times[k] = now
+    saved = sum(best_steps)
+    kept = f" Your best, {saved}/{possible}, stays on the board." if saved > points else ''
+    if old and old.get('score') == saved:
+        first_at = old.get('first_at', first_at)        # same total again: keep the time you first reached it
+    name = str(val('my_name') or '').strip()
+    submit('bootstrap_smackdown', team, 'Smackdown', saved,
+           {'possible': possible, 'first_at': first_at, 'name': '' if name in ('...', 'Ellipsis') else name,
+            'slope': float(true_slope), 'ci': [float(left), float(right)] if ok4 else (old or {}).get('ci'),
+            'steps': best_steps, 'step_times': step_times,
+            'checkins': int((old or {}).get('checkins', 0)) + 1})
 
     rows = ''.join(f'<tr><td style="padding:3px 10px">{"✅" if s[2] == s[1] else "⬜"}</td>'
                    f'<td style="padding:3px 10px">{s[0]}</td><td style="padding:3px 10px;text-align:right">{s[2]}/{s[1]}</td>'
@@ -396,3 +405,73 @@ def smackdown_scoreboard(interval=10):
     "Live Bootstrap Smackdown standings: each team's best points, ties broken by who finished first."
     _game_dir('bootstrap_smackdown')
     return _live(_smackdown_html, interval, 'Bootstrap Smackdown', 'bootstrap_smackdown_scoreboard.html')
+
+
+# ============================================================================ Smackdown: individual contributions
+SMACK_STEPS = ['Data', 'Slope', 'Bootstrap', 'CI', 'Prediction', 'Figure', 'Real?']
+
+
+def _smackdown_players_html():
+    scores = [s for s in load('bootstrap_smackdown') if s.get('round') == 'Smackdown']
+    teams = {}
+    for s in scores:
+        teams.setdefault(s['team'], []).append(s)
+    # order teams like the main board: best points, then first to finish
+    def team_key(members):
+        top = max(m['score'] for m in members)
+        first = min((m.get('first_at', '') for m in members if m['score'] == top), default='')
+        return (-top, first)
+    sections = ''
+    for team, members in sorted(teams.items(), key=lambda kv: team_key(kv[1])):
+        n_steps = len(SMACK_STEPS)
+        # who on this team earned each step first -> ⭐
+        firsts = []
+        for k in range(n_steps):
+            times = [(m.get('step_times') or [''] * n_steps)[k] for m in members]
+            stamped = [(t, i) for i, t in enumerate(times) if t]
+            firsts.append(min(stamped)[1] if stamped else None)
+        stars = {i: sum(1 for f in firsts if f == i) for i in range(len(members))}
+        order = sorted(range(len(members)), key=lambda i: (-members[i]['score'], members[i].get('first_at', '')))
+        head = ''.join(f'<th style="padding:6px 4px;font-size:12px;color:#888;font-weight:600;text-align:center">{lab}</th>'
+                       for lab in SMACK_STEPS)
+        rows = ''
+        for rank, i in enumerate(order):
+            m = members[i]
+            steps = m.get('steps') or [0] * n_steps
+            cells = ''
+            for k in range(n_steps):
+                if steps[k]:
+                    star = '⭐' if firsts[k] == i else ''
+                    cells += (f'<td style="text-align:center;padding:6px 4px"><span style="display:inline-block;min-width:34px;'
+                              f'padding:3px 4px;border-radius:6px;background:#E6F2EA;color:#2E7D50;font-weight:800">✓{star}</span></td>')
+                else:
+                    cells += ('<td style="text-align:center;padding:6px 4px"><span style="display:inline-block;min-width:34px;'
+                              'padding:3px 4px;border-radius:6px;background:#F0EDE8;color:#bbb">·</span></td>')
+            name = html.escape(m.get('name') or f'student {m.get("player", "")[:4]}')
+            last = str(m.get('submitted', ''))[11:16]
+            done = '🏁 ' if m['score'] >= m.get('possible', 13) else ''
+            rows += (f'<tr style="border-top:1px solid #F0EDE8"><td style="padding:6px 10px;font-weight:700;font-size:15px;white-space:nowrap">'
+                     f'{done}{name}</td>{cells}'
+                     f'<td style="padding:6px 10px;text-align:right;font-weight:900;font-size:16px">{m["score"]:g}'
+                     f'<span style="font-size:11px;color:#888">/{m.get("possible", 13)}</span></td>'
+                     f'<td style="padding:6px 10px;text-align:center;font-size:15px">{"⭐" * stars[i] or "—"}</td>'
+                     f'<td style="padding:6px 10px;text-align:right;color:#888;font-size:12px;white-space:nowrap">'
+                     f'{m.get("checkins", 1)} check-in{"s" if m.get("checkins", 1) != 1 else ""}<br>last {last}</td></tr>')
+        best = max(m['score'] for m in members)
+        sections += (f'<div style="background:#fff;border:1px solid #E0DDD6;border-radius:10px;margin-bottom:14px;overflow:hidden">'
+                     f'<div style="background:#2d0a16;color:#fff;padding:9px 14px;font-weight:800;font-size:17px">{html.escape(team)}'
+                     f'<span style="float:right;color:{GOLD}">team best {best:g} · {len(members)} member{"s" if len(members) != 1 else ""}</span></div>'
+                     f'<table style="width:100%;border-collapse:collapse"><tr><th></th>{head}'
+                     f'<th style="padding:6px 10px;font-size:12px;color:#888;text-align:right">points</th>'
+                     f'<th style="padding:6px 10px;font-size:12px;color:#888">firsts</th><th></th></tr>{rows}</table></div>')
+    if not sections:
+        sections = '<div style="color:#999;padding:14px;font-style:italic">No check-ins yet.</div>'
+    return (_header('🥊 SMACKDOWN · PLAYERS', 'Each member\'s steps · ⭐ = first on the team to earn that step · 🏁 = all 13 points')
+            + sections)
+
+
+def smackdown_players(interval=10):
+    """Live board of individual contributions: every member's steps, who on each team earned each step
+    first (⭐), points, and how many times they've checked in."""
+    _game_dir('bootstrap_smackdown')
+    return _live(_smackdown_players_html, interval, 'Smackdown Players', 'bootstrap_smackdown_players.html')
