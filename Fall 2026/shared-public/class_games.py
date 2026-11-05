@@ -8,7 +8,7 @@ one small file per student per round, so simultaneous submissions never overwrit
 
 Students:   submit_button('Arena', 'arena_rmse')          (Neighbor Games)
             smackdown_spin()   smackdown_check_in()   smackdown_summary()     (Bootstrap Smackdown)
-Instructor: neighbor_scoreboard()   smackdown_teams()   smackdown_scoreboard()   smackdown_players()   smackdown_summaries()   manual_score(...)   reset_game(...)
+Instructor: stoplight()   neighbor_scoreboard()   smackdown_teams()   smackdown_scoreboard()   smackdown_players()   smackdown_summaries()   manual_score(...)   reset_game(...)
 """
 import os, re, json, glob, time, hashlib, datetime, threading, shutil, html
 
@@ -77,8 +77,11 @@ def reset_game(game, section=None):
     folder = os.path.join(GAMES_ROOT, game)
     files = glob.glob(os.path.join(folder, '*.json'))
     posts = glob.glob(os.path.join(folder, 'summaries', '*.json'))
+    light = _light_path(game)
     if not files and not posts and not glob.glob(os.path.join(folder, 'teams', '*.json')):
-        print(f'{game}: nothing to clear.')
+        if os.path.exists(light):
+            os.remove(light)
+        print(f'{game}: nothing to clear. The start light is back to its starting state.')
         return
     section = _norm_section(section) or SECTION
     if not section:
@@ -101,8 +104,11 @@ def reset_game(game, section=None):
             shutil.move(p, os.path.join(archive, 'teams'))
     for f in saved:
         shutil.copy(f, archive)
+    if os.path.exists(light):
+        shutil.move(light, os.path.join(archive, 'start_light.json'))
     print(f'{game}: cleared {len(files)} scores and {len(posts)} summaries for class {section}. '
-          f'Boards are empty and ready for the next class. (Raw files archived in {archive}.)')
+          f'Boards are empty and the start light is back to its starting state (🔴 for the Smackdown), '
+          f'ready for the next class. (Raw files archived in {archive}.)')
 
 
 def manual_score(game, team, round_name, score, **extra):
@@ -132,6 +138,10 @@ def submit_button(round_name, score_var, extra_fn=None, game='neighbor_games', u
         with out:
             out.clear_output()
             try:
+                gate = _gate(game)
+                if gate:
+                    display(HTML(gate))
+                    return
                 score = ns.get(score_var)
                 if score is None or score is Ellipsis:
                     raise ValueError(f'Run the {round_name} cells first — {score_var} has no value yet.')
@@ -167,6 +177,10 @@ def smackdown_check_in():
     team = val('team_name')
     if tbl is None or x is None or team is None:
         display(HTML(f'<b style="color:{CHERRY}">⚠️ Run your team\'s dataset cell first.</b>'))
+        return
+    gate = _gate('bootstrap_smackdown')
+    if gate:
+        display(HTML(gate))
         return
     xs, ys = np.asarray(tbl.column(x), float), np.asarray(tbl.column(y), float)
     r = np.mean((xs - xs.mean()) / xs.std() * (ys - ys.mean()) / ys.std())
@@ -321,6 +335,189 @@ def _header(title, subtitle):
             f'<div style="color:#ddd">{subtitle}</div></div>')
 
 
+
+# ============================================================================ the start light (🚦)
+GATED_GAMES = {'bootstrap_smackdown'}     # these start on red: no submissions until the instructor turns the light green
+
+
+def _light_path(game):
+    folder = os.path.join(GAMES_ROOT, '_lights')
+    os.makedirs(folder, exist_ok=True)
+    for f in (GAMES_ROOT, folder):
+        try:
+            os.chmod(f, 0o777)
+        except PermissionError:
+            pass
+    return os.path.join(folder, f'{game}.json')
+
+
+def get_light(game='bootstrap_smackdown'):
+    """The game's start light: {'state': 'red' | 'yellow' | 'green', 'go_at': time of the first GO, ...}.
+    With no light set, gated games (the Smackdown) are red and other games are green."""
+    try:
+        with open(_light_path(game)) as f:
+            rec = json.load(f)
+    except (OSError, ValueError):
+        rec = {}
+    rec.setdefault('state', 'red' if game in GATED_GAMES else 'green')
+    return rec
+
+
+def set_light(game='bootstrap_smackdown', state='green'):
+    "Instructor: set the light to 'red', 'yellow' or 'green'. Students can submit only on green."
+    if state not in ('red', 'yellow', 'green'):
+        raise ValueError("state must be 'red', 'yellow' or 'green'")
+    path = _light_path(game)
+    rec = get_light(game) if os.path.exists(path) else {}
+    now = datetime.datetime.now().isoformat(timespec='seconds')
+    rec.update(state=state, at=now, section=SECTION)
+    if state == 'green':
+        rec.setdefault('go_at', now)
+        rec.pop('stopped_at', None)
+    elif rec.get('go_at'):
+        rec['stopped_at'] = now
+    with open(path + '.tmp', 'w') as f:
+        json.dump(rec, f)
+    os.replace(path + '.tmp', path)
+    try:
+        os.chmod(path, 0o666)
+    except PermissionError:
+        pass
+    return rec
+
+
+def _clock(seconds):
+    "Seconds as m:ss (or h:mm:ss)."
+    h, rest = divmod(max(int(seconds), 0), 3600)
+    m, sec = divmod(rest, 60)
+    return f'{h}:{m:02d}:{sec:02d}' if h else f'{m}:{sec:02d}'
+
+
+def _elapsed(rec):
+    "Seconds since the first GO, up to the stop if the light was turned back to red."
+    if not rec.get('go_at'):
+        return None
+    end = rec.get('stopped_at') if rec['state'] != 'green' else None
+    stop = datetime.datetime.fromisoformat(end) if end else datetime.datetime.now()
+    return (stop - datetime.datetime.fromisoformat(rec['go_at'])).total_seconds()
+
+
+def _gate(game, allow_after_stop=False):
+    "None if students may submit now; otherwise the message to show them."
+    rec = get_light(game)
+    if rec['state'] == 'green':
+        return None
+    if rec['state'] == 'red' and rec.get('go_at'):
+        if allow_after_stop:
+            return None
+        msg = ('🛑', "Time's up — the competition has stopped.",
+               'Your last check-in stays on the board. Your instructor can turn the light green again.')
+    elif rec['state'] == 'yellow':
+        msg = ('🟡', 'Get ready — almost time!', 'Nothing is submitted until the light turns green. Run this cell again after GO.')
+    else:
+        msg = ('🔴', "The competition hasn't started yet.",
+               'Find your teammates and look over your data. Nothing is submitted until your instructor turns the light '
+               'green; your work stays in your notebook. Run this cell again after GO.')
+    return (f'<div style="font-family:sans-serif;border:2px solid #E0DDD6;border-radius:10px;padding:10px 14px;margin:6px 0">'
+            f'<div style="font-size:1.35em;font-weight:900">{msg[0]} {msg[1]}</div>'
+            f'<div style="color:#555;margin-top:3px">{msg[2]}</div></div>')
+
+
+def _light_chip(game):
+    "A small status label for the boards' subtitles."
+    rec = get_light(game)
+    el = _elapsed(rec)
+    if rec['state'] == 'green':
+        return f'🟢 <b>GO</b> · {_clock(el)} elapsed'
+    if rec['state'] == 'yellow':
+        return '🟡 <b>Get ready</b>'
+    if el is not None:
+        return f'🛑 <b>Stopped</b> after {_clock(el)}'
+    return '🔴 <b>Not started</b>'
+
+
+def _light_html(state, big, small):
+    lamps = ''.join(
+        f'<div style="width:74px;height:74px;border-radius:50%;margin:10px auto;background:{on if state == name else off};'
+        f'box-shadow:{"0 0 28px " + on if state == name else "inset 0 0 12px #000"}"></div>'
+        for name, on, off in (('red', '#FF3B30', '#4a1513'), ('yellow', '#FFCC00', '#4a3d10'), ('green', '#34C759', '#123d1c')))
+    return (f'<div style="display:flex;align-items:center;gap:28px;font-family:system-ui,sans-serif">'
+            f'<div style="background:#1a1a2e;border-radius:22px;padding:8px 14px;width:100px;border:4px solid #333">{lamps}</div>'
+            f'<div><div style="font-size:3.2em;font-weight:900;line-height:1.1">{big}</div>'
+            f'<div style="font-size:1.3em;color:#555;margin-top:6px">{small}</div></div></div>')
+
+
+def stoplight(game='bootstrap_smackdown'):
+    """Instructor: the start light. 🔴 before the start (students spin and find their teams; no check-ins),
+    🟡 get ready, 🟢 GO! counts down 3-2-1, then opens check-ins and starts the clock.
+    Back to 🔴 after GO = time's up: no more check-ins. The light is saved, so every notebook sees the same state."""
+    import ipywidgets as widgets
+    from IPython.display import display
+    view = widgets.HTML()
+    style = dict(text_color='white', font_weight='bold')
+    b_red = widgets.Button(description='🔴 Stop', layout=widgets.Layout(width='150px', height='44px'),
+                           style=dict(style, button_color='#C62828'))
+    b_yel = widgets.Button(description='🟡 Get ready', layout=widgets.Layout(width='150px', height='44px'),
+                           style=dict(style, button_color='#B8860B'))
+    b_go = widgets.Button(description='🟢 GO! (3-2-1)', layout=widgets.Layout(width='170px', height='44px'),
+                          style=dict(style, button_color='#2E7D50'))
+    busy = threading.Event()
+
+    def show():
+        rec = get_light(game)
+        el = _elapsed(rec)
+        if rec['state'] == 'green':
+            view.value = _light_html('green', 'GO!', f'Check-ins are open · ⏱ {_clock(el)}')
+        elif rec['state'] == 'yellow':
+            view.value = _light_html('yellow', 'Get ready…', 'Teams together? Check-ins open on green.')
+        elif el is not None:
+            view.value = _light_html('red', "Time's up", f'Stopped after {_clock(el)} · check-ins are closed')
+        else:
+            view.value = _light_html('red', 'Not started', 'Students spin and find their teams · check-ins are closed')
+
+    def go(_):
+        if busy.is_set():
+            return
+        busy.set()
+
+        def countdown():
+            try:
+                if get_light(game)['state'] == 'red':
+                    set_light(game, 'yellow')
+                for n in (3, 2, 1):
+                    view.value = _light_html('yellow', f'{n}…', 'Get ready!')
+                    time.sleep(1)
+                set_light(game, 'green')
+                show()
+            finally:
+                busy.clear()
+        threading.Thread(target=countdown, daemon=True).start()
+
+    def to(state):
+        def click(_):
+            if not busy.is_set():
+                set_light(game, state)
+                show()
+        return click
+
+    def tick():
+        while True:
+            time.sleep(1)
+            if not busy.is_set():
+                try:
+                    show()
+                except Exception:
+                    pass
+
+    b_red.on_click(to('red'))
+    b_yel.on_click(to('yellow'))
+    b_go.on_click(go)
+    show()
+    threading.Thread(target=tick, daemon=True).start()
+    display(widgets.VBox([view, widgets.HBox([b_red, b_yel, b_go], layout=widgets.Layout(gap='10px', margin='12px 0 0 0'))],
+                         layout=widgets.Layout(border='2px solid #E0DDD6', padding='14px')))
+
+
 NEIGHBOR_ROUNDS = {
     'Tribute':  ('🌿', 'RMSE', '#6B6860'),
     'Arena':    ('⚔️', 'RMSE', CHERRY),
@@ -397,7 +594,7 @@ def _smackdown_html():
     for i, (top, first, team, n, finished, best) in enumerate(ranked):
         possible = best.get('possible', 13)
         medal = MEDALS[i] if i < 3 else f'<span style="color:#999">{i + 1}</span>'
-        done_at = first[11:19] if top >= possible and first else ''
+        done_at = _since_go(first) if top >= possible and first else ''
         ci = best.get('ci')
         ci_txt = f'slope {best["slope"]:.3f} · CI [{ci[0]:.3f}, {ci[1]:.3f}]' if ci else ''
         rows += (f'<tr style="border-bottom:1px solid #F0EDE8"><td style="padding:10px;font-size:26px;text-align:center;width:50px">{medal}</td>'
@@ -410,9 +607,21 @@ def _smackdown_html():
                  f'<td style="padding:10px;text-align:right;color:#2E7D50;font-weight:700">{"⚡ " + done_at if done_at else ""}</td></tr>')
     if not rows:
         rows = '<tr><td style="padding:14px;color:#999;font-style:italic">No check-ins yet.</td></tr>'
-    return (_header('🥊 BOOTSTRAP SMACKDOWN', 'Live standings · points, then fastest to finish (⚡ = time all 13 points were first reached)')
+    return (_header('🥊 BOOTSTRAP SMACKDOWN', f'{_light_chip("bootstrap_smackdown")} · Live standings · points, then fastest to finish '
+                    '(⚡ = time after GO when all 13 points were first reached)')
             + f'<div style="background:#fff;border:1px solid #E0DDD6;border-radius:10px;overflow:hidden">'
               f'<table style="width:100%;border-collapse:collapse">{rows}</table></div>')
+
+
+def _since_go(iso, game='bootstrap_smackdown'):
+    "A finish time as minutes:seconds after GO (or the clock time if there was no GO)."
+    go = get_light(game).get('go_at')
+    if go and iso:
+        try:
+            return '+' + _clock((datetime.datetime.fromisoformat(iso) - datetime.datetime.fromisoformat(go)).total_seconds())
+        except ValueError:
+            pass
+    return (iso or '')[11:19]
 
 
 def _ts(iso):
@@ -489,7 +698,7 @@ def _smackdown_players_html():
                      f'<th style="padding:6px 10px;font-size:12px;color:#888">firsts</th><th></th></tr>{rows}</table></div>')
     if not sections:
         sections = '<div style="color:#999;padding:14px;font-style:italic">No check-ins yet.</div>'
-    return (_header('🥊 SMACKDOWN · PLAYERS', 'Each member\'s steps · ⭐ = first on the team to earn that step · 🏁 = all 13 points · 📝 = summary posted')
+    return (_header('🥊 SMACKDOWN · PLAYERS', _light_chip('bootstrap_smackdown') + ' · Each member\'s steps · ⭐ = first on the team to earn that step · 🏁 = all 13 points · 📝 = summary posted')
             + sections)
 
 
@@ -569,6 +778,10 @@ def summary_box(game='bootstrap_smackdown'):
     def on_post(_):
         with out:
             out.clear_output()
+            gate = _gate(game, allow_after_stop=True)        # summaries may still be posted after time's up
+            if gate:
+                display(HTML(gate))
+                return
             texts = {k: b.value.strip() for k, b in boxes.items()}
             if sum(len(t.split()) for t in texts.values()) < 10:
                 display(HTML(f'<b style="color:{CHERRY}">⚠️ Write a little more in both boxes (a sentence or two each), then Post.</b>'))
@@ -928,7 +1141,8 @@ def _teams_html():
                   f'<div style="background:{color};color:#fff;padding:9px 12px;font-weight:900;font-size:18px">{html.escape(team)}'
                   f'<span style="float:right">{len(names)}</span></div><div style="padding:8px 10px">'
                   f'{chips or "<i style=color:#aaa>waiting for spins…</i>"}</div></div>')
-    return (_header('🎡 SMACKDOWN · TEAMS', f'Who spun onto which team · {len(spins)} student{"s" if len(spins) != 1 else ""} so far')
+    return (_header('🎡 SMACKDOWN · TEAMS', f'{_light_chip("bootstrap_smackdown")} · Who spun onto which team · '
+                    f'{len(spins)} student{"s" if len(spins) != 1 else ""} so far')
             + f'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;align-items:start">{cards}</div>')
 
 
