@@ -7,8 +7,8 @@ Scores are written to the hub folder every student can write:
 one small file per student per round, so simultaneous submissions never overwrite each other.
 
 Students:   submit_button('Arena', 'arena_rmse')          (Neighbor Games)
-            smackdown_check_in()   smackdown_summary()     (Bootstrap Smackdown)
-Instructor: neighbor_scoreboard()   smackdown_scoreboard()   smackdown_players()   smackdown_summaries()   manual_score(...)   reset_game(...)
+            smackdown_spin()   smackdown_check_in()   smackdown_summary()     (Bootstrap Smackdown)
+Instructor: neighbor_scoreboard()   smackdown_teams()   smackdown_scoreboard()   smackdown_players()   smackdown_summaries()   manual_score(...)   reset_game(...)
 """
 import os, re, json, glob, time, hashlib, datetime, threading, shutil, html
 
@@ -77,7 +77,7 @@ def reset_game(game, section=None):
     folder = os.path.join(GAMES_ROOT, game)
     files = glob.glob(os.path.join(folder, '*.json'))
     posts = glob.glob(os.path.join(folder, 'summaries', '*.json'))
-    if not files and not posts:
+    if not files and not posts and not glob.glob(os.path.join(folder, 'teams', '*.json')):
         print(f'{game}: nothing to clear.')
         return
     section = _norm_section(section) or SECTION
@@ -94,6 +94,11 @@ def reset_game(game, section=None):
         shutil.move(p, archive)
     for p in posts:
         shutil.move(p, os.path.join(archive, 'summaries'))
+    spins = glob.glob(os.path.join(folder, 'teams', '*.json'))
+    if spins:
+        os.makedirs(os.path.join(archive, 'teams'), exist_ok=True)
+        for p in spins:
+            shutil.move(p, os.path.join(archive, 'teams'))
     for f in saved:
         shutil.copy(f, archive)
     print(f'{game}: cleared {len(files)} scores and {len(posts)} summaries for class {section}. '
@@ -686,7 +691,7 @@ def _write_csv(path, header, rows):
 
 def save_results(game='bootstrap_smackdown', section=None):
     """Save the current boards to CSV files in this folder, labeled with the class section and date.
-    bootstrap_smackdown -> ..._teams.csv, ..._players.csv, ..._summaries.csv
+    bootstrap_smackdown -> ..._teams.csv, ..._players.csv, ..._roster.csv, ..._summaries.csv
     neighbor_games      -> ..._scores.csv
     Returns the list of files written."""
     section = _norm_section(section) or SECTION
@@ -740,6 +745,10 @@ def save_results(game='bootstrap_smackdown', section=None):
         written.append(_write_csv(f'{stem}_players.csv',
                                   ['section', 'team', 'name', 'points', *[f'step_{s_}' for s_ in SMACK_STEPS],
                                    'firsts', 'checkins', 'best_reached_at', 'last_checkin', 'summary_posted'], player_rows))
+        spins = load_team_spins()
+        written.append(_write_csv(f'{stem}_roster.csv', ['section', 'team', 'name', 'spun_at'],
+                                  sorted([[section, x.get('team', ''), x.get('name', ''), str(x.get('at', ''))[11:16]]
+                                          for x in spins], key=lambda r: (r[1], r[2]))))
         written.append(_write_csv(f'{stem}_summaries.csv',
                                   ['section', 'team', 'name', 'key_ideas', 'conclusions', 'posted'],
                                   sorted([[section, p.get('team', ''), p.get('name', ''), p.get('ideas', ''),
@@ -752,3 +761,194 @@ def save_results(game='bootstrap_smackdown', section=None):
         print('💾 Saved', f)
     print('🔒 These files hold students\' names: download them from this folder and keep them off GitHub.')
     return written
+
+
+
+# ============================================================================ Smackdown: team wheel
+SMACK_TEAMS = ['Team Faithful 🌋', 'Team Galton 📐', 'Team Baby 👶', 'Team Census 🎓', 'Team Roads 🏎️']
+WHEEL_COLORS = ['#D85A30', '#1D9E75', '#378ADD', '#BA7517', '#993556', '#534AB7', '#639922', '#A32D2D']
+
+
+def _teams_dir(game='bootstrap_smackdown'):
+    path = os.path.join(_game_dir(game), 'teams')
+    os.makedirs(path, exist_ok=True)
+    try:
+        os.chmod(path, 0o777)
+    except PermissionError:
+        pass
+    return path
+
+
+def load_team_spins(game='bootstrap_smackdown'):
+    out = []
+    for p in glob.glob(os.path.join(GAMES_ROOT, game, 'teams', '*.json')):
+        try:
+            with open(p) as f:
+                out.append(json.load(f))
+        except (ValueError, OSError):
+            pass
+    return out
+
+
+def _wheel_html(teams, target, name, already):
+    uid = uuid_hex()
+    data = json.dumps({'teams': teams, 'target': target, 'colors': (WHEEL_COLORS * 3)[:len(teams)],
+                       'name': name, 'already': already}).replace('<', '\\u003c').replace('>', '\\u003e')
+    return f"""
+<div id="tw-{uid}" style="font-family:'Segoe UI',Arial,sans-serif;max-width:760px;border:1px solid #e2e2e2;border-radius:14px;overflow:hidden">
+  <div style="background:linear-gradient(135deg,#1a1a2e,#2d0a16);color:{GOLD};padding:12px 20px;font-weight:900;font-size:20px;letter-spacing:1px">
+    🎡 SPIN FOR YOUR TEAM <span style="float:right;color:#fff;font-size:14px;font-weight:600;margin-top:4px" class="tw-who"></span></div>
+  <div style="display:flex;flex-wrap:wrap;background:#fff">
+    <div style="padding:18px;text-align:center;flex:0 0 auto">
+      <div style="position:relative;display:inline-block">
+        <div style="position:absolute;top:-6px;left:50%;transform:translateX(-50%);font-size:30px;color:#222;z-index:5;line-height:1">&#9660;</div>
+        <canvas class="tw-canvas" width="380" height="380" style="display:block;border-radius:50%;border:1px solid #ddd"></canvas>
+      </div>
+      <div style="margin-top:12px"><button class="tw-btn" style="background:{CHERRY};color:#fff;border:none;padding:11px 40px;font-size:17px;
+        font-weight:800;border-radius:26px;cursor:pointer">Spin!</button></div>
+    </div>
+    <div style="flex:1;min-width:240px;padding:22px 20px;display:flex;flex-direction:column;justify-content:center">
+      <div style="font-size:12px;color:#aaa;letter-spacing:2px;text-transform:uppercase">your team</div>
+      <div class="tw-result" style="font-size:30px;font-weight:900;color:#ccc;margin:6px 0 10px">?</div>
+      <div class="tw-note" style="color:#666;font-size:14px;line-height:1.4">Click <b>Spin!</b> to find out.</div>
+    </div>
+  </div>
+</div>
+<script>
+(function () {{
+  var D = {data};
+  function init() {{
+    var root = document.getElementById('tw-{uid}');
+    if (!root) {{ setTimeout(init, 80); return; }}
+    var canvas = root.querySelector('.tw-canvas'), ctx = canvas.getContext('2d');
+    var n = D.teams.length, TWO = Math.PI * 2, slice = TWO / n, angle = 0, spinning = false;
+    var cx = canvas.width / 2, cy = canvas.height / 2, R = cx - 6;
+    root.querySelector('.tw-who').textContent = D.name;
+    function draw(a, win) {{
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (var i = 0; i < n; i++) {{
+        var s = -Math.PI / 2 + a + i * slice;
+        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, R, s, s + slice); ctx.closePath();
+        ctx.fillStyle = (win !== undefined && win !== i) ? '#d9d9d9' : D.colors[i]; ctx.fill();
+        ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke();
+        ctx.save(); ctx.translate(cx, cy); ctx.rotate(s + slice / 2); ctx.textAlign = 'right';
+        ctx.fillStyle = '#fff'; ctx.font = '700 17px "Segoe UI",Arial,sans-serif';
+        ctx.fillText(D.teams[i].replace('Team ', ''), R - 12, 6); ctx.restore();
+      }}
+      ctx.beginPath(); ctx.arc(cx, cy, 20, 0, TWO); ctx.fillStyle = '#fff'; ctx.fill();
+      ctx.strokeStyle = '#ccc'; ctx.lineWidth = 1; ctx.stroke();
+    }}
+    function reveal() {{
+      draw(angle, D.target);
+      var r = root.querySelector('.tw-result'); r.textContent = D.teams[D.target]; r.style.color = D.colors[D.target];
+      root.querySelector('.tw-note').innerHTML = D.already
+        ? 'You were already on this team. Spinning again always lands here.'
+        : '🎉 Welcome to your team! Now run the cells below: your team\\'s data loads automatically.';
+    }}
+    function spin() {{
+      if (spinning) return; spinning = true;
+      var btn = root.querySelector('.tw-btn'); btn.disabled = true; btn.style.opacity = '0.4';
+      var goal = -((D.target + 0.5) * slice) + (Math.random() - 0.5) * slice * 0.5;
+      while (goal <= angle) goal += TWO;
+      goal += (6 + Math.floor(Math.random() * 3)) * TWO;
+      var a0 = angle, dur = 4200, t0 = performance.now();
+      function frame(t) {{
+        var p = Math.min((t - t0) / dur, 1);
+        angle = a0 + (goal - a0) * (1 - Math.pow(1 - p, 5)); draw(angle);
+        if (p < 1) {{ requestAnimationFrame(frame); return; }}
+        spinning = false; btn.style.display = 'none'; reveal();
+      }}
+      requestAnimationFrame(frame);
+    }}
+    draw(0); root.querySelector('.tw-btn').addEventListener('click', spin);
+  }}
+  setTimeout(init, 50);
+}})();
+</script>"""
+
+
+def uuid_hex():
+    import uuid
+    return uuid.uuid4().hex[:8]
+
+
+def smackdown_spin(teams=None):
+    """Student side: spin the wheel to join a team. The team is picked at random from the teams with the
+    fewest members so far (so the class stays balanced) and saved; spinning again lands on the same team.
+    Sets team_name in the notebook."""
+    from IPython.display import display, HTML
+    ns = _user_ns()
+    teams = teams or SMACK_TEAMS
+    name = str(ns.get('my_name', '') or '').strip()
+    if name in ('', '...', 'Ellipsis'):
+        display(HTML(f'<b style="color:{CHERRY}">⚠️ Fill in my_name above and run it, then spin.</b>'))
+        return None
+    folder = _teams_dir()
+    mine = os.path.join(folder, f'{_player()}.json')
+    already = False
+    try:
+        with open(mine) as f:
+            team = json.load(f)['team']
+        already = team in teams
+    except (OSError, ValueError, KeyError):
+        team = None
+    if not already:
+        counts = {t: 0 for t in teams}
+        for x in load_team_spins():
+            if x.get('team') in counts:
+                counts[x['team']] += 1
+        fewest = min(counts.values())
+        team = str(np.random.choice([t for t in teams if counts[t] == fewest]))
+        with open(mine + '.tmp', 'w') as f:
+            json.dump({'team': team, 'name': name, 'player': _player(),
+                       'at': datetime.datetime.now().isoformat(timespec='seconds')}, f)
+        os.replace(mine + '.tmp', mine)
+    else:                                                   # keep the name current
+        try:
+            rec = json.load(open(mine)); rec['name'] = name
+            json.dump(rec, open(mine, 'w'))
+        except (OSError, ValueError):
+            pass
+    ns['team_name'] = team
+    display(HTML(_wheel_html(teams, teams.index(team), name, already)))
+    # team_name is set in the notebook; return nothing so the cell shows only the wheel
+
+
+def _teams_html():
+    spins = load_team_spins()
+    by_team = {t: [] for t in SMACK_TEAMS}
+    for x in spins:
+        by_team.setdefault(x.get('team', '?'), []).append(x.get('name', '?'))
+    cards = ''
+    for i, (team, names) in enumerate(by_team.items()):
+        color = WHEEL_COLORS[i % len(WHEEL_COLORS)]
+        chips = ''.join(f'<div style="padding:4px 10px;border-radius:14px;background:#F7F5F0;margin:3px 0;font-size:15px">'
+                        f'{html.escape(n)}</div>' for n in sorted(names, key=str.lower))
+        cards += (f'<div style="min-width:0;background:#fff;border:3px solid {color};border-radius:12px;overflow:hidden">'
+                  f'<div style="background:{color};color:#fff;padding:9px 12px;font-weight:900;font-size:18px">{html.escape(team)}'
+                  f'<span style="float:right">{len(names)}</span></div><div style="padding:8px 10px">'
+                  f'{chips or "<i style=color:#aaa>waiting for spins…</i>"}</div></div>')
+    return (_header('🎡 SMACKDOWN · TEAMS', f'Who spun onto which team · {len(spins)} student{"s" if len(spins) != 1 else ""} so far')
+            + f'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;align-items:start">{cards}</div>')
+
+
+def smackdown_teams(interval=8):
+    "Live board of the team wheel: who spun onto which team, with counts."
+    _teams_dir()
+    return _live(_teams_html, interval, 'Smackdown Teams', 'bootstrap_smackdown_teams.html')
+
+
+def move_to_team(name, team, game='bootstrap_smackdown'):
+    "Instructor: move a student (by the name they entered) to another team, e.g. move_to_team('Priya', 'Team Roads 🏎️')."
+    if team not in SMACK_TEAMS:
+        print('Team must be one of:', ', '.join(SMACK_TEAMS))
+        return
+    hits = [p for p in glob.glob(os.path.join(_teams_dir(game), '*.json'))
+            if str(json.load(open(p)).get('name', '')).strip().lower() == name.strip().lower()]
+    if len(hits) != 1:
+        print(f'{len(hits)} students named {name!r} have spun; ask them to tell you their exact name.' if hits
+              else f'Nobody named {name!r} has spun yet.')
+        return
+    rec = json.load(open(hits[0])); rec['team'] = team
+    json.dump(rec, open(hits[0], 'w'))
+    print(f'Moved {name} to {team}. They should rerun their spin cell and the cells below it.')
