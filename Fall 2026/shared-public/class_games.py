@@ -7,8 +7,8 @@ Scores are written to the hub folder every student can write:
 one small file per student per round, so simultaneous submissions never overwrite each other.
 
 Students:   submit_button('Arena', 'arena_rmse')          (Neighbor Games)
-            smackdown_check_in()                           (Bootstrap Smackdown)
-Instructor: neighbor_scoreboard()   smackdown_scoreboard()   smackdown_players()   manual_score(...)   reset_game(...)
+            smackdown_check_in()   smackdown_summary()     (Bootstrap Smackdown)
+Instructor: neighbor_scoreboard()   smackdown_scoreboard()   smackdown_players()   smackdown_summaries()   manual_score(...)   reset_game(...)
 """
 import os, re, json, glob, time, hashlib, datetime, threading, shutil, html
 
@@ -72,17 +72,20 @@ def load(game):
 
 
 def reset_game(game):
-    "Clear a game's scoreboard. Old scores are moved to an archive folder, not deleted."
+    "Clear a game's scoreboard (and posted summaries). Everything is moved to an archive folder, not deleted."
     folder = os.path.join(GAMES_ROOT, game)
     files = glob.glob(os.path.join(folder, '*.json'))
-    if not files:
+    posts = glob.glob(os.path.join(folder, 'summaries', '*.json'))
+    if not files and not posts:
         print(f'{game}: nothing to clear.')
         return
     archive = os.path.join(GAMES_ROOT, '_archive', f"{game}_{datetime.datetime.now():%Y%m%d-%H%M%S}")
-    os.makedirs(archive, exist_ok=True)
+    os.makedirs(os.path.join(archive, 'summaries'), exist_ok=True)
     for p in files:
         shutil.move(p, archive)
-    print(f'{game}: cleared {len(files)} scores (saved in {archive}).')
+    for p in posts:
+        shutil.move(p, os.path.join(archive, 'summaries'))
+    print(f'{game}: cleared {len(files)} scores and {len(posts)} summaries (saved in {archive}).')
 
 
 def manual_score(game, team, round_name, score, **extra):
@@ -413,6 +416,7 @@ SMACK_STEPS = ['Data', 'Slope', 'Bootstrap', 'CI', 'Prediction', 'Figure', 'Real
 
 def _smackdown_players_html():
     scores = [s for s in load('bootstrap_smackdown') if s.get('round') == 'Smackdown']
+    posted = {p.get('player') for p in load_summaries('bootstrap_smackdown')}
     teams = {}
     for s in scores:
         teams.setdefault(s['team'], []).append(s)
@@ -450,6 +454,7 @@ def _smackdown_players_html():
             name = html.escape(m.get('name') or f'student {m.get("player", "")[:4]}')
             last = str(m.get('submitted', ''))[11:16]
             done = '🏁 ' if m['score'] >= m.get('possible', 13) else ''
+            done += '📝 ' if m.get('player') in posted else ''
             rows += (f'<tr style="border-top:1px solid #F0EDE8"><td style="padding:6px 10px;font-weight:700;font-size:15px;white-space:nowrap">'
                      f'{done}{name}</td>{cells}'
                      f'<td style="padding:6px 10px;text-align:right;font-weight:900;font-size:16px">{m["score"]:g}'
@@ -466,7 +471,7 @@ def _smackdown_players_html():
                      f'<th style="padding:6px 10px;font-size:12px;color:#888">firsts</th><th></th></tr>{rows}</table></div>')
     if not sections:
         sections = '<div style="color:#999;padding:14px;font-style:italic">No check-ins yet.</div>'
-    return (_header('🥊 SMACKDOWN · PLAYERS', 'Each member\'s steps · ⭐ = first on the team to earn that step · 🏁 = all 13 points')
+    return (_header('🥊 SMACKDOWN · PLAYERS', 'Each member\'s steps · ⭐ = first on the team to earn that step · 🏁 = all 13 points · 📝 = summary posted')
             + sections)
 
 
@@ -475,3 +480,160 @@ def smackdown_players(interval=10):
     first (⭐), points, and how many times they've checked in."""
     _game_dir('bootstrap_smackdown')
     return _live(_smackdown_players_html, interval, 'Smackdown Players', 'bootstrap_smackdown_players.html')
+
+
+
+# ============================================================================ team summaries (student box + instructor board)
+SUMMARY_FIELDS = [
+    ('ideas', '🔑 Key ideas about our dataset',
+     'What are the variables? What do the data show? Anything surprising about this data set?'),
+    ('conclusions', '📣 Our conclusions',
+     'What does the slope mean in real units? What is the 95% CI? Is the slope real, and how do you know?'),
+]
+
+
+def _summary_dir(game):
+    path = os.path.join(_game_dir(game), 'summaries')
+    os.makedirs(path, exist_ok=True)
+    try:
+        os.chmod(path, 0o777)
+    except PermissionError:
+        pass
+    return path
+
+
+def load_summaries(game='bootstrap_smackdown'):
+    out = []
+    for p in glob.glob(os.path.join(GAMES_ROOT, game, 'summaries', '*.json')):
+        try:
+            with open(p) as f:
+                out.append(json.load(f))
+        except (ValueError, OSError):
+            pass
+    return out
+
+
+def summary_box(game='bootstrap_smackdown'):
+    """A box at the end of the student sheet: type the key ideas and conclusions, then Post.
+    Posting again replaces your earlier summary. Uses the notebook's team_name and my_name."""
+    import ipywidgets as widgets
+    from IPython.display import display, HTML
+    ns = _user_ns()
+    team, name = str(ns.get('team_name', '') or ''), str(ns.get('my_name', '') or '')
+    if team in ('', '...', 'Ellipsis'):
+        display(HTML(f'<b style="color:{CHERRY}">⚠️ Run your team\'s dataset cell first, then this cell again.</b>'))
+        return
+    if name in ('', '...', 'Ellipsis'):
+        display(HTML(f'<b style="color:{CHERRY}">⚠️ Fill in my_name at the top of the notebook, run it, then this cell again.</b>'))
+        return
+    folder = _summary_dir(game)
+    path = os.path.join(folder, f'{_slug(team)}__{_player()}.json')
+    old = {}
+    for p in glob.glob(os.path.join(folder, f'*__{_player()}.json')):    # your last post, if any
+        try:
+            with open(p) as f:
+                old = json.load(f)
+        except (ValueError, OSError):
+            pass
+    boxes = {}
+    parts = [widgets.HTML(f'<div style="background:linear-gradient(135deg,#1a1a2e,#2d0a16);color:{GOLD};padding:10px 16px;'
+                          f'border-radius:10px;font-weight:900;font-size:1.25em">📝 Team summary — {html.escape(team)} · '
+                          f'<span style="color:#fff">{html.escape(name)}</span></div>')]
+    for key, label, hint in SUMMARY_FIELDS:
+        boxes[key] = widgets.Textarea(value=old.get(key, ''), placeholder=hint,
+                                      layout=widgets.Layout(width='100%', height='120px'))
+        parts += [widgets.HTML(f'<div style="font-weight:800;font-size:1.1em;margin-top:8px">{label}</div>'
+                               f'<div style="color:#666;font-size:.92em">{hint}</div>'), boxes[key]]
+    post = widgets.Button(description='📤 Post to the class board', layout=widgets.Layout(width='260px', height='38px'),
+                          style={'button_color': CHERRY, 'text_color': 'white', 'font_weight': 'bold'})
+    out = widgets.Output()
+
+    def on_post(_):
+        with out:
+            out.clear_output()
+            texts = {k: b.value.strip() for k, b in boxes.items()}
+            if sum(len(t.split()) for t in texts.values()) < 10:
+                display(HTML(f'<b style="color:{CHERRY}">⚠️ Write a little more in both boxes (a sentence or two each), then Post.</b>'))
+                return
+            for p in glob.glob(os.path.join(folder, f'*__{_player()}.json')):   # switched teams: keep only one post
+                if p != path:
+                    os.remove(p)
+            entry = dict(texts, team=team, name=name, player=_player(),
+                         submitted=datetime.datetime.now().isoformat(timespec='seconds'))
+            with open(path + '.tmp', 'w') as f:
+                json.dump(entry, f)
+            os.replace(path + '.tmp', path)
+            display(HTML(f'<div style="color:#2E7D50;font-weight:bold;padding:6px 0">✅ Posted for {html.escape(team)}! '
+                         'Edit and Post again any time; the newest version replaces the old one.</div>'))
+
+    post.on_click(on_post)
+    display(widgets.VBox(parts + [post, out], layout=widgets.Layout(border='2px solid #E0DDD6', padding='10px')))
+
+
+_STOP = set("""
+a about above after again against all also am an and any are as at be because been before being below between both
+but by can could did do does doing done down during each even every few for from further get got had has have having
+he her here hers him his how i if in into is it its itself just like lot lots made make many me more most much my
+myself no nor not now of off on once only or other our out over own really same she should so some something such
+than that the their them then there these they thing things this those through to too under until up us very was we
+were what when where which while who whom why will with would you your yours i'm it's didn't don't wasn't couldn't
+think felt feel bit kind way well one two first overall able still since though data dataset shows show means
+""".split())
+
+
+def _cloud(texts, n_words=50):
+    from collections import Counter
+    words = []
+    for text in texts:
+        words += [w.strip("'") for w in re.findall(r"[a-zA-Z][a-zA-Z'-]+", str(text).lower())]
+    top = Counter(w for w in words if len(w) > 2 and w not in _STOP).most_common(n_words)
+    if not top:
+        return '<div style="color:#999;font-style:italic;padding:12px">The word cloud appears as summaries come in.</div>'
+    biggest = top[0][1]
+    palette = [CHERRY, '#221C1E', '#7A1626', '#5B4A50', '#8A5F00', '#2F5D8A']
+    rng = np.random.RandomState(7)
+    spans = ''
+    for i in rng.choice(np.arange(len(top)), len(top), replace=False):
+        word, n = top[i]
+        spans += (f'<span title="{n}" style="font-size:{16 + 50 * np.sqrt(n / biggest):.0f}px;font-weight:'
+                  f'{800 if n / biggest > 0.5 else 600};color:{palette[i % len(palette)]};margin:2px 10px;'
+                  f'line-height:1.1;display:inline-block">{html.escape(word)}</span>')
+    return f'<div style="text-align:center;padding:10px 6px">{spans}</div>'
+
+
+def _summaries_html(game='bootstrap_smackdown'):
+    posts = load_summaries(game)
+    texts = [p.get(k, '') for p in posts for k, _, _ in SUMMARY_FIELDS]
+    teams = {}
+    for p in posts:
+        teams.setdefault(p['team'], []).append(p)
+    body = (f'<div style="background:#fff;border:1px solid #E0DDD6;border-radius:12px;margin-bottom:16px">'
+            f'<div style="padding:8px 14px;font-weight:800;color:#888;font-size:13px;letter-spacing:1px">WHAT THE CLASS IS SAYING · '
+            f'{len(posts)} summar{"y" if len(posts) == 1 else "ies"} from {len(teams)} team{"" if len(teams) == 1 else "s"}</div>'
+            f'{_cloud(texts)}</div>')
+    for team in sorted(teams):
+        cards = ''
+        for p in sorted(teams[team], key=lambda q: q.get('name', '').lower()):
+            fields = ''.join(f'<div style="font-weight:800;color:{CHERRY};font-size:13px;margin-top:6px">{label}</div>'
+                             f'<div style="font-size:15px;line-height:1.4">{html.escape(p.get(k, "")).replace(chr(10), "<br>")}</div>'
+                             for k, label, _ in SUMMARY_FIELDS)
+            cards += (f'<div style="background:#fff;border:1px solid #ddd;border-left:5px solid {CHERRY};border-radius:10px;'
+                      f'padding:10px 14px"><div style="font-weight:900;font-size:17px">{html.escape(p.get("name", ""))}'
+                      f'<span style="float:right;color:#aaa;font-size:12px;font-weight:400">{str(p.get("submitted", ""))[11:16]}</span></div>'
+                      f'{fields}</div>')
+        body += (f'<div style="background:#2d0a16;color:#fff;border-radius:10px;padding:9px 14px;margin:18px 0 10px;font-weight:800;'
+                 f'font-size:18px">{html.escape(team)}<span style="float:right;color:{GOLD}">{len(teams[team])} posted</span></div>'
+                 f'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:12px">{cards}</div>')
+    return _header('📝 SMACKDOWN · TEAM SUMMARIES', 'Key ideas and conclusions, by team and name · word cloud of every summary') + body
+
+
+def smackdown_summaries(interval=15):
+    """Live board of the summaries students post from the end of their sheet: a word cloud of everything
+    posted at the top, then each team's summaries by name."""
+    _summary_dir('bootstrap_smackdown')
+    return _live(_summaries_html, interval, 'Smackdown Summaries', 'bootstrap_smackdown_summaries.html')
+
+
+def smackdown_summary():
+    "Student side: the summary box for the Bootstrap Smackdown."
+    summary_box('bootstrap_smackdown')
