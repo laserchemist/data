@@ -165,6 +165,12 @@ def my_project(name):
         return _announce(rows[0])
     # 2) Fall back to the name the student typed
     rows = [r for r in assignments if _clean(r['first_name']) == _clean(first)]
+    if not rows:                     # 'MujahidGreen', or 'Caleb' for a roster 'Ernestcaleb'
+        typed, f = _clean(name), _clean(first)
+        rows = [r for r in assignments if len(_clean(r['first_name'])) >= 3 and typed.startswith(_clean(r['first_name']))]
+        if not rows and len(f) >= 4:
+            rows = [r for r in assignments if _clean(r['first_name']) != f and
+                    (_clean(r['first_name']).startswith(f) or _clean(r['first_name']).endswith(f))]
     if len(rows) > 1 and last_initial:
         narrowed = [r for r in rows if _clean(r.get('last_initial', ''))[:1] == _clean(last_initial)]
         rows = narrowed or rows

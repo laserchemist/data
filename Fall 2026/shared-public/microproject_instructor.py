@@ -17,10 +17,12 @@ run in any order, any number of times.
     compare_lines('03')           did everyone on a project get the same line?
     export_canvas('03')           Canvas gradebook CSV, with partial credit
     link_submissions('01')        drag-and-drop: attach or discard unlinked figures and reflections
+    check_names('08')             roster names with several given names, hyphens, or long names
+    goes_by('Ernestcaleb', 'Caleb', '08')   show a student by the name they go by
 
 Wherever a function takes a class: '03', 3 and '3' all mean class 03; 'all' means every class.
 """
-import os, glob, json, csv, re, html, base64, shutil, datetime, time, uuid
+import os, glob, json, csv, re, html, base64, shutil, datetime, time, uuid, unicodedata
 from collections import Counter
 
 import numpy as np
@@ -31,6 +33,7 @@ from microproject_tools import MICRO_ROOT, SUBMIT_DIR, ASSIGN_FILE, PROJECTS, us
 
 REFLECT_DIR = os.path.join(MICRO_ROOT, 'reflections')
 BACKUP_DIR = os.path.join(MICRO_ROOT, 'backups')
+PREFERRED_FILE = os.path.join(MICRO_ROOT, 'preferred_names.json')   # user_key -> the first name a student goes by
 COLUMNS = ['section', 'display_name', 'first_name', 'last_initial', 'user_key', 'project']
 
 PIDS = list(PROJECTS)
@@ -133,7 +136,100 @@ def _label(labels, key, typed_name, sec):
     return f'{first}{initial}' + (f' · {sec}' if sec else '')
 
 
-def _link(record, t, by_name, known):
+def _words(text):
+    """Name words for matching: lower case, accents dropped, split at spaces, hyphens, dots and capitals.
+    'MujahidGreen' -> ['mujahid', 'green'];  'Iman-Renee' -> ['iman', 'renee'];  'José' -> ['jose']"""
+    text = unicodedata.normalize('NFKD', str(text))
+    text = ''.join(ch for ch in text if not unicodedata.combining(ch))
+    text = re.sub(r'([a-z])([A-Z])', r'\1 \2', text)
+    return [w for w in re.split(r'[^a-z]+', text.lower()) if w]
+
+
+def _load_preferred():
+    try:
+        with open(PREFERRED_FILE) as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {}
+
+
+def _roster_key(s):
+    "The same key assign() gives a roster student."
+    return user_key(s['login']) or user_key(f"{s['section']}|{s['first']}|{s['last']}")
+
+
+def _roster_names():
+    "user_key -> the full roster record (given names, last name), from the class_*.csv files in this folder."
+    out = {}
+    for f in sorted(glob.glob('class_[0-9]*.csv')):
+        try:
+            for s_ in read_roster(f):
+                out[_roster_key(s_)] = s_
+        except Exception:
+            pass
+    return out
+
+
+def _name_index(t):
+    """Everyone in the saved groups, with every name they might type: the name shown in the groups,
+    all their given names ('Beshoy Hany' -> beshoy, hany, beshoyhany), and their last name words
+    (from the rosters in this folder, when they are here)."""
+    roster = _roster_names()
+    people = []
+    for key, first, initial, sec in zip(t.column('user_key'), t.column('first_name'),
+                                        t.column('last_initial'), t.column('section')):
+        firsts, lasts = set(_words(first)) | {''.join(_words(first))}, set()
+        r = roster.get(key)
+        if r:
+            given = _words(r.get('given', r['first']))
+            firsts |= set(given) | {''.join(given)}
+            lasts = set(_words(r['last'])) | {''.join(_words(r['last']))}
+        firsts.discard('')
+        lasts.discard('')
+        people.append({'key': key, 'sec': sec, 'firsts': firsts, 'lasts': lasts, 'initial': str(initial).lower()[:1]})
+    return people, set(t.column('user_key'))
+
+
+def _name_matches(typed, people, section=''):
+    """Roster students a typed name could be. Tries, in order: an exact given name ('Beshoy', 'Hany'),
+    then the start or end of a run-together given name ('caleb' -> 'Ernestcaleb'), then a name typed with no
+    space ('mujahidgreen'). Any further words narrow it down by last name or last initial."""
+    text = str(typed)
+    if ',' in text:                                    # 'Abdelmalak, Beshoy'
+        last, given = text.split(',', 1)
+        text = given + ' ' + last
+    toks = _words(text)
+    if not toks:
+        return []
+
+    def hit(tok, p, loose):
+        if tok in p['firsts']:
+            return True
+        return loose and len(tok) >= 4 and any(len(f) > len(tok) and (f.startswith(tok) or f.endswith(tok))
+                                               for f in p['firsts'])
+    cands, rest = [], toks[1:]
+    for loose in (False, True):
+        cands = [p for p in people if hit(toks[0], p, loose)]
+        if cands:
+            break
+    if not cands and len(toks) == 1:                   # 'mujahidgreen': a first name, then the rest
+        for p in people:
+            for f in p['firsts']:
+                if len(f) >= 3 and toks[0].startswith(f) and len(toks[0]) > len(f):
+                    cands.append(p)
+                    rest = [toks[0][len(f):]]
+                    break
+    if rest and len(cands) > 1:
+        narrowed = [p for p in cands if any(w in p['lasts'] or w in p['firsts'] or w[:1] == p['initial'] for w in rest)]
+        strict = [p for p in narrowed if any(w in p['lasts'] for w in rest)]
+        cands = strict or narrowed or cands
+    if len(cands) > 1 and section:                     # same first name in two classes: the class they said
+        same = [p for p in cands if str(p['sec']) == str(section)]
+        cands = same or cands
+    return cands
+
+
+def _link(record, t, people, known):
     "Link one submission/reflection record to a roster student: by login, else by typed name."
     key, sec = record.get('user_key', ''), str(record.get('section', '') or '')
     if key in known:
@@ -142,38 +238,17 @@ def _link(record, t, by_name, known):
         return key, sec, ('linked by you' if record.get('linked_by_instructor') else 'login')
     if str(record.get('project', '')).upper() == 'DEMO':
         return key, sec, 'demo'
-    words = str(record.get('name', '')).replace('.', ' ').split()
-    first = words[0].lower() if words else ''
-    hits = {}
-    for w in words[1:]:                                # 'Isabelle Van Wert' tries V and W
-        for k, s_ in by_name.get((first, w[0].lower()), []):
-            hits[k] = s_
-    if not hits:                                       # no last name typed: a first name unique across classes
-        only = by_name.get((first, ''), [])
-        if len(only) == 1:
-            hits = {only[0][0]: only[0][1]}
-        elif len(only) > 1:
-            return key, sec, 'ambiguous name'
-    if len(hits) == 1:
-        k, s_ = next(iter(hits.items()))
-        return k, s_, 'name'
-    return key, sec, ('ambiguous name' if hits else 'unmatched')
-
-
-def _name_index(t):
-    by_name = {}
-    for key, first, initial, sec in zip(t.column('user_key'), t.column('first_name'),
-                                        t.column('last_initial'), t.column('section')):
-        by_name.setdefault((first.lower(), initial.lower()), []).append((key, sec))
-        by_name.setdefault((first.lower(), ''), []).append((key, sec))
-    return by_name, set(t.column('user_key'))
+    cands = _name_matches(record.get('name', ''), people, sec)
+    if len(cands) == 1:
+        return cands[0]['key'], cands[0]['sec'], 'name'
+    return key, sec, ('ambiguous name' if cands else 'unmatched')
 
 
 # ============================================================================ reading files
 def load_submissions(t=None):
     "Every submitted figure as a Table, linked to the roster (early submissions are linked by name)."
     t = load_assignments() if t is None else t
-    by_name, known = _name_index(t)
+    people, known = _name_index(t)
     rows = []
     for p in sorted(glob.glob(os.path.join(SUBMIT_DIR, '*.json'))):
         try:
@@ -185,7 +260,7 @@ def load_submissions(t=None):
         if not os.path.exists(png):
             print('⚠️ Missing image for', os.path.basename(p))
             continue
-        key, sec, how = _link(r, t, by_name, known)
+        key, sec, how = _link(r, t, people, known)
         rows.append([r.get('project', ''), sec, r.get('name', ''), key, how, r.get('r', np.nan),
                      r.get('slope', np.nan), r.get('intercept', np.nan), r.get('caption', ''),
                      r.get('submitted', ''), os.path.basename(p[:-5]), png,
@@ -204,14 +279,14 @@ def load_submissions(t=None):
 def load_reflections(t=None):
     "Every submitted reflection as a Table, linked to the roster like the figures."
     t = load_assignments() if t is None else t
-    by_name, known = _name_index(t)
+    people, known = _name_index(t)
     rows = []
     for p in sorted(glob.glob(os.path.join(REFLECT_DIR, '*.json'))):
         try:
             r = json.load(open(p))
         except ValueError:
             continue
-        key, sec, _ = _link(r, t, by_name, known)
+        key, sec, _ = _link(r, t, people, known)
         project = r.get('project', '')
         if not project and key in known:
             project = t.where('user_key', key).column('project').item(0)
@@ -248,7 +323,8 @@ def read_roster(path):
         if not given.split():
             continue
         login = row[login_col].split('@')[0].lower() if len(row) > login_col else ''
-        students.append({'section': section, 'first': given.split()[0], 'last': last.strip(), 'login': login,
+        students.append({'section': section, 'first': given.split()[0], 'given': ' '.join(given.split()),
+                         'last': last.strip(), 'login': login,
                          'full': full, 'roster_section': row[2] if len(row) > 2 else ''})
     return students
 
@@ -281,6 +357,7 @@ def assign(redeal=None, drop=None, seed=1013):
     drop = {_section(x) for x in (drop if isinstance(drop, (list, tuple)) else [drop]) if x is not None}
     old = load_assignments()
     saved = dict(zip(old.column('user_key'), old.column('project')))
+    preferred = _load_preferred()
 
     rosters = sorted(glob.glob('class_[0-9]*.csv'))
     students = []
@@ -298,12 +375,14 @@ def assign(redeal=None, drop=None, seed=1013):
         if sec in drop:
             continue
         group = [s for s in students if s['section'] == sec]
-        firsts = [s['first'] for s in group]
+        for s in group:
+            s['key'] = _roster_key(s)
+            s['shown'] = preferred.get(s['key'], s['first'])          # goes_by(...) names win
+        firsts = [s['shown'] for s in group]
         rows = []
         for s in group:
-            label = f"{s['first']} {s['last'][:1]}." if firsts.count(s['first']) > 1 else s['first']
-            key = user_key(s['login']) or user_key(f"{sec}|{s['first']}|{s['last']}")
-            rows.append([sec, label, s['first'], s['last'][:1].upper(), key, ''])
+            label = f"{s['shown']} {s['last'][:1].upper()}." if firsts.count(s['shown']) > 1 else s['shown']
+            rows.append([sec, label, s['shown'], s['last'][:1].upper(), s['key'], ''])
         # keep saved projects, then deal the rest into the smallest groups
         np.random.seed(seed + int(sec) if sec.isdigit() else seed + i)
         counts = {pid: 0 for pid in PIDS}
@@ -337,6 +416,97 @@ def assign(redeal=None, drop=None, seed=1013):
     print(f'Saved {t.num_rows} students. (A backup of the previous groups is in {BACKUP_DIR}.)')
     if t.num_rows:
         display(t.pivot('project', 'section'))
+
+
+def _relabel(t, sec):
+    "Rebuild one class's shown names: the first name, plus the last initial where two students share it."
+    firsts = list(t.where('section', sec).column('first_name'))
+    labels = [(f'{f} {i}.' if firsts.count(f) > 1 and i else f) if s_ == sec else d
+              for s_, f, i, d in zip(t.column('section'), t.column('first_name'), t.column('last_initial'), t.column('display_name'))]
+    return t.with_column('display_name', make_array(*labels))
+
+
+def _find_student(t, name, sec):
+    "One saved student by the name shown in the groups, or by any name they go by."
+    one = t if sec is None else t.where('section', sec)
+    low = str(name).strip().lower()
+    hit = [k for k, d, f in zip(one.column('user_key'), one.column('display_name'), one.column('first_name'))
+           if low in (str(d).lower(), str(f).lower())]
+    if len(set(hit)) != 1:
+        people, _ = _name_index(one)
+        hit = [p['key'] for p in _name_matches(name, people, sec or '')]
+    return hit
+
+
+def goes_by(name, preferred, which=None):
+    """Show a student by the first name they go by, everywhere: groups, draw, gallery, slide show,
+    and matching the name they type. E.g. goes_by('Ernestcaleb', 'Caleb', '08').
+    name = the name shown now (e.g. 'Justin K.'), or any of their roster names.
+    goes_by('Caleb', None, '08') goes back to the roster name. Kept when you rerun assign()."""
+    t = load_assignments()
+    sec = _section(which)
+    hit = _find_student(t, name, sec)
+    if len(set(hit)) != 1:
+        where = f'class {sec}' if sec else 'any class'
+        print(f'{"No" if not hit else str(len(set(hit)))} student{"s" if len(set(hit)) > 1 else ""} named {name!r} in {where}. '
+              'Use the name shown in the groups (e.g. \'Justin K.\') and the class, e.g. goes_by(\'Justin K.\', \'JK\', \'08\').')
+        return
+    key = hit[0]
+    row = t.where('user_key', key)
+    sec, old = row.column('section').item(0), row.column('display_name').item(0)
+    prefs = _load_preferred()
+    if preferred is None or not str(preferred).strip():
+        prefs.pop(key, None)
+        r = _roster_names().get(key)
+        new_first = r['first'] if r else row.column('first_name').item(0)
+    else:
+        new_first = ' '.join(str(preferred).split())
+        prefs[key] = new_first
+    os.makedirs(MICRO_ROOT, exist_ok=True)
+    with open(PREFERRED_FILE + '.tmp', 'w') as f:
+        json.dump(prefs, f, indent=1)
+    os.replace(PREFERRED_FILE + '.tmp', PREFERRED_FILE)
+    firsts = [new_first if k == key else f for k, f in zip(t.column('user_key'), t.column('first_name'))]
+    t = _relabel(t.with_column('first_name', make_array(*firsts)), sec)
+    _save_assignments(t)
+    print(f'✅ {old} · {sec} is now shown as {t.where("user_key", key).column("display_name").item(0)}.')
+
+
+def check_names(which='all'):
+    """Students whose roster name may not be what they go by or type: two or more given names,
+    a hyphen, or a long name. Shows the roster name next to the name shown in the groups, so you
+    can fix any with goes_by(...). Reads the class_*.csv rosters in this folder."""
+    t = load_assignments()
+    sec = _section(which)
+    roster = _roster_names()
+    prefs = _load_preferred()
+    rows = []
+    for key, s_, d, f in zip(t.column('user_key'), t.column('section'), t.column('display_name'), t.column('first_name')):
+        if sec is not None and s_ != sec:
+            continue
+        r = roster.get(key)
+        if not r:
+            continue
+        given = r.get('given', r['first'])
+        why = []
+        if len(given.split()) > 1:
+            why.append('more than one given name')
+        if '-' in given:
+            why.append('hyphenated')
+        if len(f) > 10:
+            why.append('long: two names run together?')
+        if key in prefs:
+            why.append('goes by (set)')
+        if why:
+            rows.append([s_, f'{r["last"]}, {given}', d, ', '.join(why)])
+    if not rows:
+        print(f'{class_name(sec)}: no names to check.' if roster else 'No class_*.csv rosters in this folder.')
+        return
+    print(f'{class_name(sec)}: {len(rows)} name{"s" if len(rows) != 1 else ""} to check. Students can type any of their '
+          'given names and still be matched; to change the name shown, use goes_by(shown_name, preferred, class).')
+    Table().with_columns('section', make_array(*[r[0] for r in rows]), 'roster name', make_array(*[r[1] for r in rows]),
+                         'shown as', make_array(*[r[2] for r in rows]), 'why listed', make_array(*[r[3] for r in rows])) \
+        .sort('shown as').sort('section').show()
 
 
 # ============================================================================ group boards
@@ -909,7 +1079,7 @@ DISCARD_DIR = os.path.join(MICRO_ROOT, 'discarded')
 
 def _unlinked(t):
     "Figures and reflections not linked to any roster student (instructor DEMO figures excluded)."
-    by_name, known = _name_index(t)
+    people, known = _name_index(t)
     items = []
     for kind, folder in (('figure', SUBMIT_DIR), ('reflection', REFLECT_DIR)):
         for p in sorted(glob.glob(os.path.join(folder, '*.json'))):
@@ -917,11 +1087,9 @@ def _unlinked(t):
                 r = json.load(open(p))
             except ValueError:
                 continue
-            key, sec, how = _link(r, t, by_name, known)
+            key, sec, how = _link(r, t, people, known)
             if how in ('unmatched', 'ambiguous name'):
-                words = str(r.get('name', '')).replace('.', ' ').split()
-                first = words[0].lower() if words else ''
-                suggest = [k for k, _ in by_name.get((first, ''), [])]
+                suggest = [p['key'] for p in _name_matches(r.get('name', ''), people)]
                 thumb = (_img64(p[:-5] + '.png') if kind == 'figure' and os.path.exists(p[:-5] + '.png') else '')
                 items.append({'id': f'{kind}:{os.path.basename(p)}', 'kind': kind, 'name': str(r.get('name', '')),
                               'project': r.get('project', ''), 'why': how, 'suggest': suggest, 'thumb': thumb,
