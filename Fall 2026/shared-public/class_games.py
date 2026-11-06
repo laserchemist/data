@@ -182,6 +182,13 @@ def smackdown_check_in():
     if gate:
         display(HTML(gate))
         return
+    spins = {x.get('player') for x in load_team_spins()}
+    if spins and _player() not in spins:
+        display(HTML('<div style="font-family:sans-serif;border:2px solid #E0DDD6;border-radius:10px;padding:10px 14px">'
+                     '<div style="font-size:1.35em;font-weight:900">🔒 You\'re not on a team yet.</div>'
+                     '<div style="color:#555;margin-top:3px">Check-ins count only for players who spun the wheel. '
+                     'Ask your instructor to open the teams, then run the spin cell and this cell again.</div></div>'))
+        return
     xs, ys = np.asarray(tbl.column(x), float), np.asarray(tbl.column(y), float)
     r = np.mean((xs - xs.mean()) / xs.std() * (ys - ys.mean()) / ys.std())
     true_slope = r * ys.std() / xs.std()
@@ -372,7 +379,9 @@ def set_light(game='bootstrap_smackdown', state='green'):
     now = datetime.datetime.now().isoformat(timespec='seconds')
     rec.update(state=state, at=now, section=SECTION)
     if state == 'green':
-        rec.setdefault('go_at', now)
+        if not rec.get('go_at'):
+            rec['go_at'] = now
+            rec['teams_open'] = False          # the wheel closes at the first GO; open_teams() lets latecomers in
         rec.pop('stopped_at', None)
     elif rec.get('go_at'):
         rec['stopped_at'] = now
@@ -384,6 +393,28 @@ def set_light(game='bootstrap_smackdown', state='green'):
     except PermissionError:
         pass
     return rec
+
+
+def teams_are_open(game='bootstrap_smackdown'):
+    "True while new students may spin onto a team: until the first GO, or while you've reopened the teams."
+    return bool(get_light(game).get('teams_open', True))
+
+
+def open_teams(game='bootstrap_smackdown', is_open=True):
+    """Instructor: open_teams() lets latecomers spin onto a team after GO; open_teams(is_open=False) closes the wheel again.
+    Students who join after GO are marked late (⏰)."""
+    path = _light_path(game)
+    rec = get_light(game) if os.path.exists(path) else {}
+    rec['teams_open'] = bool(is_open)
+    with open(path + '.tmp', 'w') as f:
+        json.dump(rec, f)
+    os.replace(path + '.tmp', path)
+    print(f'Teams are now {"OPEN: new students can spin" if is_open else "CLOSED: new students can no longer spin"}.')
+
+
+def close_teams(game='bootstrap_smackdown'):
+    "Instructor: close the wheel to new students (it closes by itself at the first GO)."
+    open_teams(game, is_open=False)
 
 
 def _clock(seconds):
@@ -461,11 +492,20 @@ def stoplight(game='bootstrap_smackdown'):
                            style=dict(style, button_color='#B8860B'))
     b_go = widgets.Button(description='🟢 GO! (3-2-1)', layout=widgets.Layout(width='170px', height='44px'),
                           style=dict(style, button_color='#2E7D50'))
+    b_door = widgets.Button(layout=widgets.Layout(width='190px', height='44px', margin='0 0 0 30px'),
+                            style=dict(style, button_color='#555'))
+    door = widgets.HTML()
     busy = threading.Event()
 
     def show():
         rec = get_light(game)
         el = _elapsed(rec)
+        is_open = rec.get('teams_open', True)
+        b_door.description = '🔒 Close teams' if is_open else '🔓 Let latecomers in'
+        door.value = ('<span style="font-size:1.05em">🔓 <b>Teams open:</b> new students can spin. '
+                      '(The wheel closes by itself at GO.)</span>' if is_open else
+                      '<span style="font-size:1.05em">🔒 <b>Teams closed:</b> new students can\'t spin or check in. '
+                      'Late arrivals: click <i>Let latecomers in</i>, then close again.</span>')
         if rec['state'] == 'green':
             view.value = _light_html('green', 'GO!', f'Check-ins are open · ⏱ {_clock(el)}')
         elif rec['state'] == 'yellow':
@@ -512,9 +552,15 @@ def stoplight(game='bootstrap_smackdown'):
     b_red.on_click(to('red'))
     b_yel.on_click(to('yellow'))
     b_go.on_click(go)
+
+    def toggle_door(_):
+        rec = get_light(game)
+        open_teams(game, not rec.get('teams_open', True))
+        show()
+    b_door.on_click(toggle_door)
     show()
     threading.Thread(target=tick, daemon=True).start()
-    display(widgets.VBox([view, widgets.HBox([b_red, b_yel, b_go], layout=widgets.Layout(gap='10px', margin='12px 0 0 0'))],
+    display(widgets.VBox([view, widgets.HBox([b_red, b_yel, b_go, b_door], layout=widgets.Layout(gap='10px', margin='12px 0 0 0')), door],
                          layout=widgets.Layout(border='2px solid #E0DDD6', padding='14px')))
 
 
@@ -713,16 +759,21 @@ def smackdown_players(interval=10):
 # ============================================================================ team summaries (student box + instructor board)
 
 # ============================================================================ Smackdown: collective team race
-def _team_progress(game='bootstrap_smackdown'):
+def _team_progress(game='bootstrap_smackdown', count_late=False):
     """Each team's collective progress. Members are everyone who spun onto the team (so a teammate who hasn't
-    checked in counts as 0 points), plus anyone who checked in for it without spinning."""
+    checked in counts as 0 points). Students who joined after GO (late) are shown but don't hold their team back,
+    unless count_late=True. If nobody used the wheel, members are whoever checked in."""
     n_steps = len(SMACK_STEPS)
-    spins = {x.get('player'): x.get('team') for x in load_team_spins(game) if x.get('player')}
+    spin_recs = [x for x in load_team_spins(game) if x.get('player')]
+    spins = {x['player']: x.get('team') for x in spin_recs}
+    late = {x['player'] for x in spin_recs if x.get('late')}
     best = {}                                          # player -> their check-in for their current team
     for x in load(game):
         if x.get('round') != 'Smackdown':
             continue
         pl = x.get('player')
+        if spins and pl not in spins:                  # the wheel is in use: only players who spun count
+            continue
         if spins.get(pl, x['team']) != x['team']:      # an old check-in from before move_to_team
             continue
         if pl not in best or x['score'] > best[pl]['score']:
@@ -741,33 +792,37 @@ def _team_progress(game='bootstrap_smackdown'):
             possible = x.get('possible', 13)
             score = x.get('score', 0)
             rows.append({'score': score, 'possible': possible, 'done': bool(x) and score >= possible,
-                         'steps': (x.get('steps') or [0] * n_steps), 'at': x.get('first_at', '')})
-        rows.sort(key=lambda r: (-r['score'], r['at']))
+                         'steps': (x.get('steps') or [0] * n_steps), 'at': x.get('first_at', ''), 'late': pl in late})
+        all_rows = sorted(rows, key=lambda r: (r['late'], -r['score'], r['at']))
+        rows = [r for r in all_rows if count_late or not r['late']]
         total, possible = sum(r['score'] for r in rows), sum(r['possible'] for r in rows)
         n_done = sum(r['done'] for r in rows)
         step_counts = [sum(1 for r in rows if r['steps'][k]) for k in range(n_steps)]
         out.append({'team': team, 'color': WHEEL_COLORS[SMACK_TEAMS.index(team) % len(WHEEL_COLORS)] if team in SMACK_TEAMS
                     else WHEEL_COLORS[i % len(WHEEL_COLORS)],
-                    'members': rows, 'n': len(rows), 'n_done': n_done, 'points': total, 'possible': possible,
+                    'members': all_rows, 'n_late': len(all_rows) - len(rows), 'n': len(rows), 'n_done': n_done, 'points': total, 'possible': possible,
                     'pct': 100 * total / possible if possible else 0, 'steps': step_counts,
-                    'all_done_at': max(r['at'] for r in rows) if rows and n_done == len(rows) else ''})
+                    'all_done_at': max(r['at'] for r in rows if r['done']) if rows and n_done == len(rows) else ''})
     out.sort(key=lambda t: (not t['all_done_at'], t['all_done_at'] or '', -t['pct'], -t['n_done']))
     return out
 
 
-def _race_html():
-    teams = _team_progress()
+def _race_html(count_late=False):
+    teams = _team_progress(count_late=count_late)
     winners = [t for t in teams if t['all_done_at']]
     rows = ''
+    late_tip = "joined after GO: doesn't hold the team back"
     for i, t in enumerate(teams):
         c = t['color']
         rank = ('🏆' if i == 0 else MEDALS[i] if i < 3 else '✅') if t['all_done_at'] else f'<span style="color:#999">{i + 1}</span>'
         segs = ''.join(
-            f'<div style="flex:1;background:#ECE8E1;border-radius:6px;height:34px;position:relative;overflow:hidden">'
+            f'<div style="flex:1;background:#ECE8E1;border-radius:6px;height:34px;position:relative;overflow:hidden;'
+            f'{"outline:2px dashed #999;outline-offset:-2px;opacity:.6" if m["late"] and not count_late else ""}" '
+            f'title="{late_tip if m["late"] and not count_late else ""}">'
             f'<div style="position:absolute;left:0;top:0;bottom:0;width:{100 * m["score"] / m["possible"]:.0f}%;'
             f'background:{"#2E7D50" if m["done"] else c};opacity:{1 if m["done"] else .75}"></div>'
             f'<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;'
-            f'font-weight:900;font-size:16px;text-shadow:0 0 3px #0006">{"✓" if m["done"] else ""}</div></div>'
+            f'font-weight:900;font-size:16px;text-shadow:0 0 3px #0006">{"✓" if m["done"] else "⏰" if m["late"] and not count_late else ""}</div></div>'
             for m in t['members'])
         strip = ''.join(
             f'<div style="flex:1;text-align:center;border-radius:5px;padding:3px 0;font-size:11px;'
@@ -784,7 +839,8 @@ def _race_html():
                  f'<div style="font-size:30px;width:44px;text-align:center">{rank}</div>'
                  f'<div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;align-items:baseline">'
                  f'<span style="font-size:21px;font-weight:900;color:{c}">{html.escape(t["team"])}</span>'
-                 f'<span style="font-size:15px;color:#444"><b>{t["n_done"]} of {t["n"]}</b> finished</span></div>'
+                 f'<span style="font-size:15px;color:#444"><b>{t["n_done"]} of {t["n"]}</b> finished'
+                 f'{" · +" + str(t["n_late"]) + " late ⏰" if t["n_late"] else ""}</span></div>'
                  f'<div style="display:flex;gap:5px;margin:7px 0">{segs}</div>'
                  f'<div style="display:flex;gap:4px">{strip}</div></div>'
                  f'<div style="width:150px;text-align:center">{right}</div></div>')
@@ -797,16 +853,17 @@ def _race_html():
                   f'font-size:24px;font-weight:900">🏆 {html.escape(w["team"])} wins — everyone finished, '
                   f'{_since_go(w["all_done_at"])}!</div>')
     return (_header('🤝 SMACKDOWN · TEAM RACE', f'{_light_chip("bootstrap_smackdown")} · The first team with <b>every member</b> '
-                    'at 13 points wins · one block per teammate · the strip shows how many teammates have each step')
+                    'at 13 points wins · one block per teammate · the strip shows how many teammates have each step'
+                    + ('' if count_late else ' · ⏰ = joined after GO, doesn\'t hold the team back'))
             + banner + rows)
 
 
-def smackdown_team_race(interval=10):
+def smackdown_team_race(interval=10, count_late=False):
     """Live collective board: each team's progress toward EVERYONE finishing, with no student names.
     One block per teammate (green ✓ = all 13 points), the share of the team's possible points earned,
     and how many teammates have each step. The first team with every member finished wins."""
     _game_dir('bootstrap_smackdown')
-    return _live(_race_html, interval, 'Smackdown Team Race', 'bootstrap_smackdown_team_race.html')
+    return _live(lambda: _race_html(count_late), interval, 'Smackdown Team Race', 'bootstrap_smackdown_team_race.html')
 
 SUMMARY_FIELDS = [
     ('ideas', '🔑 Key ideas about our dataset',
@@ -1063,8 +1120,9 @@ def save_results(game='bootstrap_smackdown', section=None):
                                     _since_go(t['all_done_at']) if t['all_done_at'] else '', *t['steps']]
                                    for i, t in enumerate(race, start=1)]))
         spins = load_team_spins()
-        written.append(_write_csv(f'{stem}_roster.csv', ['section', 'team', 'name', 'spun_at'],
-                                  sorted([[section, x.get('team', ''), x.get('name', ''), str(x.get('at', ''))[11:16]]
+        written.append(_write_csv(f'{stem}_roster.csv', ['section', 'team', 'name', 'spun_at', 'joined_after_go'],
+                                  sorted([[section, x.get('team', ''), x.get('name', ''), str(x.get('at', ''))[11:16],
+                                           'yes' if x.get('late') else '']
                                           for x in spins], key=lambda r: (r[1], r[2]))))
         written.append(_write_csv(f'{stem}_summaries.csv',
                                   ['section', 'team', 'name', 'key_ideas', 'conclusions', 'posted'],
@@ -1209,6 +1267,14 @@ def smackdown_spin(teams=None):
         already = team in teams
     except (OSError, ValueError, KeyError):
         team = None
+    if not already and not teams_are_open():
+        display(HTML('<div style="font-family:sans-serif;border:2px solid #E0DDD6;border-radius:10px;padding:10px 14px">'
+                     '<div style="font-size:1.35em;font-weight:900">🔒 Teams are closed.</div>'
+                     '<div style="color:#555;margin-top:3px">The competition has started, so the wheel is closed to new players. '
+                     'Ask your instructor to let you in, then run this cell again. To practice meanwhile, add a cell with '
+                     '<code>team_name = \'Team Faithful 🌋\'</code> (or any team in the table below) and run the dataset cells; '
+                     'your check-ins won\'t count until you\'re on a team.</div></div>'))
+        return None
     if not already:
         counts = {t: 0 for t in teams}
         for x in load_team_spins():
@@ -1218,7 +1284,8 @@ def smackdown_spin(teams=None):
         team = str(np.random.choice([t for t in teams if counts[t] == fewest]))
         with open(mine + '.tmp', 'w') as f:
             json.dump({'team': team, 'name': name, 'player': _player(),
-                       'at': datetime.datetime.now().isoformat(timespec='seconds')}, f)
+                       'at': datetime.datetime.now().isoformat(timespec='seconds'),
+                       'late': bool(get_light().get('go_at'))}, f)
         os.replace(mine + '.tmp', mine)
     else:                                                   # keep the name current
         try:
@@ -1235,7 +1302,7 @@ def _teams_html():
     spins = load_team_spins()
     by_team = {t: [] for t in SMACK_TEAMS}
     for x in spins:
-        by_team.setdefault(x.get('team', '?'), []).append(x.get('name', '?'))
+        by_team.setdefault(x.get('team', '?'), []).append(x.get('name', '?') + (' ⏰' if x.get('late') else ''))
     cards = ''
     for i, (team, names) in enumerate(by_team.items()):
         color = WHEEL_COLORS[i % len(WHEEL_COLORS)]
@@ -1245,7 +1312,8 @@ def _teams_html():
                   f'<div style="background:{color};color:#fff;padding:9px 12px;font-weight:900;font-size:18px">{html.escape(team)}'
                   f'<span style="float:right">{len(names)}</span></div><div style="padding:8px 10px">'
                   f'{chips or "<i style=color:#aaa>waiting for spins…</i>"}</div></div>')
-    return (_header('🎡 SMACKDOWN · TEAMS', f'{_light_chip("bootstrap_smackdown")} · Who spun onto which team · '
+    door = '🔓 teams open' if teams_are_open() else '🔒 teams closed'
+    return (_header('🎡 SMACKDOWN · TEAMS', f'{_light_chip("bootstrap_smackdown")} · {door} · ⏰ = joined after GO · Who spun onto which team · '
                     f'{len(spins)} student{"s" if len(spins) != 1 else ""} so far')
             + f'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;align-items:start">{cards}</div>')
 
