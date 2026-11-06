@@ -107,7 +107,7 @@ def reset_game(game, section=None):
     if os.path.exists(light):
         shutil.move(light, os.path.join(archive, 'start_light.json'))
     print(f'{game}: cleared {len(files)} scores and {len(posts)} summaries for class {section}. '
-          f'Boards are empty and the start light is back to its starting state (🔴 for the Smackdown), '
+          f'Boards are empty and the start light is back to 🔴, '
           f'ready for the next class. (Raw files archived in {archive}.)')
 
 
@@ -138,7 +138,7 @@ def submit_button(round_name, score_var, extra_fn=None, game='neighbor_games', u
         with out:
             out.clear_output()
             try:
-                gate = _gate(game)
+                gate = _gate(game, again='Click Submit again after GO.')
                 if gate:
                     display(HTML(gate))
                     return
@@ -344,7 +344,8 @@ def _header(title, subtitle):
 
 
 # ============================================================================ the start light (🚦)
-GATED_GAMES = {'bootstrap_smackdown'}     # these start on red: no submissions until the instructor turns the light green
+GATED_GAMES = {'bootstrap_smackdown', 'neighbor_games'}   # these start on red: no submissions until the instructor turns the light green
+WHEEL_GAMES = {'bootstrap_smackdown'}                     # games whose teams come from the wheel (and close at GO)
 
 
 def _light_path(game):
@@ -433,7 +434,7 @@ def _elapsed(rec):
     return (stop - datetime.datetime.fromisoformat(rec['go_at'])).total_seconds()
 
 
-def _gate(game, allow_after_stop=False):
+def _gate(game, allow_after_stop=False, again='Run this cell again after GO.'):
     "None if students may submit now; otherwise the message to show them."
     rec = get_light(game)
     if rec['state'] == 'green':
@@ -442,13 +443,13 @@ def _gate(game, allow_after_stop=False):
         if allow_after_stop:
             return None
         msg = ('🛑', "Time's up — the competition has stopped.",
-               'Your last check-in stays on the board. Your instructor can turn the light green again.')
+               'Your last score stays on the board. Your instructor can turn the light green again.')
     elif rec['state'] == 'yellow':
-        msg = ('🟡', 'Get ready — almost time!', 'Nothing is submitted until the light turns green. Run this cell again after GO.')
+        msg = ('🟡', 'Get ready — almost time!', 'Nothing is submitted until the light turns green. ' + again)
     else:
         msg = ('🔴', "The competition hasn't started yet.",
                'Find your teammates and look over your data. Nothing is submitted until your instructor turns the light '
-               'green; your work stays in your notebook. Run this cell again after GO.')
+               'green; your work stays in your notebook. ' + again)
     return (f'<div style="font-family:sans-serif;border:2px solid #E0DDD6;border-radius:10px;padding:10px 14px;margin:6px 0">'
             f'<div style="font-size:1.35em;font-weight:900">{msg[0]} {msg[1]}</div>'
             f'<div style="color:#555;margin-top:3px">{msg[2]}</div></div>')
@@ -481,7 +482,8 @@ def _light_html(state, big, small):
 def stoplight(game='bootstrap_smackdown'):
     """Instructor: the start light. 🔴 before the start (students spin and find their teams; no check-ins),
     🟡 get ready, 🟢 GO! counts down 3-2-1, then opens check-ins and starts the clock.
-    Back to 🔴 after GO = time's up: no more check-ins. The light is saved, so every notebook sees the same state."""
+    Back to 🔴 after GO = time's up: no more check-ins. The light is saved, so every notebook sees the same state.
+    stoplight('neighbor_games') is the same light for the Neighbor Games' Submit buttons."""
     import ipywidgets as widgets
     from IPython.display import display
     view = widgets.HTML()
@@ -496,6 +498,11 @@ def stoplight(game='bootstrap_smackdown'):
                             style=dict(style, button_color='#555'))
     door = widgets.HTML()
     busy = threading.Event()
+    wheel = game in WHEEL_GAMES
+    what = 'check-ins' if wheel else 'submissions'
+    if not wheel:
+        b_door.layout.display = 'none'
+        door.layout.display = 'none'
 
     def show():
         rec = get_light(game)
@@ -507,13 +514,13 @@ def stoplight(game='bootstrap_smackdown'):
                       '<span style="font-size:1.05em">🔒 <b>Teams closed:</b> new students can\'t spin or check in. '
                       'Late arrivals: click <i>Let latecomers in</i>, then close again.</span>')
         if rec['state'] == 'green':
-            view.value = _light_html('green', 'GO!', f'Check-ins are open · ⏱ {_clock(el)}')
+            view.value = _light_html('green', 'GO!', f'{what.capitalize()} are open · ⏱ {_clock(el)}')
         elif rec['state'] == 'yellow':
-            view.value = _light_html('yellow', 'Get ready…', 'Teams together? Check-ins open on green.')
+            view.value = _light_html('yellow', 'Get ready…', f'Teams together? {what.capitalize()} open on green.')
         elif el is not None:
-            view.value = _light_html('red', "Time's up", f'Stopped after {_clock(el)} · check-ins are closed')
+            view.value = _light_html('red', "Time's up", f'Stopped after {_clock(el)} · {what} are closed')
         else:
-            view.value = _light_html('red', 'Not started', 'Students spin and find their teams · check-ins are closed')
+            view.value = _light_html('red', 'Not started', f'{"Students spin and find their teams" if wheel else "Teams get set up"} · {what} are closed')
 
     def go(_):
         if busy.is_set():
@@ -613,7 +620,8 @@ def _neighbor_html():
         boards += (f'<div style="background:#fff;border:1px solid #E0DDD6;border-radius:10px;margin-bottom:12px;overflow:hidden">'
                    f'<div style="padding:8px 14px;border-bottom:1px solid #F0EDE8;font-weight:800;font-size:16px">{emoji} {rnd} Round'
                    f'<span style="float:right;font-weight:400;color:#999;font-size:12px">{label} · lower is better</span></div>{table}</div>')
-    return (_header('🌿 THE NEIGHBOR GAMES', f'Live leaderboard · {len(teams)} team{"s" if len(teams) != 1 else ""} on the board')
+    return (_header('🌿 THE NEIGHBOR GAMES', f'{_light_chip("neighbor_games")} · Live leaderboard · '
+                    f'{len(teams)} team{"s" if len(teams) != 1 else ""} on the board')
             + f'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">{strip}</div>' + boards)
 
 
