@@ -146,7 +146,12 @@ def submit_button(round_name, score_var, extra_fn=None, game='neighbor_games', u
                 if score is None or score is Ellipsis:
                     raise ValueError(f'Run the {round_name} cells first — {score_var} has no value yet.')
                 team = ns.get('team_name', '')
-                submit(game, team, round_name, score, extra_fn() if extra_fn else None)
+                extra = dict(extra_fn() if extra_fn else {})
+                members = _clean_members(ns.get('team_members'))
+                if members:
+                    extra['members'] = members
+                    _register_team(game, team, members)
+                submit(game, team, round_name, score, extra)
                 display(HTML(f'<div style="color:#2E7D50;font-weight:bold;padding:6px 0;">✅ Submitted! '
                              f'<em>{html.escape(str(team))}</em> · {round_name} · {float(score):.3f} {unit}</div>'))
             except Exception as e:
@@ -571,6 +576,251 @@ def stoplight(game='bootstrap_smackdown'):
                          layout=widgets.Layout(border='2px solid #E0DDD6', padding='14px')))
 
 
+
+# ============================================================================ Neighbor Games: team members
+def _clean_members(members):
+    "team_members list -> clean list of names ('...' placeholders and blanks dropped, duplicates removed)."
+    if isinstance(members, str):
+        members = [m for m in re.split(r'[,;\n]', members)]
+    if not isinstance(members, (list, tuple)):
+        return []
+    out, seen = [], set()
+    for m in members:
+        name = ' '.join(str(m).split())
+        if name and name not in ('...', 'Ellipsis') and name.lower() not in seen:
+            seen.add(name.lower())
+            out.append(name)
+    return out
+
+
+def _register_team(game, team, members):
+    team = str(team).strip()
+    if team in ('', '...', 'Ellipsis') or not members:
+        return
+    path = os.path.join(_teams_dir(game), f'{_player()}.json')
+    with open(path + '.tmp', 'w') as f:
+        json.dump({'team': team, 'members': members, 'player': _player(),
+                   'at': datetime.datetime.now().isoformat(timespec='seconds')}, f)
+    os.replace(path + '.tmp', path)
+
+
+def neighbor_team(game='neighbor_games'):
+    """Student: register this notebook's team_name and team_members with the class scorecard.
+    Works before GO (it isn't a score). Every teammate runs it in their own notebook."""
+    from IPython.display import display, HTML
+    ns = _user_ns()
+    team = str(ns.get('team_name', '')).strip()
+    raw = ns.get('team_members')
+    members = _clean_members(raw)
+    problem = None
+    if team in ('', '...', 'Ellipsis'):
+        problem = 'Set <code>team_name</code> first, e.g. <code>team_name = "District 4: The Alkanol Alliance"</code>.'
+    elif not isinstance(raw, (list, tuple)):
+        problem = ('Make <code>team_members</code> a list: names in quotes, separated by commas, inside square brackets, '
+                   'e.g. <code>team_members = ["Ada L.", "Grace H."]</code>.')
+    elif not members:
+        problem = 'Replace each <code>"..."</code> in <code>team_members</code> with a teammate\'s name.'
+    elif any(str(m).strip() in ('...', 'Ellipsis') for m in raw):
+        problem = (f'There\'s still a <code>"..."</code> in <code>team_members</code>. Fill it in, or delete it '
+                   f'(and its comma) if your team has {len(members)} member{"s" if len(members) != 1 else ""}.')
+    if problem:
+        display(HTML(f'<div style="font-family:sans-serif;color:{CHERRY};font-weight:bold;padding:6px 0">⚠️ {problem}</div>'))
+        return
+    _register_team(game, team, members)
+    chips = ''.join(f'<span style="display:inline-block;background:#fff;color:#1a1a2e;border-radius:14px;padding:3px 12px;'
+                    f'margin:3px 4px 0 0;font-weight:600">{html.escape(m)}</span>' for m in members)
+    display(HTML(f'<div style="font-family:sans-serif;background:linear-gradient(135deg,#1a1a2e,#2d0a16);color:#fff;'
+                 f'border-radius:10px;padding:12px 16px;max-width:640px"><div style="color:#FFD700;font-size:1.25em;'
+                 f'font-weight:900">🌿 {html.escape(team)}</div><div style="margin-top:4px">{chips}</div>'
+                 f'<div style="color:#aaaacc;font-size:12px;margin-top:8px">✅ Registered with the class scorecard · '
+                 f'{len(members)} member{"s" if len(members) != 1 else ""}. Every teammate runs this cell in their own '
+                 f'notebook, with the same team name.</div></div>'))
+
+
+def load_neighbor_teams(game='neighbor_games'):
+    "team -> every member name any teammate listed (merged, in order of first appearance)."
+    teams = {}
+    for x in sorted(load_team_spins(game), key=lambda x: x.get('at', '')):
+        names = teams.setdefault(x.get('team', '?'), [])
+        for m in x.get('members', []):
+            if m.lower() not in [n.lower() for n in names]:
+                names.append(m)
+    for x in load(game):                        # members sent with scores, in case a team skipped neighbor_team()
+        if x.get('members'):
+            names = teams.setdefault(x['team'], [])
+            for m in x['members']:
+                if m.lower() not in [n.lower() for n in names]:
+                    names.append(m)
+    return teams
+
+
+# ============================================================================ Neighbor Games: Training Camp checks
+def _ok(msg):
+    from IPython.display import display, HTML
+    display(HTML(f'<div style="font-family:sans-serif;color:#2E7D50;font-weight:bold;padding:4px 0">✅ {msg}</div>'))
+
+
+def _no(msg):
+    from IPython.display import display, HTML
+    display(HTML(f'<div style="font-family:sans-serif;color:{CHERRY};font-weight:bold;padding:4px 0">❌ {msg}</div>'))
+
+
+def _five_nearest(ns):
+    feats = list(ns['features'])
+    pts = [np.array(r, dtype=float) for r in ns['train'].select(feats).rows]
+    d = np.array([np.sqrt(np.sum((p - np.asarray(ns['mystery'], dtype=float)) ** 2)) for p in pts])
+    order = np.argsort(d, kind='stable')[:5]
+    return d, order
+
+
+def neighbor_check(step):
+    """Student: check one Training Camp challenge. step is the name of the variable or function you just made:
+    'z', 'distance', 'd0', 'all_dists', 'nearest', 'prediction', 'toolkit', 'arena', 'ipa_std', 'prize_score', 'weights'."""
+    ns = _user_ns()
+    try:
+        _NCHECKS[step](ns)
+    except KeyError as e:
+        _no(f'<code>{html.escape(str(e).strip(chr(39)))}</code> isn\'t defined yet. Run your challenge cell (and the cells above it) first.')
+    except Exception as e:
+        text = str(e)
+        if 'ellipsis' in text.lower():
+            _no('There\'s still a <code>...</code> to fill in.')
+        elif 'is not in the table' in text:
+            _no('The standardized <code>train</code> table is missing its feature columns. Finish Challenge 1, '
+                'then rerun the standardization cell and the cells after it.')
+        else:
+            _no(f'Python says: {html.escape(type(e).__name__ + ": " + text)}')
+
+
+def _check_z(ns):
+    r = np.asarray(ns['z'](np.array([10.0, 20.0]), 15.0, 5.0), dtype=float)
+    if np.allclose(r, [-1, 1]):
+        _ok('z([10, 20], mu=15, sigma=5) = [-1, 1]: 10 is one standard deviation below the mean, 20 is one above.')
+    elif np.allclose(r, [-5, 5]):
+        _no('You get [-5, 5]: divide the difference by sigma.')
+    elif np.allclose(r, [25, 35]) or np.allclose(r, [5, 7]):
+        _no('Subtract the mean first, then divide by sigma: (x - mu) / sigma. The parentheses matter.')
+    else:
+        _no(f'z([10, 20], 15, 5) should be [-1, 1]; yours gives {np.round(r, 3).tolist()}.')
+
+
+def _check_distance(ns):
+    d = ns['distance']
+    a = float(d(np.array([0.0, 0.0]), np.array([3.0, 4.0])))
+    b = float(d(np.array([1.0, 2.0, 3.0]), np.array([1.0, 2.0, 3.0])))
+    if np.isclose(a, 5) and np.isclose(b, 0):
+        _ok('distance([0, 0], [3, 4]) = 5, the 3-4-5 right triangle. It works for any number of features.')
+    elif np.isclose(a, 25):
+        _no('You get 25 for [0, 0] to [3, 4]: take the square root at the end.')
+    elif np.isclose(a, 7) or np.isclose(a, -7):
+        _no('You get 7: square each difference before adding them up.')
+    else:
+        _no(f'distance([0, 0], [3, 4]) should be 5; yours gives {a:.3f}.')
+
+
+def _check_d0(ns):
+    d, _ = _five_nearest(ns)
+    if np.isclose(float(ns['d0']), d[0]):
+        _ok(f'The first training molecule is {d[0]:.3f} standard units away from the mystery molecule.')
+    else:
+        _no(f'd0 should be {d[0]:.3f}. Use the mystery molecule as the second point: distance(first_row, mystery).')
+
+
+def _check_all_dists(ns):
+    d, order = _five_nearest(ns)
+    mine = np.asarray(ns['all_dists'], dtype=float)
+    if len(mine) != len(d):
+        _no(f'You have {len(mine)} distances; there should be {len(d)}, one per training molecule.')
+    elif np.allclose(mine, d):
+        n0 = int(np.sum(np.isclose(d, 0)))
+        close = (f'{n0} training molecule{"s are" if n0 > 1 else " is"} at distance 0: exactly the same '
+                 f'{" and ".join(ns["features"])} as the mystery molecule (isomers!)' if n0 else
+                 f'the closest is only {d[order[0]]:.3f} away')
+        _ok(f'{len(d)} distances, one per training molecule. {close[0].upper() + close[1:]}; the farthest is {d.max():.2f}.')
+    else:
+        _no('The right number of distances, but not the right values: each one is distance(np.array(row), mystery).')
+
+
+def _check_nearest(ns):
+    d, order = _five_nearest(ns)
+    t = ns['nearest']
+    if 'Distance' not in t.labels:
+        _no('nearest needs the Distance column: train.with_column(\'Distance\', all_dists) …')
+    elif t.num_rows != 5:
+        _no(f'nearest has {t.num_rows} rows; take(np.arange(5)) keeps the 5 closest.')
+    elif not np.allclose(np.asarray(t.column('Distance'), dtype=float), d[order]):
+        _no('Those aren\'t the 5 closest: sort by \'Distance\' (smallest first) before you take them.')
+    else:
+        _ok('These are the 5 nearest neighbors of the mystery molecule, closest first.')
+
+
+def _check_prediction(ns):
+    d, order = _five_nearest(ns)
+    expect = float(np.average(np.asarray(ns['train'].column('bp'), dtype=float)[order]))
+    mine = float(ns['prediction'])
+    actual = float(ns['test'].column('bp').item(0))
+    if np.isclose(mine, expect):
+        _ok(f'Predicted bp = {mine:.1f} K. The actual bp is {actual:.0f} K, so you\'re off by {abs(mine - actual):.1f} K. '
+            'That\'s k-nearest neighbors, done by hand!')
+    else:
+        _no(f'The prediction should be the average bp of your 5 neighbors, {expect:.1f} K; yours is {mine:.1f} K.')
+
+
+def _check_toolkit(ns):
+    p = float(ns['predict_knn'](0, ns['train'], ns['test'], k=5))
+    if np.isclose(p, float(ns['prediction'])):
+        _ok(f'predict_knn(0, train, test, k=5) = {p:.1f} K, the same as your hand-built prediction.')
+    else:
+        _no(f'predict_knn gives {p:.1f} K, but your hand-built prediction is {float(ns["prediction"]):.1f} K. '
+            'Did you change features? Rerun the Training Camp cells.')
+
+
+def _check_arena(ns):
+    preds = list(ns['arena_predictions'])
+    n = ns['test'].num_rows
+    if len(preds) != n:
+        _no(f'You have {len(preds)} predictions; you need {n}, one per test molecule. Loop over np.arange(test.num_rows).')
+    elif not np.isclose(float(preds[0]), float(ns['predict_knn'](0, ns['train'], ns['test'], k=ns['k']))):
+        _no('Use the row number i from the loop as the first argument: predict_knn(i, train, test, k=k).')
+    else:
+        _ok(f'{n} predictions, one per test molecule, with k = {ns["k"]} and features = {list(ns["features"])}.')
+
+
+def _check_ipa(ns):
+    raw, stats, feats = ns['ipa_raw'], ns['train_stats'], list(ns['features'])
+    expect = np.array([(raw[f] - stats[f][0]) / stats[f][1] for f in feats])
+    mine = np.asarray(ns['ipa_std'], dtype=float)
+    if mine.shape == expect.shape and np.allclose(mine, expect):
+        _ok('Isopropanol, standardized with the training mean and SD: ' +
+            ', '.join(f'{f} = {v:.3f}' for f, v in zip(feats, mine)))
+    else:
+        _no('Use the training mean train_stats[f][0] and SD train_stats[f][1], in the same order as features.')
+
+
+def _check_prize(ns):
+    expect = (float(ns['ethanol_error']) + float(ns['ipa_error'])) / 2
+    if np.isclose(float(ns['prize_score']), expect):
+        _ok(f'Prize score = {expect:.2f} K, the average of your two errors.')
+    else:
+        _no(f'The average of two errors divides their sum by 2: it should be {expect:.2f} K.')
+
+
+def _check_weights(ns):
+    t = ns['nearest']
+    expect = 1 / (np.asarray(t.column('Distance'), dtype=float) + 1e-9)
+    mine = np.asarray(ns['weights'], dtype=float)
+    if mine.shape == expect.shape and np.allclose(mine, expect):
+        shown = ' · '.join('huge (distance 0)' if w > 1e6 else f'{w:.2f}' for w in mine)
+        _ok(f'Weights = 1 / distance, so the closest neighbors get the biggest say: {shown}')
+    else:
+        _no('weights should be 1 / (nearest.column(\'Distance\') + 1e-9), one weight per neighbor.')
+
+
+_NCHECKS = {'z': _check_z, 'distance': _check_distance, 'd0': _check_d0, 'all_dists': _check_all_dists,
+            'nearest': _check_nearest, 'prediction': _check_prediction, 'toolkit': _check_toolkit,
+            'arena': _check_arena, 'ipa_std': _check_ipa, 'prize_score': _check_prize, 'weights': _check_weights}
+
+
 NEIGHBOR_ROUNDS = {
     'Tribute':  ('🌿', 'RMSE', '#6B6860'),
     'Arena':    ('⚔️', 'RMSE', CHERRY),
@@ -589,7 +839,8 @@ def _best_per_team(scores, round_name):
 
 def _neighbor_html():
     scores = load('neighbor_games')
-    teams = {s['team'] for s in scores}
+    rosters = load_neighbor_teams()
+    teams = {s['team'] for s in scores} | set(rosters)
     strip, boards = '', ''
     for rnd, (emoji, label, color) in NEIGHBOR_ROUNDS.items():
         entries = _best_per_team(scores, rnd)
@@ -607,8 +858,11 @@ def _neighbor_html():
                 pct = 100 if worst == best else max(6, int(100 * (1 - (e['score'] - best) / (worst - best))))
                 detail = (f'<span style="font-size:12px;color:#888;margin-left:8px">k={e.get("k")} · {", ".join(e["features"])}</span>'
                           if rnd == 'Arena' and e.get('features') else '')
+                who = rosters.get(e['team'])
+                who = (f'<div style="font-size:12px;color:#6B6860;margin:1px 0 3px">{html.escape(", ".join(who))}</div>'
+                       if who else '')
                 rows += (f'<tr><td style="padding:6px 10px;font-size:20px;text-align:center;width:40px">{medal}</td>'
-                         f'<td style="padding:6px 4px"><div style="font-weight:700;font-size:15px">{html.escape(e["team"])}{detail}</div>'
+                         f'<td style="padding:6px 4px"><div style="font-weight:700;font-size:15px">{html.escape(e["team"])}{detail}</div>{who}'
                          f'<div style="background:#E8E4DE;height:6px;border-radius:3px;width:260px"><div style="background:{color};'
                          f'height:6px;border-radius:3px;width:{pct}%"></div></div></td>'
                          f'<td style="padding:6px 10px;text-align:right;font-weight:800;font-size:16px">{e["score"]:.2f} K</td>'
@@ -620,9 +874,17 @@ def _neighbor_html():
         boards += (f'<div style="background:#fff;border:1px solid #E0DDD6;border-radius:10px;margin-bottom:12px;overflow:hidden">'
                    f'<div style="padding:8px 14px;border-bottom:1px solid #F0EDE8;font-weight:800;font-size:16px">{emoji} {rnd} Round'
                    f'<span style="float:right;font-weight:400;color:#999;font-size:12px">{label} · lower is better</span></div>{table}</div>')
+    cards = ''.join(
+        f'<div style="background:#fff;border:1px solid #E0DDD6;border-radius:10px;padding:8px 12px;min-width:170px;flex:1">'
+        f'<div style="font-weight:800;font-size:14px">{html.escape(t)}</div>'
+        f'<div style="font-size:12px;color:#6B6860">{html.escape(", ".join(rosters.get(t, [])) or "no names yet")}</div></div>'
+        for t in sorted(teams, key=str.lower))
+    panel = (f'<div style="font-weight:800;font-size:14px;color:#6B6860;margin:2px 0 6px">👥 Teams</div>'
+             f'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">{cards}</div>' if cards else '')
     return (_header('🌿 THE NEIGHBOR GAMES', f'{_light_chip("neighbor_games")} · Live leaderboard · '
-                    f'{len(teams)} team{"s" if len(teams) != 1 else ""} on the board')
-            + f'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">{strip}</div>' + boards)
+                    f'{len(teams)} team{"s" if len(teams) != 1 else ""} · '
+                    f'{sum(len(v) for v in rosters.values())} students')
+            + panel + f'<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">{strip}</div>' + boards)
 
 
 def neighbor_scoreboard(interval=10):
@@ -1067,7 +1329,7 @@ def _write_csv(path, header, rows):
 def save_results(game='bootstrap_smackdown', section=None):
     """Save the current boards to CSV files in this folder, labeled with the class section and date.
     bootstrap_smackdown -> ..._teams.csv, ..._players.csv, ..._roster.csv, ..._summaries.csv
-    neighbor_games      -> ..._scores.csv
+    neighbor_games      -> ..._scores.csv, ..._teams.csv (who was on each team)
     Returns the list of files written."""
     section = _norm_section(section) or SECTION
     if not section:
@@ -1084,6 +1346,14 @@ def save_results(game='bootstrap_smackdown', section=None):
                              ' '.join(e.get('features', []) or []), e.get('time', ''), 'yes' if e.get('manual') else ''])
         written.append(_write_csv(f'{stem}_scores.csv',
                                   ['section', 'round', 'rank', 'team', 'score_K', 'k', 'features', 'time', 'manual'], rows))
+        rosters = load_neighbor_teams(game)
+        rounds_done = {}
+        for x in scores:
+            rounds_done.setdefault(x['team'], set()).add(x.get('round'))
+        written.append(_write_csv(f'{stem}_teams.csv', ['section', 'team', 'members', 'n_members', 'rounds_submitted'],
+                                  [[section, t, '; '.join(rosters.get(t, [])), len(rosters.get(t, [])),
+                                    ' '.join(r for r in NEIGHBOR_ROUNDS if r in rounds_done.get(t, set()))]
+                                   for t in sorted(set(rosters) | set(rounds_done), key=str.lower)]))
     elif game == 'bootstrap_smackdown':
         scores = [x for x in load(game) if x.get('round') == 'Smackdown']
         posts = load_summaries(game)
