@@ -614,14 +614,15 @@ def neighbor_team(game='neighbor_games'):
     members = _clean_members(raw)
     problem = None
     if team in ('', '...', 'Ellipsis'):
-        problem = 'Set <code>team_name</code> first, e.g. <code>team_name = "District 4: The Alkanol Alliance"</code>.'
+        problem = ('Type your team name between the quotes in <code>team_name</code>, e.g. '
+                   '<code>team_name = "District 4: The Alkanol Alliance"</code>, and run that cell.')
     elif not isinstance(raw, (list, tuple)):
         problem = ('Make <code>team_members</code> a list: names in quotes, separated by commas, inside square brackets, '
                    'e.g. <code>team_members = ["Ada L.", "Grace H."]</code>.')
     elif not members:
-        problem = 'Replace each <code>"..."</code> in <code>team_members</code> with a teammate\'s name.'
-    elif any(str(m).strip() in ('...', 'Ellipsis') for m in raw):
-        problem = (f'There\'s still a <code>"..."</code> in <code>team_members</code>. Fill it in, or delete it '
+        problem = 'Type a teammate\'s name between each pair of quotes in <code>team_members</code>.'
+    elif any(str(m).strip() in ('', '...', 'Ellipsis') for m in raw):
+        problem = (f'There\'s still an empty <code>""</code> in <code>team_members</code>. Fill it in, or delete it '
                    f'(and its comma) if your team has {len(members)} member{"s" if len(members) != 1 else ""}.')
     if problem:
         display(HTML(f'<div style="font-family:sans-serif;color:{CHERRY};font-weight:bold;padding:6px 0">⚠️ {problem}</div>'))
