@@ -655,6 +655,134 @@ def load_neighbor_teams(game='neighbor_games'):
     return teams
 
 
+
+# ============================================================================ saved overview page + Canvas export
+def save_overview(game='neighbor_games', section=None, quiet=False):
+    """Save the scoreboard as a web page to show later: neighbor_games_08.html (bootstrap_smackdown_08.html).
+    It doesn't reload itself, so it keeps this class's final board. Open it from the file browser
+    (right-click → Open in New Browser Tab) or download it to view in any browser."""
+    section = _norm_section(section) or SECTION
+    if not section:
+        print("Set the class first, e.g. set_section('08').")
+        return None
+    if game == 'neighbor_games':
+        body, title = _neighbor_html().replace('Live leaderboard', 'Final board'), f'The Neighbor Games · class {section}'
+    else:
+        body, title = _smackdown_html() + '<div style="height:18px"></div>' + _race_html(), f'Bootstrap Smackdown · class {section}'
+    stamp = datetime.datetime.now().strftime('%A %B %d, %Y · %H:%M').replace(' 0', ' ')
+    path = f'{game}_{section}.html'
+    with open(path, 'w', encoding='utf-8') as f:
+        f.write(f'<!DOCTYPE html><html><head><meta charset="utf-8"><title>{html.escape(title)}</title></head>'
+                f'<body style="font-family:system-ui,sans-serif;background:#F7F5F0;max-width:1400px;margin:0 auto;padding:20px">'
+                f'{body}<p style="color:#888;font-size:13px;margin-top:18px">Saved {stamp}</p></body></html>')
+    if not quiet:
+        print(f'💾 Saved {path}: the final board for class {section}. Right-click it → Open in New Browser Tab to show it.')
+    return path
+
+
+def _match_member(name, students):
+    """A typed team-member name ('Ada L.', 'ada lovelace', 'AdaL') -> the one roster student it fits, else None."""
+    from microproject_instructor import _words
+    toks = _words(name)
+    if not toks:
+        return None
+    if len(toks) == 1:                                          # 'AdaL' / 'adal': a given name, then an initial
+        for st in students:
+            for g in st['_given']:
+                if toks[0].startswith(g) and len(toks[0]) > len(g):
+                    toks = [g, toks[0][len(g):]]
+                    break
+            if len(toks) > 1:
+                break
+    hits = [st for st in students if toks[0] in st['_given']]
+    if not hits and len(toks[0]) >= 4:                          # 'caleb' for a roster 'Ernestcaleb'
+        hits = [st for st in students if any(len(g) > len(toks[0]) and (g.startswith(toks[0]) or g.endswith(toks[0]))
+                                             for g in st['_given'])]
+    if len(hits) > 1 and len(toks) > 1:
+        hits = [st for st in hits if any(t in st['_last'] or t[:1] == st['_initial'] for t in toks[1:])]
+    return hits[0] if len(hits) == 1 else None
+
+
+def neighbor_canvas(which=None, points=1, absent=0, assignment='Neighbor Games', details=True):
+    """Write a Canvas gradebook import file for the Neighbor Games: canvas_neighbor_games_08.csv.
+    Each student on the roster gets `points` (1) for taking part, or `absent` (0; '' leaves Canvas unchanged).
+    A student took part if their own notebook registered or submitted for a team, or a teammate listed their name.
+    details=True adds their Team and the team's best score in each round (K), for your records:
+    when Canvas asks about those columns on import, choose to ignore them.
+    which: '08' (default: the class set with set_section) or 'all'.
+    Needs the class roster(s), class_08.csv, in this folder: they hold the SIS Login IDs Canvas matches on.
+    Run it before reset_game(...) clears the board."""
+    from IPython.display import display, HTML
+    from microproject_instructor import read_roster, _words
+    sec = SECTION if which is None else (None if str(which).lower() == 'all' else _norm_section(which))
+    files = sorted(glob.glob('class_[0-9]*.csv'))
+    students = [st for f in files for st in read_roster(f) if sec is None or st['section'] == sec]
+    if not students:
+        print(f'No roster for class {sec or "(any)"} in this folder. Upload class_{sec or "08"}.csv here first '
+              '(the same roster file as for the microprojects).')
+        return None
+    for st in students:
+        st['_player'] = hashlib.sha256(('class-games:' + str(st['login']).strip().lower()).encode()).hexdigest()[:10]
+        st['_given'] = set(_words(st.get('given', st['first']))) | {''.join(_words(st.get('given', st['first'])))}
+        st['_last'] = set(_words(st['last'])) | {''.join(_words(st['last']))}
+        st['_initial'] = (_words(st['last']) or [''])[0][:1]
+    # who took part, and on which team
+    by_player = {}
+    for x in sorted(load_team_spins('neighbor_games') + load('neighbor_games'), key=lambda x: x.get('at', '')):
+        if x.get('player') and x.get('team'):
+            by_player[x['player']] = x['team']
+    rosters = load_neighbor_teams()
+    team_of, how = {}, {}
+    for st in students:
+        if st['_player'] in by_player:
+            team_of[id(st)], how[id(st)] = by_player[st['_player']], 'own notebook'
+    unmatched = []
+    for team, members in rosters.items():
+        for m in members:
+            st = _match_member(m, [x for x in students if id(x) not in team_of or team_of[id(x)] == team])
+            if st is None:
+                st = _match_member(m, students)
+            if st is None:
+                unmatched.append(f'{m} ({team})')
+            elif id(st) not in team_of:
+                team_of[id(st)], how[id(st)] = team, 'named by a teammate'
+    best = {}
+    for x in load('neighbor_games'):
+        key = (x['team'], x['round'])
+        if key not in best or x['score'] < best[key]:
+            best[key] = x['score']
+    header = ['Student', 'ID', 'SIS User ID', 'SIS Login ID', 'Section', assignment]
+    if details:
+        header += ['Team'] + [f'{r} (K)' for r in NEIGHBOR_ROUNDS]
+    rows, review = [], []
+    for st in sorted(students, key=lambda x: (x['section'], x['last'].lower(), x['first'].lower())):
+        team = team_of.get(id(st), '')
+        row = [st['full'], '', '', st['login'], st.get('roster_section') or st['section'], points if team else absent]
+        if details:
+            row += [team] + [(round(best[(team, r)], 2) if (team, r) in best else '') for r in NEIGHBOR_ROUNDS]
+        rows.append(row)
+        review.append([st['section'], f"{st['first']} {st['last'][:1]}.", team or '—', points if team else absent,
+                       how.get(id(st), 'no sign of taking part')])
+    out = f'canvas_neighbor_games_{sec or "all"}.csv'
+    _write_csv(out, header, rows)
+    took = sum(1 for r in review if r[2] != '—')
+    print(f'Class {sec or "all"}: {took} of {len(review)} students took part ({points} point'
+          f'{"s" if points != 1 else ""}); {len(review) - took} get {absent if absent != "" else "no change"}.')
+    display(HTML(f'<p style="font-size:1.1em">💾 Saved <b>{out}</b> — <a href="{out}" target="_blank" download>download it</a>, '
+                 f'then in Canvas: <b>Grades → Import</b>. '
+                 + ('When Canvas asks about the <b>Team</b> and round-score columns, choose to <b>ignore</b> them (they are '
+                    'for your records). ' if details else '')
+                 + '🔒 It holds names and logins: keep it off GitHub.</p>'))
+    from datascience import Table
+    t = Table().with_columns('class', [r[0] for r in review], 'student', [r[1] for r in review], 'team', [r[2] for r in review],
+                             assignment, [r[3] for r in review], 'how we know', [r[4] for r in review])
+    t.sort('team').show()
+    if unmatched:
+        print('⚠️ Team-member names that match no one (or more than one student) on the roster — check these students '
+              'by hand: ' + '; '.join(unmatched))
+    return out
+
+
 # ============================================================================ Neighbor Games: Training Camp checks
 def _ok(msg):
     from IPython.display import display, HTML
@@ -1341,15 +1469,16 @@ def _write_csv(path, header, rows):
 
 def save_results(game='bootstrap_smackdown', section=None):
     """Save the current boards to CSV files in this folder, labeled with the class section and date.
-    bootstrap_smackdown -> ..._teams.csv, ..._players.csv, ..._roster.csv, ..._summaries.csv
-    neighbor_games      -> ..._scores.csv, ..._teams.csv (who was on each team)
+    bootstrap_smackdown -> ..._teams.csv, ..._players.csv, ..._roster.csv, ..._summaries.csv, bootstrap_smackdown_08.html
+    neighbor_games      -> ..._scores.csv, ..._teams.csv (who was on each team), neighbor_games_08.html (the final board),
+                           and canvas_neighbor_games_08.csv when the roster class_08.csv is in this folder
     Returns the list of files written."""
     section = _norm_section(section) or SECTION
     if not section:
         print("Set the class first, e.g. set_section('08') or save_results(section='08').")
         return []
     stem = f'{game}_{section}_{datetime.date.today():%Y-%m-%d}'
-    written = []
+    written, extras = [], []
     if game == 'neighbor_games':
         scores = load(game)
         rows = []
@@ -1363,6 +1492,12 @@ def save_results(game='bootstrap_smackdown', section=None):
         rounds_done = {}
         for x in scores:
             rounds_done.setdefault(x['team'], set()).add(x.get('round'))
+        extras.append(save_overview(game, section, quiet=True))
+        if glob.glob(f'class_{section}.csv'):
+            try:
+                extras.append(neighbor_canvas(section))
+            except Exception as e:
+                print(f'(Canvas file not written: {e})')
         written.append(_write_csv(f'{stem}_teams.csv', ['section', 'team', 'members', 'n_members', 'rounds_submitted'],
                                   [[section, t, '; '.join(rosters.get(t, [])), len(rosters.get(t, [])),
                                     ' '.join(r for r in NEIGHBOR_ROUNDS if r in rounds_done.get(t, set()))]
@@ -1410,6 +1545,7 @@ def save_results(game='bootstrap_smackdown', section=None):
                                   [[section, i, t['team'], t['n'], t['n_done'], t['points'], t['possible'], round(t['pct'], 1),
                                     _since_go(t['all_done_at']) if t['all_done_at'] else '', *t['steps']]
                                    for i, t in enumerate(race, start=1)]))
+        extras.append(save_overview(game, section, quiet=True))
         spins = load_team_spins()
         written.append(_write_csv(f'{stem}_roster.csv', ['section', 'team', 'name', 'spun_at', 'joined_after_go'],
                                   sorted([[section, x.get('team', ''), x.get('name', ''), str(x.get('at', ''))[11:16],
@@ -1423,8 +1559,10 @@ def save_results(game='bootstrap_smackdown', section=None):
     else:
         print(f'Unknown game {game!r}.')
         return []
+    written += [f for f in extras if f and f not in written]
     for f in written:
-        print('💾 Saved', f)
+        if not f.startswith('canvas_'):                 # the Canvas file was announced with its download link
+            print('💾 Saved', f)
     print('🔒 These files hold students\' names: download them from this folder and keep them off GitHub.')
     return written
 
