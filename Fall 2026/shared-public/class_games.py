@@ -614,14 +614,15 @@ def neighbor_team(game='neighbor_games'):
     members = _clean_members(raw)
     problem = None
     if team in ('', '...', 'Ellipsis'):
-        problem = 'Set <code>team_name</code> first, e.g. <code>team_name = "District 4: The Alkanol Alliance"</code>.'
+        problem = ('Type your team name between the quotes in <code>team_name</code>, e.g. '
+                   '<code>team_name = "District 4: The Alkanol Alliance"</code>, and run that cell.')
     elif not isinstance(raw, (list, tuple)):
         problem = ('Make <code>team_members</code> a list: names in quotes, separated by commas, inside square brackets, '
                    'e.g. <code>team_members = ["Ada L.", "Grace H."]</code>.')
     elif not members:
-        problem = 'Replace each <code>"..."</code> in <code>team_members</code> with a teammate\'s name.'
-    elif any(str(m).strip() in ('...', 'Ellipsis') for m in raw):
-        problem = (f'There\'s still a <code>"..."</code> in <code>team_members</code>. Fill it in, or delete it '
+        problem = 'Type a teammate\'s name between each pair of quotes in <code>team_members</code>.'
+    elif any(str(m).strip() in ('', '...', 'Ellipsis') for m in raw):
+        problem = (f'There\'s still an empty <code>""</code> in <code>team_members</code>. Fill it in, or delete it '
                    f'(and its comma) if your team has {len(members)} member{"s" if len(members) != 1 else ""}.')
     if problem:
         display(HTML(f'<div style="font-family:sans-serif;color:{CHERRY};font-weight:bold;padding:6px 0">⚠️ {problem}</div>'))
@@ -675,7 +676,7 @@ def _five_nearest(ns):
 
 def neighbor_check(step):
     """Student: check one Training Camp challenge. step is the name of the variable or function you just made:
-    'z', 'distance', 'd0', 'all_dists', 'nearest', 'prediction', 'toolkit', 'arena', 'ipa_std', 'prize_score', 'weights'."""
+    'split', 'z', 'distance', 'd0', 'all_dists', 'nearest', 'prediction', 'toolkit', 'arena', 'ipa_std', 'prize_score', 'weights'."""
     ns = _user_ns()
     try:
         _NCHECKS[step](ns)
@@ -685,11 +686,23 @@ def neighbor_check(step):
         text = str(e)
         if 'ellipsis' in text.lower():
             _no('There\'s still a <code>...</code> to fill in.')
-        elif 'is not in the table' in text:
-            _no('The standardized <code>train</code> table is missing its feature columns. Finish Challenge 1, '
-                'then rerun the standardization cell and the cells after it.')
+        elif 'is not in the table' in text or "'train'" in text or "'test'" in text:
+            _no('The standardized <code>train</code> and <code>test</code> tables aren\'t ready. Finish Challenges 1 and 2, '
+                'then rerun the standard-units cells and the cells after them.')
         else:
             _no(f'Python says: {html.escape(type(e).__name__ + ": " + text)}')
+
+
+def _check_split(ns):
+    tr, te = ns['train_roh'], ns['test_roh']
+    n = tr.num_rows + te.num_rows
+    if tr.num_rows == round(0.75 * n):
+        _ok(f'{tr.num_rows} training and {te.num_rows} test molecules: a 75 / 25 split.')
+    elif te.num_rows == round(0.75 * n):
+        _no(f'That puts {tr.num_rows} molecules in training and {te.num_rows} in test. split(k) gives k rows to the '
+            'FIRST table, train_roh: training should get three quarters.')
+    else:
+        _no(f'You have {tr.num_rows} training molecules; three quarters of {n} is {round(0.75 * n)}.')
 
 
 def _check_z(ns):
@@ -767,9 +780,9 @@ def _check_prediction(ns):
 
 
 def _check_toolkit(ns):
-    p = float(ns['predict_knn'](0, ns['train'], ns['test'], k=5))
+    p = float(ns['predict_knn'](0, 5))
     if np.isclose(p, float(ns['prediction'])):
-        _ok(f'predict_knn(0, train, test, k=5) = {p:.1f} K, the same as your hand-built prediction.')
+        _ok(f'predict_knn(0, 5) = {p:.1f} K, the same as your hand-built prediction for the mystery molecule.')
     else:
         _no(f'predict_knn gives {p:.1f} K, but your hand-built prediction is {float(ns["prediction"]):.1f} K. '
             'Did you change features? Rerun the Training Camp cells.')
@@ -780,21 +793,21 @@ def _check_arena(ns):
     n = ns['test'].num_rows
     if len(preds) != n:
         _no(f'You have {len(preds)} predictions; you need {n}, one per test molecule. Loop over np.arange(test.num_rows).')
-    elif not np.isclose(float(preds[0]), float(ns['predict_knn'](0, ns['train'], ns['test'], k=ns['k']))):
-        _no('Use the row number i from the loop as the first argument: predict_knn(i, train, test, k=k).')
+    elif not np.isclose(float(preds[-1]), float(ns['predict_knn'](n - 1, ns['k']))):
+        _no('Use the row number i from the loop as the first argument: predict_knn(i, k).')
     else:
         _ok(f'{n} predictions, one per test molecule, with k = {ns["k"]} and features = {list(ns["features"])}.')
 
 
 def _check_ipa(ns):
-    raw, stats, feats = ns['ipa_raw'], ns['train_stats'], list(ns['features'])
-    expect = np.array([(raw[f] - stats[f][0]) / stats[f][1] for f in feats])
+    raw, tr, feats = ns['ipa_raw'], ns['train_roh'], list(ns['features'])
+    expect = np.array([(raw[f] - np.mean(tr.column(f))) / np.std(tr.column(f)) for f in feats])
     mine = np.asarray(ns['ipa_std'], dtype=float)
     if mine.shape == expect.shape and np.allclose(mine, expect):
         _ok('Isopropanol, standardized with the training mean and SD: ' +
             ', '.join(f'{f} = {v:.3f}' for f, v in zip(feats, mine)))
     else:
-        _no('Use the training mean train_stats[f][0] and SD train_stats[f][1], in the same order as features.')
+        _no('Each value goes into standard units with the training mean and SD: train_su(ipa_raw[f], f), for each feature f.')
 
 
 def _check_prize(ns):
@@ -816,7 +829,7 @@ def _check_weights(ns):
         _no('weights should be 1 / (nearest.column(\'Distance\') + 1e-9), one weight per neighbor.')
 
 
-_NCHECKS = {'z': _check_z, 'distance': _check_distance, 'd0': _check_d0, 'all_dists': _check_all_dists,
+_NCHECKS = {'split': _check_split, 'z': _check_z, 'distance': _check_distance, 'd0': _check_d0, 'all_dists': _check_all_dists,
             'nearest': _check_nearest, 'prediction': _check_prediction, 'toolkit': _check_toolkit,
             'arena': _check_arena, 'ipa_std': _check_ipa, 'prize_score': _check_prize, 'weights': _check_weights}
 
