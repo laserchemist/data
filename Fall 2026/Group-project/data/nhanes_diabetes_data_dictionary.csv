@@ -1,0 +1,21 @@
+Variable,Type,Description,Values,Notes
+id,ID,NHANES respondent sequence number (SEQN),130378-142310,Unique per person; use to link back to any other NHANES 2021-2023 file
+age,Numeric,Age at screening,20-80,Years. Top-coded: 80 means 80 or older (321 people)
+sex,Binary,Sex,Male or Female,As recorded by NHANES (RIAGENDR)
+race_ethnicity,Categorical,Race and Hispanic origin (RIDRETH3),Mexican American; Other Hispanic; Non-Hispanic White; Non-Hispanic Black; Non-Hispanic Asian; Other or Multiracial,"Self-reported. NHANES oversamples some groups, so unweighted shares are not US shares"
+education,Categorical,Highest education completed (DMDEDUC2),Less than 9th grade; 9-11th grade; High school/GED; Some college/AA; College graduate; Unknown,Unknown = refused or don't know
+income_poverty_ratio,Numeric,Family income divided by the federal poverty guideline (INDFMPIR),0-5,Capped at 5 (5 means 5 or more). Below 1 = below poverty. Blank for ~13% (income not reported)
+smoking,Categorical,"Cigarette smoking status (SMQ020, SMQ040)",Never; Former; Current; Unknown,Never = fewer than 100 cigarettes in lifetime. Current = smokes every day or some days
+height_cm,Numeric,Standing height,cm,Measured in the exam
+weight_kg,Numeric,Body weight,kg,Measured in the exam
+bmi,Numeric,Body mass index,kg/m^2,weight / height^2 computed by NHANES
+waist_cm,Numeric,Waist circumference,cm,Blank when not measured (~5%)
+systolic_bp,Numeric,Systolic blood pressure,mmHg,Mean of up to 3 oscillometric readings (BPXOSY1-3)
+diastolic_bp,Numeric,Diastolic blood pressure,mmHg,Mean of up to 3 oscillometric readings (BPXODI1-3)
+hba1c,Numeric,Glycohemoglobin (hemoglobin A1c) (LBXGH),% of hemoglobin,Average blood sugar over ~3 months. ADA cutoffs: below 5.7 normal; 5.7-6.4 prediabetes; 6.5+ diabetes. Lowered by diabetes treatment
+fasting_glucose,Numeric,Fasting plasma glucose (LBXGLU),mg/dL,Only for the morning fasting subsample who fasted 8-24 h; blank for everyone else (~49%). ADA cutoffs: below 100 normal; 100-125 prediabetes; 126+ diabetes
+diagnosed_diabetes,Categorical,Ever told by a doctor you have diabetes (DIQ010),Yes; No; Borderline,Self-reported. Excludes diabetes only during pregnancy
+diabetes_medication,Binary,"Currently taking insulin or diabetes pills (DIQ050, DIQ070)",Yes or No,"Self-reported. A few people without diagnosed diabetes take these pills (e.g., metformin for prediabetes)"
+glycemic_status,Categorical,Derived glucose category,Normal; Prediabetes; Undiagnosed diabetes; Diagnosed diabetes,"Derived, not measured. Diagnosed diabetes if diagnosed_diabetes = Yes; otherwise uses the hba1c and fasting_glucose cutoffs above (highest category met). People without fasting glucose are classified by HbA1c alone"
+sample_weight,Numeric,Survey weight for the blood-test sample (WTPH2YR),persons,Number of US adults this person represents. Use for population estimates; optional for in-class analyses
+fasting_weight,Numeric,Survey weight for the fasting subsample (WTSAF2YR),persons,Use instead of sample_weight for any estimate that uses fasting_glucose. Blank outside the fasting subsample
