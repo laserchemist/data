@@ -10,7 +10,7 @@ Students:   submit_button('Arena', 'arena_rmse')          (Neighbor Games)
             smackdown_spin()   smackdown_check_in()   smackdown_summary()     (Bootstrap Smackdown)
 Instructor: stoplight()   neighbor_scoreboard()   smackdown_teams()   smackdown_scoreboard()   smackdown_team_race()   smackdown_players()   smackdown_summaries()   manual_score(...)   reset_game(...)
 """
-import os, re, json, glob, time, hashlib, datetime, threading, shutil, html
+import os, re, json, glob, time, hashlib, datetime, threading, shutil, html, csv
 
 import numpy as np
 
@@ -65,10 +65,21 @@ def load(game):
     for p in glob.glob(os.path.join(GAMES_ROOT, game, '*.json')):
         try:
             with open(p) as f:
-                out.append(json.load(f))
+                rec = json.load(f)
+            if isinstance(rec, dict) and 'team' in rec and 'score' in rec:
+                out.append(rec)
         except (ValueError, OSError):
             pass
     return out
+
+
+def _new_archive(game, label):
+    "A new, unused archive folder name: <game>_<label>_<YYYYmmdd-HHMMSS>."
+    while True:
+        path = os.path.join(GAMES_ROOT, '_archive', f"{game}_{label}_{datetime.datetime.now():%Y%m%d-%H%M%S}")
+        if not os.path.exists(path):
+            return path
+        time.sleep(1)
 
 
 def reset_game(game, section=None):
@@ -91,7 +102,7 @@ def reset_game(game, section=None):
     if not saved:
         print('Saving failed, so nothing was cleared.')
         return
-    archive = os.path.join(GAMES_ROOT, '_archive', f"{game}_{section}_{datetime.datetime.now():%Y%m%d-%H%M%S}")
+    archive = _new_archive(game, section)
     os.makedirs(os.path.join(archive, 'summaries'), exist_ok=True)
     for p in files:
         shutil.move(p, archive)
@@ -109,6 +120,113 @@ def reset_game(game, section=None):
     print(f'{game}: cleared {len(files)} scores and {len(posts)} summaries for class {section}. '
           f'Boards are empty and the start light is back to 🔴, '
           f'ready for the next class. (Raw files archived in {archive}.)')
+
+
+def _board_files(game):
+    folder = os.path.join(GAMES_ROOT, game)
+    return (glob.glob(os.path.join(folder, '*.json')) + glob.glob(os.path.join(folder, 'summaries', '*.json'))
+            + glob.glob(os.path.join(folder, 'teams', '*.json')))
+
+
+def list_archives(game='neighbor_games'):
+    """Earlier classes you can bring back with restore_game(...): the archives reset_game made,
+    and results CSV files saved in this folder."""
+    from datascience import Table
+    rows = []
+    for d in sorted(glob.glob(os.path.join(GAMES_ROOT, '_archive', f'{game}_*'))):
+        m = re.match(rf'{re.escape(game)}_(.+)_(\d{{8}})-(\d{{6}})$', os.path.basename(d))
+        if not m:
+            continue
+        when = datetime.datetime.strptime(m.group(2) + m.group(3), '%Y%m%d%H%M%S').strftime('%a %b %d %H:%M')
+        rows.append([m.group(1), when, len([p for p in glob.glob(os.path.join(d, '*.json')) if not p.endswith('start_light.json')]),
+                     len(glob.glob(os.path.join(d, 'teams', '*.json'))), 'archive', os.path.basename(d)])
+    for f in sorted(glob.glob(f'{game}_*_scores.csv') + glob.glob(f'{game}_*_teams.csv')):
+        m = re.match(rf'{re.escape(game)}_(\w+?)_(\d{{4}}-\d{{2}}-\d{{2}})_(scores|teams)\.csv$', f)
+        if m and m.group(3) == 'scores':
+            rows.append([m.group(1), m.group(2), '', '', 'CSV in this folder', f])
+    now = len(_board_files(game))
+    print(f'{game}: the board now holds {now} file{"s" if now != 1 else ""}'
+          + (f' (class {SECTION} is set)' if SECTION else '') + '.')
+    if not rows:
+        print('No archived classes and no saved results CSV files found here.')
+        return
+    Table().with_columns('class', [r[0] for r in rows], 'saved', [r[1] for r in rows], 'scores', [r[2] for r in rows],
+                         'team files', [r[3] for r in rows], 'from', [r[4] for r in rows], 'name', [r[5] for r in rows]).show()
+    print("Bring one back with restore_game('" + game + "', '01').")
+
+
+def restore_game(game, section, archive=None):
+    """Bring an earlier class's board back, e.g. restore_game('neighbor_games', '01'), to show it, save its
+    page, or export it to Canvas. Uses the newest archive for that class (or archive='name' from list_archives());
+    if there is no archive, rebuilds the board from that class's saved results CSV files in this folder.
+    Whatever is on the board now is archived first (with reset_game), so nothing is lost.
+    When you're done, reset_game(...) clears it again for the next class."""
+    global SECTION
+    section = _norm_section(section)
+    found = sorted(glob.glob(os.path.join(GAMES_ROOT, '_archive', f'{game}_{section}_*')))
+    if archive:
+        found = [d for d in found if os.path.basename(d) == archive or archive in os.path.basename(d)]
+    csvs = sorted(glob.glob(f'{game}_{section}_*_scores.csv'))
+    if not found and not csvs:
+        print(f'Nothing saved for {game}, class {section}: no archive and no {game}_{section}_..._scores.csv here.')
+        list_archives(game)
+        return
+    if _board_files(game):                              # keep whatever is on the board now
+        if SECTION and SECTION != section:
+            print(f'Archiving the current board as class {SECTION} first…')
+            reset_game(game, SECTION)
+        else:
+            dest = _new_archive(game, 'unlabeled')
+            os.makedirs(dest, exist_ok=True)
+            for p in _board_files(game):
+                sub = os.path.relpath(os.path.dirname(p), os.path.join(GAMES_ROOT, game))
+                os.makedirs(os.path.join(dest, sub), exist_ok=True)
+                shutil.move(p, os.path.join(dest, sub))
+            print(f'Moved what was on the board to {os.path.basename(dest)} (no class was set for it).')
+    folder = _game_dir(game)
+    if found:
+        src = found[-1]
+        n = 0
+        for sub in ('', 'teams', 'summaries'):
+            files = [p for p in glob.glob(os.path.join(src, sub, '*.json')) if os.path.basename(p) != 'start_light.json']
+            if files:
+                os.makedirs(os.path.join(folder, sub), exist_ok=True)
+                for p in files:
+                    shutil.copy(p, os.path.join(folder, sub))
+                    n += 1
+        if os.path.exists(os.path.join(src, 'start_light.json')):
+            shutil.copy(os.path.join(src, 'start_light.json'), _light_path(game))
+        how = f'the archive {os.path.basename(src)} ({n} files; the archive itself is unchanged)'
+    else:
+        f = csvs[-1]
+        with open(f, encoding='utf-8-sig') as fh:
+            score_rows = list(csv.DictReader(fh))
+        for i, r in enumerate(score_rows):
+            rec = {'team': r['team'], 'round': r['round'], 'score': float(r['score_K']), 'player': f'csv{i:03d}',
+                   'time': r.get('time', ''), 'restored_from': f}
+            if r.get('k'):
+                rec['k'] = r['k']
+            if r.get('features'):
+                rec['features'] = r['features'].split()
+            with open(os.path.join(folder, f"{_slug(r['round'])}__{_slug(r['team'])}__csv{i:03d}.json"), 'w') as out:
+                json.dump(rec, out)
+        teams_csv = f.replace('_scores.csv', '_teams.csv')
+        if game == 'neighbor_games' and os.path.exists(teams_csv):
+            with open(teams_csv, encoding='utf-8-sig') as fh:
+                for i, r in enumerate(csv.DictReader(fh)):
+                    members = [m.strip() for m in r.get('members', '').split(';') if m.strip()]
+                    if members:
+                        with open(os.path.join(_teams_dir(game), f'csv{i:03d}.json'), 'w') as out:
+                            json.dump({'team': r['team'], 'members': members, 'player': f'csv-team{i:03d}'}, out)
+        how = (f'{f}{" and its _teams.csv" if os.path.exists(teams_csv) else ""} ({len(score_rows)} scores). '
+               'Canvas matching will use the team-member names only')
+    SECTION = section
+    print(f'✅ Restored {game}, class {section}, from {how}.')
+    print(f'Class set to {section}. Now: neighbor_scoreboard() to see it, save_overview(\'{game}\') for its page, '
+          f'neighbor_canvas(\'{section}\') for Canvas. reset_game(\'{game}\') clears it when you\'re done.'
+          if game == 'neighbor_games' else
+          f'Class set to {section}. Now: smackdown_scoreboard() to see it, save_overview(\'{game}\') for its page. '
+          f'reset_game(\'{game}\') clears it when you\'re done.')
 
 
 def manual_score(game, team, round_name, score, **extra):
