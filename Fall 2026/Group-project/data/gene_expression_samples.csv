@@ -1,0 +1,87 @@
+Sample,Patient,Sample_Type,Grade,Age,Histology
+GSM398074,BC0043,Normal,Normal tissue,37,normal tissue
+GSM398075,BC0043,Cancer,Grade 2,37,mucinous carcinoma
+GSM398076,BC0051,Normal,Normal tissue,79,normal tissue
+GSM398077,BC0051,Cancer,Grade 2,79,mixed mucinous carcinoma & ductal carcinoma
+GSM398078,BC0057,Normal,Normal tissue,52,normal tissue
+GSM398079,BC0057,Cancer,Grade 3,52,infiltrating ductal carcinoma
+GSM398080,BC0087,Normal,Normal tissue,58,normal tissue
+GSM398081,BC0087,Cancer,Grade 1,58,infiltrating ductal carcinoma
+GSM398082,BC0109,Normal,Normal tissue,75,normal tissue
+GSM398083,BC0109,Cancer,Grade 3,75,infiltrating ductal carcinoma
+GSM398084,BC0112,Normal,Normal tissue,53,normal tissue
+GSM398085,BC0112,Cancer,Grade 2,53,intraductal carcinoma
+GSM398086,BC0113,Normal,Normal tissue,30,normal tissue
+GSM398087,BC0113,Cancer,Grade 3,30,infiltrating ductal carcinoma
+GSM398088,BC0117,Normal,Normal tissue,46,normal tissue
+GSM398089,BC0117,Cancer,Grade 2,46,infiltrating ductal carcinoma
+GSM398090,BC0122,Normal,Normal tissue,53,normal tissue
+GSM398091,BC0122,Cancer,Grade 1,53,infiltrating ductal carcinoma
+GSM398092,BC0126,Normal,Normal tissue,52,normal tissue
+GSM398093,BC0126,Cancer,Grade 3,52,infiltrating ductal carcinoma
+GSM398094,BC0127,Normal,Normal tissue,22,normal tissue
+GSM398095,BC0127,Cancer,Grade 1,22,ductal carcinoma
+GSM398096,BC0138,Normal,Normal tissue,64,normal tissue
+GSM398097,BC0138,Cancer,Grade 2,64,invasive ductal carcinoma
+GSM398098,BC0142,Normal,Normal tissue,48,normal tissue
+GSM398099,BC0142,Cancer,Grade 3,48,infiltrating ductal carcinoma
+GSM398100,BC0147,Normal,Normal tissue,41,normal tissue
+GSM398101,BC0147,Cancer,Grade 2,41,infiltrating ductal carcinoma
+GSM398102,BC0151,Normal,Normal tissue,53,normal tissue
+GSM398103,BC0151,Cancer,Grade 2,53,infiltrating ductal carcinoma
+GSM398104,BC0152,Normal,Normal tissue,59,normal tissue
+GSM398105,BC0152,Cancer,Grade 1,59,infiltrating ductal carcinoma
+GSM398106,BC0153,Normal,Normal tissue,43,normal tissue
+GSM398107,BC0153,Cancer,Grade 2,43,infiltrating ductal carcinoma
+GSM398108,BC0155,Normal,Normal tissue,49,normal tissue
+GSM398109,BC0155,Cancer,Grade 1,49,lobular carcinoma
+GSM398110,BC0156,Normal,Normal tissue,31,normal tissue
+GSM398111,BC0156,Cancer,Grade 3,31,infiltrating ductal carcinoma
+GSM398112,BC0158,Normal,Normal tissue,45,normal tissue
+GSM398113,BC0158,Cancer,Grade 3,45,infiltrating ductal carcinoma
+GSM398114,BC0159,Normal,Normal tissue,60,normal tissue
+GSM398115,BC0159,Cancer,Grade 1,60,infiltrating ductal carcinoma
+GSM398116,BC0160,Normal,Normal tissue,31,normal tissue
+GSM398117,BC0160,Cancer,Grade 3,31,infiltrating ductal carcinoma
+GSM398118,BC0163,Normal,Normal tissue,45,normal tissue
+GSM398119,BC0163,Cancer,Grade 2,45,infiltrating ductal carcinoma
+GSM398120,BC0164,Normal,Normal tissue,43,normal tissue
+GSM398121,BC0164,Cancer,Grade 2,43,infiltrating lobular carcinoma
+GSM398122,BC0165,Normal,Normal tissue,47,normal tissue
+GSM398123,BC0165,Cancer,Grade 2,47,infiltrating ductal carcinoma
+GSM398124,BC0168,Normal,Normal tissue,58,normal tissue
+GSM398125,BC0168,Cancer,Grade 2,58,infiltrating ductal carcinoma
+GSM398126,BC0170,Normal,Normal tissue,52,normal tissue
+GSM398127,BC0170,Cancer,Grade 2,52,infiltrating ductal carcinoma
+GSM398128,BC0171,Normal,Normal tissue,57,normal tissue
+GSM398129,BC0171,Cancer,Grade 2,57,infiltrating ductal carcinoma
+GSM398130,BC0172,Normal,Normal tissue,65,normal tissue
+GSM398131,BC0172,Cancer,Grade 2,65,infiltrating ductal carcinoma
+GSM398132,BC0173,Normal,Normal tissue,43,normal tissue
+GSM398133,BC0173,Cancer,Grade 2,43,infiltrating ductal carcinoma
+GSM398134,BC0174,Normal,Normal tissue,57,normal tissue
+GSM398135,BC0174,Cancer,Grade 2,57,infiltrating ductal carcinoma
+GSM398136,BC0177,Normal,Normal tissue,58,normal tissue
+GSM398137,BC0177,Cancer,Grade 2,58,infiltrating ductal carcinoma
+GSM398138,BC0179,Normal,Normal tissue,47,normal tissue
+GSM398139,BC0179,Cancer,Grade 2,47,infiltrating ductal carcinoma
+GSM398140,BC0180,Normal,Normal tissue,47,normal tissue
+GSM398141,BC0180,Cancer,Grade 3,47,infiltrating ductal carcinoma
+GSM398142,BC0181,Normal,Normal tissue,36,normal tissue
+GSM398143,BC0181,Cancer,Grade 3,36,infiltrating ductal carcinoma
+GSM398144,BC0183,Normal,Normal tissue,47,normal tissue
+GSM398145,BC0183,Cancer,Grade 2,47,infiltrating ductal carcinoma
+GSM398146,BC0185,Normal,Normal tissue,60,normal tissue
+GSM398147,BC0185,Cancer,Grade 2,60,infiltrating ductal carcinoma
+GSM398148,BC0186,Normal,Normal tissue,54,normal tissue
+GSM398149,BC0186,Cancer,Grade 3,54,infiltrating ductal carcinoma
+GSM398150,BC0188,Normal,Normal tissue,44,normal tissue
+GSM398151,BC0188,Cancer,Grade 1,44,infiltrating ductal carcinoma with DCIS
+GSM398152,BC0190,Normal,Normal tissue,54,normal tissue
+GSM398153,BC0190,Cancer,Grade 2,54,infiltrating ductal carcinoma
+GSM398154,BC0191,Normal,Normal tissue,70,normal tissue
+GSM398155,BC0191,Cancer,Grade 2,70,infiltrating ductal carcinoma
+GSM398156,BC0192,Normal,Normal tissue,56,normal tissue
+GSM398157,BC0192,Cancer,Grade 3,56,infiltrating ductal carcinoma
+GSM398158,BC0194,Normal,Normal tissue,57,normal tissue
+GSM398159,BC0194,Cancer,Grade 1,57,infiltrating ductal carcinoma
