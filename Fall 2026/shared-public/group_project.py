@@ -18,7 +18,7 @@ One file per student and per claim, so students spinning at the same moment neve
 Students:   team_sign_in()   team_spin()   team_page()   team_choose_project()   team_choose_role()   team_messages()
 Instructor: set_teams('01', Groups)   teams_board('01')   open_projects('01')   close_teams('01')
             move_student(...)   add_student(...)   remove_student(...)   assign_project(...)   release_project(...)
-            show_messages('01')   remove_message(...)   save_teams('01')   save_team_sheets('01')   reset_section('01')
+            show_messages('01')   remove_message(...)   save_teams('01')   export_teams_html('01')   reset_section('01')
 """
 import os, json, glob, time, datetime, shutil, html, csv
 
@@ -30,7 +30,7 @@ __all__ = ['team_sign_in', 'team_spin', 'team_page', 'team_choose_project', 'tea
            'show_messages', 'remove_message', 'load_messages', 'ROLES',
            'set_teams', 'teams_board', 'open_teams', 'close_teams', 'open_projects', 'close_projects',
            'move_student', 'add_student', 'remove_student', 'assign_project', 'release_project',
-           'save_teams', 'save_team_sheets', 'team_sheet', 'reset_section',
+           'save_teams', 'save_team_sheets', 'team_sheet', 'reset_section', 'export_teams_html',
            'load_members', 'load_claims', 'get_section', 'DATASETS', 'SECTIONS']
 
 ROOT = os.environ.get('GROUP_PROJECT_ROOT', '/home/jovyan/shared-public/group_project')
@@ -301,6 +301,16 @@ def _release(section, team):
     return had
 
 
+# ---------------------------------------------------------------------------- game scores
+def _game_lines(section):
+    "team -> a short text of the team's challenge scores (Fix the Bug, P-value Poker, ...); {} if no games were played."
+    try:
+        import team_challenges
+        return team_challenges.team_scores(section)
+    except Exception:                                   # the challenges are optional extras: never break a board
+        return {}
+
+
 # ---------------------------------------------------------------------------- team sheets
 def _messages_dir(section, team):
     return _dir('messages', f'{_norm_section(section)}__{_slug(team)}')
@@ -435,6 +445,7 @@ def _team_card(section, team, me=None):
                     + (f' <span style="color:#888;font-weight:400;font-size:12px">· {html.escape(m["role"])}</span>' if m['role'] else '')
                     + '</span>' for m in sorted(sheet['members'], key=lambda m: m['name'].lower()))
     proj = sheet['project']
+    games = _game_lines(section).get(team, '')
     line = (f'📂 <b>{html.escape(proj["dataset"])}</b> <span style="color:#888;font-size:12px">· chosen by '
             f'{html.escape(proj["chosen_by"])}</span>' if proj else '<span style="color:#999">📂 No project chosen yet</span>')
     return (f'<div style="font-family:sans-serif;max-width:760px;background:#fff;border:3px solid {color};border-radius:12px;'
@@ -442,7 +453,9 @@ def _team_card(section, team, me=None):
             f'{html.escape(team)}<span style="float:right;font-size:14px;font-weight:600;margin-top:3px">section {section} · '
             f'{len(sheet["members"])} member{"s" if len(sheet["members"]) != 1 else ""}</span></div>'
             f'<div style="padding:8px 12px">{chips or "<i style=color:#aaa>no members yet</i>"}'
-            f'<div style="border-top:1px solid #F0EDE8;margin-top:10px;padding-top:8px;font-size:15px">{line}</div></div></div>')
+            f'<div style="border-top:1px solid #F0EDE8;margin-top:10px;padding-top:8px;font-size:15px">{line}</div>'
+            + (f'<div style="margin-top:5px;font-size:11px;color:#999">🎮 {html.escape(games)}</div>' if games else '')
+            + '</div></div>')
 
 
 def _need_team():
@@ -765,6 +778,7 @@ def _board_html(section):
     for m in members:
         by_team.setdefault(m['team'], []).append((m.get('name', '?'), m.get('role', '')))
     project = {c['team']: d for d, c in claims.items()}
+    games = _game_lines(section)
     cards = ''
     for i, (team, names) in enumerate(by_team.items()):
         color = WHEEL_COLORS[i % len(WHEEL_COLORS)]
@@ -780,7 +794,9 @@ def _board_html(section):
         cards += (f'<div style="min-width:0;background:#fff;border:3px solid {color};border-radius:12px;overflow:hidden">'
                   f'<div style="background:{color};color:#fff;padding:9px 12px;font-weight:900;font-size:17px">{html.escape(team)}'
                   f'<span style="float:right">{len(names)}</span></div><div style="padding:8px 10px">'
-                  f'{chips or "<i style=color:#aaa>waiting for spins…</i>"}</div>{proj}</div>')
+                  f'{chips or "<i style=color:#aaa>waiting for spins…</i>"}</div>{proj}'
+                  + (f'<div style="padding:0 10px 6px;font-size:11px;color:#999">🎮 {html.escape(games[team])}</div>'
+                     if games.get(team) else '') + '</div>')
     rows = ''.join(
         f'<tr style="border-top:1px solid #F0EDE8"><td style="padding:5px 12px;font-size:13px">{html.escape(d)}</td>'
         + (f'<td style="padding:5px 12px;font-size:13px;font-weight:700;color:{CHERRY}">{html.escape(claims[d]["team"])}</td>'
@@ -922,6 +938,46 @@ def save_teams(section):
                             project.get(m['team'], '')] for m in load_members(section)))
     print(f'💾 Saved {path}. 🔒 It holds students\' names: keep it off GitHub.')
     return path
+
+
+def export_teams_html(section, title=None):
+    """Instructor: save one class's teams as a small HTML file to paste into a Canvas page: every team with its
+    members and roles, its project, and its game scores. Plain tables and simple inline styles only, because
+    Canvas removes scripts, style sheets and fancier styling when a page is saved."""
+    section = _norm_section(section)
+    cfg = get_section(section)
+    if not cfg:
+        print(f'Class {section} has no teams yet.')
+        return
+    games = _game_lines(section)
+    title = title or f'Group Project Teams · Section {section}'
+    cell = 'border:1px solid #cccccc;padding:8px 10px;vertical-align:top;font-size:14px'
+    rows = ''
+    for i, team in enumerate(cfg['teams']):
+        sheet = team_sheet(section, team)
+        color = WHEEL_COLORS[i % len(WHEEL_COLORS)]
+        people = '<br>'.join(
+            html.escape(m['name']) + (f' <span style="color:#666666;font-size:12px">· {html.escape(m["role"])}</span>' if m['role'] else '')
+            for m in sorted(sheet['members'], key=lambda m: m['name'].lower())) or '<em>no members yet</em>'
+        project = html.escape(sheet['project']['dataset']) if sheet['project'] else '<em>not chosen yet</em>'
+        small = (f'<br><span style="color:#777777;font-size:11px">🎮 {html.escape(games[team])}</span>' if games.get(team) else '')
+        rows += (f'<tr><td style="{cell};background-color:{color};color:#ffffff;font-weight:bold;width:24%">{html.escape(team)}'
+                 f'<br><span style="font-weight:normal;font-size:12px">{len(sheet["members"])} member'
+                 f'{"s" if len(sheet["members"]) != 1 else ""}</span></td>'
+                 f'<td style="{cell};width:40%">{people}</td><td style="{cell}">📂 {project}{small}</td></tr>\n')
+    head = 'border:1px solid #cccccc;padding:6px 10px;background-color:#f2f2f2;text-align:left;font-size:13px'
+    page = (f'<h3>{html.escape(title)}</h3>\n'
+            f'<table style="border-collapse:collapse;width:100%">\n'
+            f'<thead><tr><th style="{head}">Team</th><th style="{head}">Members and roles</th>'
+            f'<th style="{head}">Project</th></tr></thead>\n<tbody>\n{rows}</tbody></table>\n'
+            f'<p style="font-size:11px;color:#777777">Updated {datetime.datetime.now():%B %d, %Y at %H:%M}</p>\n')
+    path = f'group_project_teams_{section}_canvas.html'
+    with open(path, 'w', encoding='utf-8') as f:
+        f.write(page)
+    print(f'💾 Saved {path} ({len(cfg["teams"])} teams).')
+    print('   In Canvas: edit the page → click  </>  (HTML editor) under the text box → paste the file\'s contents → Save.')
+    print('   To copy it: right-click the file → Open With → Editor, then select all and copy.')
+    print('   🔒 It holds students\' names: fine inside your Canvas course, but keep it off GitHub.')
 
 
 def reset_section(section, confirm=''):
