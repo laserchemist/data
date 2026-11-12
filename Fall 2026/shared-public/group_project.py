@@ -9,15 +9,16 @@ Everything is saved in the hub folder every student can write:
         members/<player>.json             one small file per student: name, section, team
         claims/01__<dataset>.json         one file per claimed dataset (so two teams can never hold the same one)
         picks/01__<team>.json             one file per team that has chosen (so a team can never hold two)
-        teams/01/<team>.json              each team's sheet: members + project (ready for more fields later)
+        messages/01__<team>/<time>__<player>.json   one file per team message
+        teams/01/<team>.json              each team's sheet: members, roles, project and messages
         _archive/                         where reset_section() moves a class's files; nothing is deleted
 
 One file per student and per claim, so students spinning at the same moment never overwrite each other.
 
-Students:   team_sign_in()   team_spin()   team_page()   team_choose_project()
+Students:   team_sign_in()   team_spin()   team_page()   team_choose_project()   team_choose_role()   team_messages()
 Instructor: set_teams('01', Groups)   teams_board('01')   open_projects('01')   close_teams('01')
             move_student(...)   add_student(...)   remove_student(...)   assign_project(...)   release_project(...)
-            save_teams('01')   save_team_sheets('01')   reset_section('01')
+            show_messages('01')   remove_message(...)   save_teams('01')   save_team_sheets('01')   reset_section('01')
 """
 import os, json, glob, time, datetime, shutil, html, csv
 
@@ -25,7 +26,8 @@ import numpy as np
 
 from class_games import _player, _slug, _live, _norm_section, uuid_hex, WHEEL_COLORS, CHERRY, GOLD
 
-__all__ = ['team_sign_in', 'team_spin', 'team_page', 'team_choose_project',
+__all__ = ['team_sign_in', 'team_spin', 'team_page', 'team_choose_project', 'team_choose_role', 'team_messages',
+           'show_messages', 'remove_message', 'load_messages', 'ROLES',
            'set_teams', 'teams_board', 'open_teams', 'close_teams', 'open_projects', 'close_projects',
            'move_student', 'add_student', 'remove_student', 'assign_project', 'release_project',
            'save_teams', 'save_team_sheets', 'team_sheet', 'reset_section',
@@ -56,6 +58,11 @@ DATASETS = [
     'CAMELS · Hydrology Dataset',
 ]
 PICK = '--- Select a dataset ---'
+
+# The role pulldown. Keep these the same as ROLES in GroupProject_Submission.ipynb.
+ROLES = ['Coder 1', 'Coder 2', 'Coder 3', 'Analyst', 'Context Expert', 'Writer', 'Project Manager', 'Visualizer']
+NO_ROLE = '--- Select a role ---'
+MESSAGE_LIMIT = 500          # characters in one team message
 
 
 # ============================================================================ storage
@@ -295,15 +302,40 @@ def _release(section, team):
 
 
 # ---------------------------------------------------------------------------- team sheets
+def _messages_dir(section, team):
+    return _dir('messages', f'{_norm_section(section)}__{_slug(team)}')
+
+
+def load_messages(section, team):
+    "A team's messages, oldest first: [{'name', 'text', 'at', 'file'}, ...]."
+    out = []
+    for p in sorted(glob.glob(os.path.join(ROOT, TERM, 'messages', f'{_norm_section(section)}__{_slug(team)}', '*.json'))):
+        rec = _read(p)
+        if rec and rec.get('text'):
+            out.append(dict(rec, file=os.path.basename(p)))
+    return out
+
+
+def _post_message(section, team, name, text, player=None):
+    text = str(text).strip()[:MESSAGE_LIMIT]
+    if not text:
+        return None
+    rec = {'name': name, 'text': text, 'at': _now(), 'player': player or _player()}
+    _write(os.path.join(_messages_dir(section, team), f'{time.time_ns()}__{rec["player"]}.json'), rec)
+    return rec
+
+
 def team_sheet(section, team):
-    "One team's sheet, built from the saved files: who is on the team and which project they chose."
+    "One team's sheet, built from the saved files: members and their roles, the project, and the team's messages."
     section = _norm_section(section)
     claim = _team_claim(section, team)
     return {'term': TERM, 'section': section, 'team': team,
-            'members': [{'name': m.get('name', ''), 'joined': m.get('at', '')} for m in load_members(section)
-                        if m['team'] == team],
+            'members': [{'name': m.get('name', ''), 'role': m.get('role', ''), 'joined': m.get('at', '')}
+                        for m in load_members(section) if m['team'] == team],
             'project': ({'dataset': claim['dataset'], 'chosen_by': claim.get('by', ''), 'at': claim.get('at', '')}
-                        if claim else None)}
+                        if claim else None),
+            'messages': [{'name': m.get('name', ''), 'text': m['text'], 'at': m.get('at', '')}
+                         for m in load_messages(section, team)]}
 
 
 def save_team_sheets(section, quiet=True):
@@ -399,7 +431,9 @@ def _team_card(section, team, me=None):
     color = WHEEL_COLORS[cfg['teams'].index(team) % len(WHEEL_COLORS)] if team in cfg['teams'] else CHERRY
     chips = ''.join(f'<span style="display:inline-block;background:#F7F5F0;border-radius:14px;padding:4px 12px;margin:3px 4px 0 0;'
                     f'font-size:15px;{"font-weight:800;border:2px solid " + color if m["name"] == me else ""}">'
-                    f'{html.escape(m["name"])}</span>' for m in sorted(sheet['members'], key=lambda m: m['name'].lower()))
+                    f'{html.escape(m["name"])}'
+                    + (f' <span style="color:#888;font-weight:400;font-size:12px">· {html.escape(m["role"])}</span>' if m['role'] else '')
+                    + '</span>' for m in sorted(sheet['members'], key=lambda m: m['name'].lower()))
     proj = sheet['project']
     line = (f'📂 <b>{html.escape(proj["dataset"])}</b> <span style="color:#888;font-size:12px">· chosen by '
             f'{html.escape(proj["chosen_by"])}</span>' if proj else '<span style="color:#999">📂 No project chosen yet</span>')
@@ -515,6 +549,117 @@ def team_choose_project():
     display(widgets.VBox([card, status, choosing, changing, again, out]))
 
 
+def team_choose_role():
+    """Student: choose your own role on the team, once the team has its project. Each teammate does this in their
+    own notebook; choose again any time to change it. Sets team_role in the notebook."""
+    import ipywidgets as widgets
+    from IPython.display import display, HTML, clear_output
+    rec = _need_team()
+    if not rec:
+        return
+    section, team = rec['section'], rec['team']
+    card, status = widgets.HTML(), widgets.HTML()
+    pick = widgets.Dropdown(options=[NO_ROLE] + ROLES, value=rec.get('role') if rec.get('role') in ROLES else NO_ROLE,
+                            description='🎭 My role:', style={'description_width': '90px'}, layout=widgets.Layout(width='340px'))
+    save = widgets.Button(description='✅ Save my role', layout=widgets.Layout(width='160px', height='36px'),
+                          style={'button_color': CHERRY, 'text_color': 'white', 'font_weight': 'bold'})
+    again = widgets.Button(description='🔄 Refresh', layout=widgets.Layout(width='110px', height='36px'))
+    out = widgets.Output()
+    choosing = widgets.HBox([pick, save], layout=widgets.Layout(gap='10px', align_items='center'))
+
+    def refresh(_=None):
+        me = _my_record() or rec
+        _ns()['team_role'] = me.get('role') or None
+        card.value = _team_card(section, team, me.get('name'))
+        ready = _team_claim(section, team) is not None
+        choosing.layout.display = 'flex' if ready else 'none'
+        held = {}
+        for m in load_members(section):
+            if m['team'] == team and m.get('role') and m.get('player') != me.get('player'):
+                held.setdefault(m['role'], []).append(m.get('name', '?'))
+        free = [r for r in ROLES if r not in held and r != me.get('role')]
+        if not ready:
+            head = '⏳ Your team chooses its project first (Step 4). Then click Refresh.'
+        else:
+            head = (f'Your role: <b>{html.escape(me["role"])}</b>. ' if me.get('role') else 'Talk it over, then pick your role. ') \
+                   + ('Roles nobody on your team has yet: ' + ', '.join(free) + '.' if free else 'Every role is covered.') \
+                   + ' Two teammates can share a role if your team is larger than the list.'
+        status.value = f'<div style="font-family:sans-serif;font-size:15px;margin:8px 0 4px;max-width:760px">{head}</div>'
+
+    def on_save(_):
+        with out:
+            clear_output(wait=True)
+            me = _my_record()
+            if pick.value == NO_ROLE or not me:
+                display(HTML(f'<b style="color:{CHERRY}">⚠️ Pick a role from the pulldown first.</b>'))
+            else:
+                me['role'] = pick.value
+                _write(_member_path(), me)
+                display(HTML(f'<b style="color:#2E7D50">✅ Saved: {html.escape(me.get("name", ""))} · {pick.value}</b>'))
+        refresh()
+
+    save.on_click(on_save)
+    again.on_click(refresh)
+    refresh()
+    display(widgets.VBox([card, status, choosing, again, out]))
+
+
+def _messages_html(section, team, me=None, limit=30):
+    msgs = load_messages(section, team)
+    rows = ''.join(
+        f'<div style="padding:6px 10px;margin:4px 0;border-radius:10px;background:{"#FDF3D7" if m.get("player") == me else "#F7F5F0"}">'
+        f'<b>{html.escape(m.get("name", "?"))}</b> <span style="color:#999;font-size:11px">'
+        f'{html.escape(m.get("at", "")[5:16].replace("T", " "))}</span><br>{html.escape(m["text"]).replace(chr(10), "<br>")}</div>'
+        for m in msgs[-limit:])
+    more = f'<div style="color:#999;font-size:12px">… {len(msgs) - limit} earlier messages</div>' if len(msgs) > limit else ''
+    return (f'<div style="font-family:sans-serif;max-width:760px;border:1px solid #E0DDD6;border-radius:12px;overflow:hidden">'
+            f'<div style="background:#2d0a16;color:#fff;padding:8px 14px;font-weight:800">💬 {html.escape(team)} · team messages'
+            f'<span style="float:right;color:{GOLD};font-weight:600">{len(msgs)}</span></div>'
+            f'<div style="padding:8px 10px;font-size:14px;max-height:340px;overflow-y:auto">{more}'
+            f'{rows or "<i style=color:#aaa>No messages yet. Say hello to your team!</i>"}</div></div>')
+
+
+def team_messages():
+    """Student: your team's message board. Everyone on your team (and your instructor) can read what you post.
+    Click Refresh to see new messages."""
+    import ipywidgets as widgets
+    from IPython.display import display, HTML, clear_output
+    rec = _need_team()
+    if not rec:
+        return
+    section, team = rec['section'], rec['team']
+    view = widgets.HTML()
+    box = widgets.Textarea(placeholder=f'Write a message to your team (up to {MESSAGE_LIMIT} characters): when to meet, who is doing what, a question…',
+                           layout=widgets.Layout(width='760px', height='70px'))
+    post = widgets.Button(description='📤 Post to my team', layout=widgets.Layout(width='180px', height='36px'),
+                          style={'button_color': CHERRY, 'text_color': 'white', 'font_weight': 'bold'})
+    again = widgets.Button(description='🔄 Refresh', layout=widgets.Layout(width='110px', height='36px'))
+    out = widgets.Output()
+
+    def refresh(_=None):
+        view.value = _messages_html(section, team, _player())
+
+    def on_post(_):
+        with out:
+            clear_output(wait=True)
+            me = _my_record()
+            if not me or me.get('team') != team:
+                display(HTML(f'<b style="color:{CHERRY}">⚠️ Your team has changed: run this cell again.</b>'))
+            elif not box.value.strip():
+                display(HTML(f'<b style="color:{CHERRY}">⚠️ Type a message first.</b>'))
+            else:
+                _post_message(section, team, me.get('name', ''), box.value)
+                box.value = ''
+        refresh()
+
+    post.on_click(on_post)
+    again.on_click(refresh)
+    refresh()
+    display(widgets.VBox([view, box, widgets.HBox([post, again], layout=widgets.Layout(gap='10px')), out,
+                          widgets.HTML('<div style="font-family:sans-serif;color:#888;font-size:12px">Keep it about the project. '
+                                       'Your teammates and your instructor can read these messages.</div>')]))
+
+
 # ---------------------------------------------------------------------------- the wheel
 _WHEEL = r"""
 <div id="gw-%%UID%%" style="font-family:'Segoe UI',Arial,sans-serif;max-width:780px;border:1px solid #e2e2e2;border-radius:14px;overflow:hidden">
@@ -618,16 +763,20 @@ def _board_html(section):
     save_team_sheets(section)
     by_team = {t: [] for t in cfg['teams']}
     for m in members:
-        by_team.setdefault(m['team'], []).append(m.get('name', '?'))
+        by_team.setdefault(m['team'], []).append((m.get('name', '?'), m.get('role', '')))
     project = {c['team']: d for d, c in claims.items()}
     cards = ''
     for i, (team, names) in enumerate(by_team.items()):
         color = WHEEL_COLORS[i % len(WHEEL_COLORS)]
         chips = ''.join(f'<div style="padding:4px 10px;border-radius:14px;background:#F7F5F0;margin:3px 0;font-size:15px">'
-                        f'{html.escape(n)}</div>' for n in sorted(names, key=str.lower))
+                        f'{html.escape(n)}'
+                        + (f' <span style="color:#888;font-size:12px">· {html.escape(r)}</span>' if r else '') + '</div>'
+                        for n, r in sorted(names, key=lambda x: x[0].lower()))
+        n_msgs = len(load_messages(section, team))
+        talk = f' <span style="float:right;color:#888;font-weight:400">💬 {n_msgs}</span>' if n_msgs else ''
         proj = (f'<div style="border-top:1px solid #F0EDE8;padding:7px 10px;font-size:13px;font-weight:700;color:{color}">'
-                f'📂 {html.escape(project[team])}</div>' if team in project else
-                '<div style="border-top:1px solid #F0EDE8;padding:7px 10px;font-size:12px;color:#aaa">📂 no project yet</div>')
+                f'📂 {html.escape(project[team])}{talk}</div>' if team in project else
+                f'<div style="border-top:1px solid #F0EDE8;padding:7px 10px;font-size:12px;color:#aaa">📂 no project yet{talk}</div>')
         cards += (f'<div style="min-width:0;background:#fff;border:3px solid {color};border-radius:12px;overflow:hidden">'
                   f'<div style="background:{color};color:#fff;padding:9px 12px;font-weight:900;font-size:17px">{html.escape(team)}'
                   f'<span style="float:right">{len(names)}</span></div><div style="padding:8px 10px">'
@@ -678,6 +827,8 @@ def move_student(name, team, section=None, to_section=None):
     if team not in cfg.get('teams', []):
         print(f'Class {target} teams are:', ', '.join(cfg.get('teams', [])) or '(none yet)')
         return
+    if team != rec['team']:
+        rec.pop('role', None)                           # a new team: choose a role again
     rec.update(team=team, section=target, moved=_now())
     _write(_member_path(rec['player']), rec)
     print(f'Moved {rec["name"]} to {team} (class {target}). They should run their spin cell again.')
@@ -731,6 +882,34 @@ def release_project(section, team):
     print(f'Released {had["dataset"]} from {team}.' if had else f'{team} has no project to release.')
 
 
+def show_messages(section, team=None):
+    "Instructor: read the team messages for one class (or one team). Each message is numbered for remove_message."
+    section = _norm_section(section)
+    cfg = get_section(section) or {'teams': []}
+    parts = []
+    for t in ([team] if team else cfg['teams']):
+        msgs = load_messages(section, t)
+        rows = ''.join(f'<div style="padding:3px 0"><span style="color:#999">#{i}</span> <b>{html.escape(m.get("name", "?"))}</b> '
+                       f'<span style="color:#999;font-size:11px">{html.escape(m.get("at", "")[5:16].replace("T", " "))}</span> — '
+                       f'{html.escape(m["text"])}</div>' for i, m in enumerate(msgs, start=1))
+        parts.append(f'<div style="font-family:sans-serif;margin:8px 0"><div style="font-weight:800;color:{CHERRY}">'
+                     f'💬 {html.escape(t)} · {len(msgs)}</div>{rows or "<i style=color:#aaa>no messages</i>"}</div>')
+    _show(''.join(parts) or f'Class {section} has no teams yet.')
+
+
+def remove_message(section, team, number):
+    "Instructor: take down one message, by its # in show_messages. It is moved to the archive folder, not deleted."
+    section = _norm_section(section)
+    msgs = load_messages(section, team)
+    if not 1 <= number <= len(msgs):
+        print(f'{team} has {len(msgs)} messages; give a number from show_messages.')
+        return
+    m = msgs[number - 1]
+    dest = _dir('_archive', 'removed_messages', f'{section}__{_slug(team)}')
+    shutil.move(os.path.join(_messages_dir(section, team), m['file']), dest)
+    print(f'Removed message #{number} by {m.get("name", "?")} from {team}.')
+
+
 def save_teams(section):
     "Instructor: save one class's teams to group_project_teams_<section>_<date>.csv in this folder (names: keep it off GitHub)."
     section = _norm_section(section)
@@ -738,8 +917,8 @@ def save_teams(section):
     path = f'group_project_teams_{section}_{datetime.date.today():%Y-%m-%d}.csv'
     with open(path, 'w', newline='', encoding='utf-8-sig') as f:
         w = csv.writer(f)
-        w.writerow(['section', 'team', 'name', 'joined', 'project'])
-        w.writerows(sorted([section, m['team'], m.get('name', ''), m.get('at', '')[:16].replace('T', ' '),
+        w.writerow(['section', 'team', 'name', 'role', 'joined', 'project'])
+        w.writerows(sorted([section, m['team'], m.get('name', ''), m.get('role', ''), m.get('at', '')[:16].replace('T', ' '),
                             project.get(m['team'], '')] for m in load_members(section)))
     print(f'💾 Saved {path}. 🔒 It holds students\' names: keep it off GitHub.')
     return path
@@ -756,6 +935,7 @@ def reset_section(section, confirm=''):
     files = ([_member_path(m['player']) for m in load_members(section)]
              + glob.glob(os.path.join(base, 'claims', f'{section}__*.json'))
              + glob.glob(os.path.join(base, 'picks', f'{section}__*.json'))
+             + glob.glob(os.path.join(base, 'messages', f'{section}__*', '*.json'))
              + glob.glob(os.path.join(base, 'teams', section, '*.json'))
              + glob.glob(os.path.join(base, 'sections', f'{section}.json')))
     if not files:
