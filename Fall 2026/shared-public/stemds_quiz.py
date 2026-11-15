@@ -40,7 +40,7 @@ Returns from open_quiz()
     Supports tuple unpacking: score, total = open_quiz(...)
 """
 
-import json, os, time, glob, random
+import json, os, time, glob, random, html
 import ipywidgets as widgets
 from IPython.display import display, HTML
 
@@ -204,6 +204,17 @@ class _QuestionWidget:
             f'{hdr_icon} &nbsp; {self.data["question"]}</div>'
         )
 
+        # Optional code snippet (same "code" key jupyterquiz uses), shown under the header
+        code_w = None
+        if self.data.get("code"):
+            code_w = widgets.HTML(
+                f'<pre style="background:#f7f7f9;color:#1a1a1a;border:1px solid #ddd;'
+                f'border-radius:6px;padding:10px 14px;margin:8px 14px 0 14px;'
+                f'font-family:Menlo,Consolas,monospace;font-size:0.95em;'
+                f'line-height:1.45;white-space:pre;overflow-x:auto;">'
+                f'{html.escape(self.data["code"])}</pre>'
+            )
+
         self._attempt_label = widgets.HTML(self._attempt_html(remaining))
         self._feedback      = widgets.Output()
         self._answer_btns   = []   # list of (html_widget, click_btn)
@@ -265,7 +276,8 @@ class _QuestionWidget:
             border = _C["blue"]
 
         self.widget = widgets.VBox(
-            [header, self._attempt_label, btn_area, self._feedback],
+            [header] + ([code_w] if code_w else [])
+            + [self._attempt_label, btn_area, self._feedback],
             layout=widgets.Layout(border=f"1px solid {border}",
                                   border_radius="8px", margin="10px 0")
         )
