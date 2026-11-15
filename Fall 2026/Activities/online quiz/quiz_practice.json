@@ -1,0 +1,274 @@
+[
+ {
+  "topic": "pop",
+  "question": "The average height of all 2,000 students enrolled in a course is a ...",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "parameter",
+    "correct": true,
+    "feedback": "Correct: it describes the whole population of 2,000 students."
+   },
+   {
+    "answer": "statistic",
+    "correct": false,
+    "feedback": "A statistic comes from a sample; this uses everyone."
+   },
+   {
+    "answer": "sample",
+    "correct": false,
+    "feedback": "A sample is a group of individuals, not a number."
+   },
+   {
+    "answer": "random variable",
+    "correct": false,
+    "feedback": "It is one fixed number."
+   }
+  ]
+ },
+ {
+  "topic": "pop",
+  "question": "Treat all 72 alcohols in ROH_data as the population. Then train_roh (57 randomly chosen rows) is a ...",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "random sample",
+    "correct": true,
+    "feedback": "Correct: train_roh is a random subset of the population."
+   },
+   {
+    "answer": "population",
+    "correct": false,
+    "feedback": "train_roh is only part of the 72 alcohols."
+   },
+   {
+    "answer": "parameter",
+    "correct": false,
+    "feedback": "A parameter is a number, not a Table of rows."
+   },
+   {
+    "answer": "convenience sample",
+    "correct": false,
+    "feedback": "split shuffles the rows at random first."
+   }
+  ]
+ },
+ {
+  "topic": "code",
+  "question": "What does this loop print?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "0, 1, 2 (one per line)",
+    "correct": true,
+    "feedback": "Correct: np.arange(3) starts at 0 and stops before 3."
+   },
+   {
+    "answer": "1, 2, 3",
+    "correct": false,
+    "feedback": "np.arange starts at 0 by default."
+   },
+   {
+    "answer": "0, 1, 2, 3",
+    "correct": false,
+    "feedback": "The end value 3 is not included."
+   },
+   {
+    "answer": "3",
+    "correct": false,
+    "feedback": "The loop prints once for each value."
+   }
+  ],
+  "code": "for i in np.arange(3):\n    print(i)"
+ },
+ {
+  "topic": "code",
+  "question": "What is label after this code runs?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "'A'",
+    "correct": true,
+    "feedback": "Correct: Python takes the first branch that is True and skips the rest."
+   },
+   {
+    "answer": "'B'",
+    "correct": false,
+    "feedback": "7 > 6 is True, but the if branch was already taken."
+   },
+   {
+    "answer": "'C'",
+    "correct": false,
+    "feedback": "else runs only when every condition is False."
+   },
+   {
+    "answer": "'A' and then 'B'",
+    "correct": false,
+    "feedback": "Only one branch of an if/elif/else runs."
+   }
+  ],
+  "code": "x = 7\nif x > 5:\n    label = 'A'\nelif x > 6:\n    label = 'B'\nelse:\n    label = 'C'"
+ },
+ {
+  "topic": "sampling",
+  "question": "How do you draw 5 rows from Table t with no row repeated?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "t.sample(5, with_replacement=False)",
+    "correct": true,
+    "feedback": "Correct."
+   },
+   {
+    "answer": "t.sample(5)",
+    "correct": false,
+    "feedback": "By default sample draws with replacement, so rows can repeat."
+   },
+   {
+    "answer": "t.take(np.arange(5))",
+    "correct": false,
+    "feedback": "That gives the first 5 rows, not a random sample."
+   },
+   {
+    "answer": "np.random.choice(t, 5)",
+    "correct": false,
+    "feedback": "Use the Table method sample for Tables."
+   }
+  ]
+ },
+ {
+  "topic": "sampling",
+  "question": "Can np.random.choice(make_array(1, 2, 3, 4, 5, 6), 2) return the same number twice, like a pair of dice?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "Yes, because it draws with replacement by default",
+    "correct": true,
+    "feedback": "Correct: just like rolling two dice."
+   },
+   {
+    "answer": "No, the two values are always different",
+    "correct": false,
+    "feedback": "That needs replace=False."
+   },
+   {
+    "answer": "No, it returns only one value",
+    "correct": false,
+    "feedback": "The 2 asks for two draws."
+   },
+   {
+    "answer": "Only if you set a seed",
+    "correct": false,
+    "feedback": "A seed fixes the results; it doesn't change replacement."
+   }
+  ]
+ },
+ {
+  "topic": "regression",
+  "question": "A value is x = 70. The mean of x is 60 and its SD is 5. What is x in standard units?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "2",
+    "correct": true,
+    "feedback": "Correct: (70 - 60) / 5 = 2."
+   },
+   {
+    "answer": "10",
+    "correct": false,
+    "feedback": "Divide the difference by the SD."
+   },
+   {
+    "answer": "14",
+    "correct": false,
+    "feedback": "Subtract the mean before dividing."
+   },
+   {
+    "answer": "0.5",
+    "correct": false,
+    "feedback": "Divide by the SD, not into it."
+   }
+  ]
+ },
+ {
+  "topic": "regression",
+  "question": "A regression line has slope 2 and intercept 150. What does it predict for x = 120?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "390",
+    "correct": true,
+    "feedback": "Correct: 2 x 120 + 150 = 390."
+   },
+   {
+    "answer": "300",
+    "correct": false,
+    "feedback": "That is slope x intercept; multiply the slope by x, then add the intercept."
+   },
+   {
+    "answer": "270",
+    "correct": false,
+    "feedback": "Multiply x by the slope (2) before adding the intercept."
+   },
+   {
+    "answer": "240",
+    "correct": false,
+    "feedback": "Don't forget the intercept."
+   }
+  ]
+ },
+ {
+  "topic": "knn",
+  "question": "When standardizing the test set for kNN, whose mean and SD should you use?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "The training set's",
+    "correct": true,
+    "feedback": "Correct: using the training set as the ruler keeps information from leaking out of the held-out data."
+   },
+   {
+    "answer": "The test set's own",
+    "correct": false,
+    "feedback": "That lets the test data shape the model, so it is no longer a fair judge."
+   },
+   {
+    "answer": "The whole data set's",
+    "correct": false,
+    "feedback": "That also leaks information from the test set."
+   },
+   {
+    "answer": "It doesn't matter",
+    "correct": false,
+    "feedback": "It matters: the held-out sets must not influence the model."
+   }
+  ]
+ },
+ {
+  "topic": "knn",
+  "question": "With k = 1, what does kNN regression predict for a new molecule?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "The target value of the single nearest training molecule",
+    "correct": true,
+    "feedback": "Correct."
+   },
+   {
+    "answer": "The average target of the whole training set",
+    "correct": false,
+    "feedback": "That is the 'always guess the average' baseline."
+   },
+   {
+    "answer": "The average of the two nearest molecules",
+    "correct": false,
+    "feedback": "That would be k = 2."
+   },
+   {
+    "answer": "The target of the farthest molecule",
+    "correct": false,
+    "feedback": "kNN uses the nearest neighbors."
+   }
+  ]
+ }
+]

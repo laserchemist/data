@@ -1,0 +1,819 @@
+[
+ {
+  "topic": "pop",
+  "question": "A chemist randomly picks 15 of the 72 alcohols in ROH_data and computes their mean boiling point. That mean is a ...",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "statistic",
+    "correct": true,
+    "feedback": "Correct: it is computed from a sample, so a different random 15 would give a different value."
+   },
+   {
+    "answer": "parameter",
+    "correct": false,
+    "feedback": "A parameter describes the whole population (all 72 alcohols). This number uses only 15."
+   },
+   {
+    "answer": "population",
+    "correct": false,
+    "feedback": "The population is the set of all 72 alcohols, not a number computed from 15 of them."
+   },
+   {
+    "answer": "probability",
+    "correct": false,
+    "feedback": "It is an average of measured boiling points, not a chance."
+   }
+  ]
+ },
+ {
+  "topic": "pop",
+  "question": "A pollster calls 1,000 randomly chosen Pennsylvania voters to estimate the proportion who support a ballot measure. What is the population?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "All Pennsylvania voters",
+    "correct": true,
+    "feedback": "Correct: the population is the whole group we want to learn about."
+   },
+   {
+    "answer": "The 1,000 voters who were called",
+    "correct": false,
+    "feedback": "That is the sample."
+   },
+   {
+    "answer": "The proportion of the 1,000 who support the measure",
+    "correct": false,
+    "feedback": "That is a statistic computed from the sample."
+   },
+   {
+    "answer": "The proportion of all Pennsylvania voters who support it",
+    "correct": false,
+    "feedback": "That is the parameter: a number that describes the population, not the population itself."
+   }
+  ]
+ },
+ {
+  "topic": "pop",
+  "question": "You compute the mean of a random sample, then rerun the cell with a different np.random.seed and get a different mean. Why?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "The sample is random, so a statistic varies from sample to sample",
+    "correct": true,
+    "feedback": "Correct: this sample-to-sample variability is exactly what simulation lets us study."
+   },
+   {
+    "answer": "The population changed when the seed changed",
+    "correct": false,
+    "feedback": "The population is fixed; only which rows were drawn changed."
+   },
+   {
+    "answer": "The parameter is random too",
+    "correct": false,
+    "feedback": "A parameter is a fixed number about the population."
+   },
+   {
+    "answer": "There is a bug: a sample mean should never change",
+    "correct": false,
+    "feedback": "Different random samples give different statistics; that is expected."
+   }
+  ]
+ },
+ {
+  "topic": "pop",
+  "question": "Which statement is true?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "A parameter is a fixed (usually unknown) number about the population; a statistic is computed from a sample and varies",
+    "correct": true,
+    "feedback": "Correct."
+   },
+   {
+    "answer": "A statistic is fixed; a parameter changes every time you sample",
+    "correct": false,
+    "feedback": "It is the other way around."
+   },
+   {
+    "answer": "A parameter and a statistic are always equal when the sample is random",
+    "correct": false,
+    "feedback": "A random sample gives a statistic that is close to the parameter on average, not equal every time."
+   },
+   {
+    "answer": "A statistic can only be computed if you know the whole population",
+    "correct": false,
+    "feedback": "A statistic needs only the sample."
+   }
+  ]
+ },
+ {
+  "topic": "pop",
+  "question": "To estimate how many hours all Temple students sleep, you survey only the students in your 9 a.m. lab section. What is the main problem?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "It is not a random sample, so it may not represent all students (bias)",
+    "correct": true,
+    "feedback": "Correct: a convenience sample can be systematically different from the population."
+   },
+   {
+    "answer": "The sample is too large",
+    "correct": false,
+    "feedback": "Size is not the issue; how the sample was chosen is."
+   },
+   {
+    "answer": "Sleep hours cannot be averaged",
+    "correct": false,
+    "feedback": "Hours are numbers and can be averaged."
+   },
+   {
+    "answer": "A survey can never estimate a parameter",
+    "correct": false,
+    "feedback": "A well-designed random survey can estimate a parameter well."
+   }
+  ]
+ },
+ {
+  "topic": "pop",
+  "question": "As you draw a larger and larger random sample from a population, the histogram of the sample ...",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "looks more and more like the histogram of the population",
+    "correct": true,
+    "feedback": "Correct: with large random samples, the empirical distribution of the sample resembles the population (Inferential Thinking 10.1)."
+   },
+   {
+    "answer": "gets more spread out than the population",
+    "correct": false,
+    "feedback": "A large sample spreads out about as much as the population, not more."
+   },
+   {
+    "answer": "always becomes bell-shaped, whatever the population looks like",
+    "correct": false,
+    "feedback": "That is true for the distribution of sample means, not for the sample itself."
+   },
+   {
+    "answer": "stays the same no matter the sample size",
+    "correct": false,
+    "feedback": "Small samples can look very different from the population."
+   }
+  ]
+ },
+ {
+  "topic": "code",
+  "question": "What does size(4) return?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "'medium'",
+    "correct": true,
+    "feedback": "Correct: 4 > 5 is False, 4 > 2 is True, so the elif branch returns 'medium'."
+   },
+   {
+    "answer": "'big'",
+    "correct": false,
+    "feedback": "4 > 5 is False, so the first branch is skipped."
+   },
+   {
+    "answer": "'small'",
+    "correct": false,
+    "feedback": "The elif branch already returned, so the last line never runs."
+   },
+   {
+    "answer": "'medium' and then 'small'",
+    "correct": false,
+    "feedback": "return ends the function immediately; only one value comes back."
+   }
+  ],
+  "code": "def size(x):\n    if x > 5:\n        return 'big'\n    elif x > 2:\n        return 'medium'\n    return 'small'"
+ },
+ {
+  "topic": "code",
+  "question": "What is the value of total after this loop?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "10",
+    "correct": true,
+    "feedback": "Correct: np.arange(1, 5) is 1, 2, 3, 4 and 1 + 2 + 3 + 4 = 10."
+   },
+   {
+    "answer": "15",
+    "correct": false,
+    "feedback": "np.arange stops before its end value, so 5 is not included."
+   },
+   {
+    "answer": "4",
+    "correct": false,
+    "feedback": "That is the last value of i, not the running total."
+   },
+   {
+    "answer": "0",
+    "correct": false,
+    "feedback": "total is updated each time through the loop."
+   }
+  ],
+  "code": "total = 0\nfor i in np.arange(1, 5):\n    total = total + i"
+ },
+ {
+  "topic": "code",
+  "question": "What is the value of result?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "None",
+    "correct": true,
+    "feedback": "Correct: the function computes y but never returns it, so Python returns None."
+   },
+   {
+    "answer": "6",
+    "correct": false,
+    "feedback": "y is 6 inside the function, but without return the value is lost."
+   },
+   {
+    "answer": "3",
+    "correct": false,
+    "feedback": "The function never returns x either."
+   },
+   {
+    "answer": "An error occurs",
+    "correct": false,
+    "feedback": "The code runs; it just returns None."
+   }
+  ],
+  "code": "def double(x):\n    y = 2 * x\n\nresult = double(3)"
+ },
+ {
+  "topic": "code",
+  "question": "What is the value of count after this loop?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "2",
+    "correct": true,
+    "feedback": "Correct: only 4.2 and 6.8 are below 7."
+   },
+   {
+    "answer": "1",
+    "correct": false,
+    "feedback": "Check every value: 4.2 and 6.8 are both below 7."
+   },
+   {
+    "answer": "3",
+    "correct": false,
+    "feedback": "9.1 is not below 7."
+   },
+   {
+    "answer": "4",
+    "correct": false,
+    "feedback": "The if statement only counts values below 7."
+   }
+  ],
+  "code": "count = 0\nfor pka in make_array(4.2, 9.1, 6.8, 10.5):\n    if pka < 7:\n        count = count + 1"
+ },
+ {
+  "topic": "code",
+  "question": "What does this expression return?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "array(['stronger', 'weaker', 'stronger'])",
+    "correct": true,
+    "feedback": "Correct: np.where picks the first label where the condition is True and the second where it is False."
+   },
+   {
+    "answer": "array(['weaker', 'stronger', 'weaker'])",
+    "correct": false,
+    "feedback": "The first label goes with True (value < 7)."
+   },
+   {
+    "answer": "'stronger'",
+    "correct": false,
+    "feedback": "np.where works element by element and returns an array."
+   },
+   {
+    "answer": "array([True, False, True])",
+    "correct": false,
+    "feedback": "That is the condition itself; np.where replaces it with the labels."
+   }
+  ],
+  "code": "np.where(make_array(3.0, 8.0, 6.5) < 7, 'stronger', 'weaker')"
+ },
+ {
+  "topic": "code",
+  "question": "Which function correctly returns the mean of column label in Table t?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "def col_mean(t, label): return np.mean(t.column(label))",
+    "correct": true,
+    "feedback": "Correct."
+   },
+   {
+    "answer": "def col_mean(t, label): print(np.mean(t.column(label)))",
+    "correct": false,
+    "feedback": "print shows the value but the function returns None."
+   },
+   {
+    "answer": "def col_mean(t, label): return np.mean(t.column[label])",
+    "correct": false,
+    "feedback": "column is a method: use parentheses, t.column(label)."
+   },
+   {
+    "answer": "def col_mean(t, label): np.mean(t.column(label))",
+    "correct": false,
+    "feedback": "Without return the computed mean is thrown away."
+   }
+  ]
+ },
+ {
+  "topic": "sampling",
+  "question": "What is flips?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "An array of 10 values, each 'H' or 'T', chosen at random with replacement",
+    "correct": true,
+    "feedback": "Correct: np.random.choice samples with replacement by default."
+   },
+   {
+    "answer": "A single value, 'H' or 'T'",
+    "correct": false,
+    "feedback": "The second argument asks for 10 draws."
+   },
+   {
+    "answer": "An array with exactly 5 'H' and 5 'T'",
+    "correct": false,
+    "feedback": "Each draw is random, so the counts vary."
+   },
+   {
+    "answer": "An error, because you can't draw 10 items from an array of 2",
+    "correct": false,
+    "feedback": "Draws are with replacement, so this works."
+   }
+  ],
+  "code": "flips = np.random.choice(make_array('H', 'T'), 10)"
+ },
+ {
+  "topic": "sampling",
+  "question": "ROH_data has 72 rows. What does ROH_data.sample(20) return?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "A Table of 20 rows drawn at random with replacement, so a row can appear more than once",
+    "correct": true,
+    "feedback": "Correct: Table.sample uses with_replacement=True unless you say otherwise."
+   },
+   {
+    "answer": "20 different rows, never repeated",
+    "correct": false,
+    "feedback": "That needs ROH_data.sample(20, with_replacement=False)."
+   },
+   {
+    "answer": "The first 20 rows",
+    "correct": false,
+    "feedback": "That would be ROH_data.take(np.arange(20))."
+   },
+   {
+    "answer": "The 20 rows with the highest boiling points",
+    "correct": false,
+    "feedback": "sample draws at random; it does not sort."
+   }
+  ]
+ },
+ {
+  "topic": "sampling",
+  "question": "Why put np.random.seed(1013) at the top of a simulation cell?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "So the random results are the same every time the cell runs (reproducible)",
+    "correct": true,
+    "feedback": "Correct."
+   },
+   {
+    "answer": "To make the results more random",
+    "correct": false,
+    "feedback": "A seed does not change how random the draws are; it fixes the sequence."
+   },
+   {
+    "answer": "To guarantee the sample represents the population",
+    "correct": false,
+    "feedback": "Any single random sample can still be unusual."
+   },
+   {
+    "answer": "numpy functions won't run without a seed",
+    "correct": false,
+    "feedback": "A seed is optional."
+   }
+  ]
+ },
+ {
+  "topic": "sampling",
+  "question": "You repeat a simulation 1,000 times, record the sample mean each time, and draw a histogram of the 1,000 means. That histogram is ...",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "an empirical distribution of the statistic (the sample mean)",
+    "correct": true,
+    "feedback": "Correct: it shows how the statistic varies across samples."
+   },
+   {
+    "answer": "the population distribution",
+    "correct": false,
+    "feedback": "The population distribution is a histogram of the individual values in the population."
+   },
+   {
+    "answer": "the distribution of one sample",
+    "correct": false,
+    "feedback": "It summarizes 1,000 samples, one mean from each."
+   },
+   {
+    "answer": "a regression line",
+    "correct": false,
+    "feedback": "No line is being fit."
+   }
+  ]
+ },
+ {
+  "topic": "sampling",
+  "question": "You simulate sample means with sample size 25 and with sample size 400 (1,000 repetitions each). How do the two histograms compare?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "Both are centered near the population mean, but the size-400 histogram is much narrower",
+    "correct": true,
+    "feedback": "Correct: larger samples give less variable sample means."
+   },
+   {
+    "answer": "The size-400 histogram is wider",
+    "correct": false,
+    "feedback": "Larger samples give less variability, not more."
+   },
+   {
+    "answer": "The size-400 histogram is centered far from the population mean",
+    "correct": false,
+    "feedback": "Random samples of any size are centered near the population mean."
+   },
+   {
+    "answer": "They look the same because the population is the same",
+    "correct": false,
+    "feedback": "The spread of sample means depends on the sample size."
+   }
+  ]
+ },
+ {
+  "topic": "sampling",
+  "question": "Which expression gives the proportion of heads in flips?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "np.mean(flips == 'H')",
+    "correct": true,
+    "feedback": "Correct: the comparison gives True/False values, and their mean is the proportion True."
+   },
+   {
+    "answer": "np.mean(flips)",
+    "correct": false,
+    "feedback": "You cannot average strings like 'H' and 'T'."
+   },
+   {
+    "answer": "flips == 'H'",
+    "correct": false,
+    "feedback": "That is an array of True/False, not a single proportion."
+   },
+   {
+    "answer": "np.count_nonzero(flips == 'H')",
+    "correct": false,
+    "feedback": "That is the count of heads; divide by 10,000 to get a proportion."
+   }
+  ],
+  "code": "flips = np.random.choice(make_array('H', 'T'), 10000)"
+ },
+ {
+  "topic": "regression",
+  "question": "An alcohol's boiling point is exactly 1 SD above the average boiling point. What is its boiling point in standard units?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "1",
+    "correct": true,
+    "feedback": "Correct: standard units count how many SDs a value is from the average."
+   },
+   {
+    "answer": "0",
+    "correct": false,
+    "feedback": "0 standard units means the value equals the average."
+   },
+   {
+    "answer": "The SD of the boiling points",
+    "correct": false,
+    "feedback": "Standard units have no units; the value is 1."
+   },
+   {
+    "answer": "The average plus 1",
+    "correct": false,
+    "feedback": "That mixes original units with standard units."
+   }
+  ]
+ },
+ {
+  "topic": "regression",
+  "question": "The correlation between two variables is r = -0.9. This means ...",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "there is a strong negative linear association",
+    "correct": true,
+    "feedback": "Correct: r near -1 means points cluster tightly around a line that slopes down."
+   },
+   {
+    "answer": "there is a weak association",
+    "correct": false,
+    "feedback": "|r| = 0.9 is close to 1, so the association is strong."
+   },
+   {
+    "answer": "there is almost no association",
+    "correct": false,
+    "feedback": "That would be r near 0."
+   },
+   {
+    "answer": "90% of the points lie exactly on the line",
+    "correct": false,
+    "feedback": "r measures how tightly points cluster, not the percentage on the line."
+   }
+  ]
+ },
+ {
+  "topic": "regression",
+  "question": "Using slope = r x SD(y) / SD(x), with r = 0.8, SD of x = 20, and SD of y = 50, what is the slope?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "2.0",
+    "correct": true,
+    "feedback": "Correct: 0.8 x 50 / 20 = 2.0."
+   },
+   {
+    "answer": "0.32",
+    "correct": false,
+    "feedback": "That is 0.8 x 20 / 50; the SD of y goes on top."
+   },
+   {
+    "answer": "40",
+    "correct": false,
+    "feedback": "Multiply r by the ratio SD(y)/SD(x), not by SD(y) alone."
+   },
+   {
+    "answer": "0.8",
+    "correct": false,
+    "feedback": "r is the slope only in standard units."
+   }
+  ]
+ },
+ {
+  "topic": "regression",
+  "question": "Using intercept = mean(y) - slope x mean(x), with mean of x = 100, mean of y = 350, and slope = 2, what is the intercept?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "150",
+    "correct": true,
+    "feedback": "Correct: 350 - 2 x 100 = 150."
+   },
+   {
+    "answer": "550",
+    "correct": false,
+    "feedback": "Subtract slope x mean(x); don't add it."
+   },
+   {
+    "answer": "250",
+    "correct": false,
+    "feedback": "Remember to multiply mean(x) by the slope."
+   },
+   {
+    "answer": "450",
+    "correct": false,
+    "feedback": "Check the sign and the multiplication."
+   }
+  ]
+ },
+ {
+  "topic": "regression",
+  "question": "The regression line predicts 390 K for an alcohol whose actual boiling point is 400 K. What is the residual (actual - predicted)?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "10 K",
+    "correct": true,
+    "feedback": "Correct: 400 - 390 = 10 K. The line under-predicted this alcohol."
+   },
+   {
+    "answer": "-10 K",
+    "correct": false,
+    "feedback": "Residual = actual - predicted, in that order."
+   },
+   {
+    "answer": "790 K",
+    "correct": false,
+    "feedback": "Subtract, don't add."
+   },
+   {
+    "answer": "0.975",
+    "correct": false,
+    "feedback": "A residual is a difference in kelvin, not a ratio."
+   }
+  ]
+ },
+ {
+  "topic": "regression",
+  "question": "A scatter plot shows a clear U-shaped curve, but r is close to 0. What should you conclude?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "There is little linear association, but the variables can still be strongly related in a non-linear way",
+    "correct": true,
+    "feedback": "Correct: r only measures linear association, so always look at the plot."
+   },
+   {
+    "answer": "The variables are unrelated",
+    "correct": false,
+    "feedback": "A clear U shape is a strong relationship; it just isn't linear."
+   },
+   {
+    "answer": "r must have been computed incorrectly",
+    "correct": false,
+    "feedback": "r near 0 is the expected value for a symmetric U shape."
+   },
+   {
+    "answer": "A regression line will fit the data well",
+    "correct": false,
+    "feedback": "A straight line can't follow a U shape."
+   }
+  ]
+ },
+ {
+  "topic": "knn",
+  "question": "What is the Euclidean distance between the points (1, 2) and (4, 6)?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "5",
+    "correct": true,
+    "feedback": "Correct: sqrt(3^2 + 4^2) = sqrt(25) = 5."
+   },
+   {
+    "answer": "7",
+    "correct": false,
+    "feedback": "Square the differences before adding them, then take the square root."
+   },
+   {
+    "answer": "25",
+    "correct": false,
+    "feedback": "Remember the square root."
+   },
+   {
+    "answer": "2.65",
+    "correct": false,
+    "feedback": "That is sqrt(3 + 4); square each difference first."
+   }
+  ]
+ },
+ {
+  "topic": "knn",
+  "question": "With k = 3, the three nearest training alcohols have boiling points 350 K, 360 K, and 400 K. What does kNN regression predict?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "370 K",
+    "correct": true,
+    "feedback": "Correct: the average is (350 + 360 + 400) / 3 = 370 K."
+   },
+   {
+    "answer": "360 K",
+    "correct": false,
+    "feedback": "That is the median; predict_knn uses np.mean."
+   },
+   {
+    "answer": "350 K",
+    "correct": false,
+    "feedback": "That would be the k = 1 prediction if 350 K were the nearest."
+   },
+   {
+    "answer": "400 K",
+    "correct": false,
+    "feedback": "kNN regression averages all k neighbors."
+   }
+  ]
+ },
+ {
+  "topic": "knn",
+  "question": "In kNN classification with k = 5, the neighbors' classes are weaker, stronger, weaker, weaker, stronger. What is the predicted class?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "weaker",
+    "correct": true,
+    "feedback": "Correct: 'weaker' wins the vote 3 to 2."
+   },
+   {
+    "answer": "stronger",
+    "correct": false,
+    "feedback": "Count the votes: 3 weaker, 2 stronger."
+   },
+   {
+    "answer": "It's a tie",
+    "correct": false,
+    "feedback": "With 5 voters and 2 classes, a tie is impossible."
+   },
+   {
+    "answer": "The average of the classes",
+    "correct": false,
+    "feedback": "Classes are categories; the neighbors vote instead of being averaged."
+   }
+  ]
+ },
+ {
+  "topic": "knn",
+  "question": "Why convert features to standard units before computing kNN distances?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "So a feature with a large spread doesn't dominate the distance",
+    "correct": true,
+    "feedback": "Correct: in standard units each feature counts on equal terms."
+   },
+   {
+    "answer": "To make the target normally distributed",
+    "correct": false,
+    "feedback": "Scaling the features doesn't change the target."
+   },
+   {
+    "answer": "So the code runs faster",
+    "correct": false,
+    "feedback": "Scaling is about fairness in the distance, not speed."
+   },
+   {
+    "answer": "So every feature has the same mean as the target",
+    "correct": false,
+    "feedback": "In standard units each feature has mean 0 and SD 1."
+   }
+  ]
+ },
+ {
+  "topic": "knn",
+  "question": "What is the validation set used for?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "Comparing choices such as k or which features to use, without touching the test set",
+    "correct": true,
+    "feedback": "Correct: it works like the practice exam."
+   },
+   {
+    "answer": "Providing the neighbors that make the predictions",
+    "correct": false,
+    "feedback": "That is the training set."
+   },
+   {
+    "answer": "Reporting the final, honest error once",
+    "correct": false,
+    "feedback": "That is the test set."
+   },
+   {
+    "answer": "Replacing the training set when it is too small",
+    "correct": false,
+    "feedback": "The validation set stays separate from the training data."
+   }
+  ]
+ },
+ {
+  "topic": "knn",
+  "question": "A kNN model that predicts boiling points has a test RMSE of 12 K. What is the best interpretation?",
+  "type": "multiple_choice",
+  "answers": [
+   {
+    "answer": "Predictions are typically off by roughly 12 K",
+    "correct": true,
+    "feedback": "Correct: RMSE is in the units of the target and measures a typical error size."
+   },
+   {
+    "answer": "12% of the predictions are wrong",
+    "correct": false,
+    "feedback": "RMSE is not a percentage."
+   },
+   {
+    "answer": "Every prediction is exactly 12 K too high",
+    "correct": false,
+    "feedback": "Errors vary in size and sign; RMSE summarizes their typical size."
+   },
+   {
+    "answer": "The model is correct 12 times out of 15",
+    "correct": false,
+    "feedback": "That would be an accuracy, which is used for classification."
+   }
+  ]
+ }
+]
