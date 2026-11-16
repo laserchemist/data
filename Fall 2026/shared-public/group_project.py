@@ -19,8 +19,11 @@ Students:   team_sign_in()   team_spin()   team_page()   team_choose_project()  
 Instructor: set_teams('01', Groups)   teams_board('01')   open_projects('01')   close_teams('01')
             move_student(...)   add_student(...)   remove_student(...)   assign_project(...)   release_project(...)
             show_messages('01')   remove_message(...)   save_teams('01')   export_teams_html('01')   reset_section('01')
+Roster:     roster_check('01')   missing_students('01', link=...)   open_teams_for_missing('01')
+            match_student('Sam T', 'tuv12345')   rename_student('sammy', 'Sam T')   canvas_groups('01')
+            (these read the class roster class_01.csv from the notebook's folder)
 """
-import os, json, glob, time, datetime, shutil, html, csv
+import os, json, glob, time, datetime, shutil, html, csv, hashlib, re, unicodedata, difflib
 
 import numpy as np
 
@@ -31,6 +34,7 @@ __all__ = ['team_sign_in', 'team_spin', 'team_page', 'team_choose_project', 'tea
            'set_teams', 'teams_board', 'open_teams', 'close_teams', 'open_projects', 'close_projects',
            'move_student', 'add_student', 'remove_student', 'assign_project', 'release_project',
            'save_teams', 'save_team_sheets', 'team_sheet', 'reset_section', 'export_teams_html',
+           'roster_check', 'missing_students', 'open_teams_for_missing', 'match_student', 'rename_student', 'canvas_groups',
            'load_members', 'load_claims', 'get_section', 'DATASETS', 'SECTIONS']
 
 ROOT = os.environ.get('GROUP_PROJECT_ROOT', '/home/jovyan/shared-public/group_project')
@@ -170,11 +174,17 @@ def _flag(section, key, value, said):
 
 def open_teams(section):
     "Instructor: let students spin onto a team (the wheel is open as soon as you set the teams)."
+    cfg = get_section(section)
+    if cfg and cfg.pop('allow', None) is not None:
+        _save_section(cfg)
     _flag(section, 'teams_open', True, 'the wheel is OPEN. Students can spin.')
 
 
 def close_teams(section):
     "Instructor: close the wheel. Students already on a team keep it; nobody new can spin."
+    cfg = get_section(section)
+    if cfg and cfg.pop('allow', None) is not None:      # also ends open_teams_for_missing
+        _save_section(cfg)
     _flag(section, 'teams_open', False, 'the wheel is CLOSED to new students.')
 
 
@@ -422,7 +432,7 @@ def team_spin():
     teams = cfg['teams']
     already = bool(rec and rec.get('team') in teams)
     if not already:
-        if not cfg.get('teams_open', True):
+        if not cfg.get('teams_open', True) and _player() not in cfg.get('allow', []):
             _show(_box('🔒 The wheel is closed.', 'Ask your instructor to let you in, then run this cell again.'))
             return
         rec = {'player': _player(), 'name': name, 'section': section, 'team': _balanced_pick(section, teams), 'at': _now()}
@@ -806,7 +816,8 @@ def _board_html(section):
              f'font-family:system-ui,sans-serif"><div style="padding:9px 14px;background:#F7F5F0;font-weight:800">📂 Projects '
              f'<span style="font-weight:400;color:#888;font-size:12px">· one team per dataset · {len(claims)} of '
              f'{len(cfg["teams"])} teams have chosen</span></div><table style="width:100%;border-collapse:collapse">{rows}</table></div>')
-    sub = (f'{"🔓 wheel open" if cfg.get("teams_open", True) else "🔒 wheel closed"} · '
+    waiting = len(set(cfg.get('allow', [])) - {m['player'] for m in load_members()})
+    sub = (f'{"🔓 wheel open" if cfg.get("teams_open", True) else f"🔓 wheel open for {waiting} missing" if waiting else "🔒 wheel closed"} · '
            f'{"🔓 project choice open" if cfg.get("projects_open") else "🔒 project choice closed"} · '
            f'{len(members)} student{"s" if len(members) != 1 else ""} on {len(cfg["teams"])} teams')
     return (head.replace('@SUB@', sub) + f'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;'
@@ -924,6 +935,294 @@ def remove_message(section, team, number):
     dest = _dir('_archive', 'removed_messages', f'{section}__{_slug(team)}')
     shutil.move(os.path.join(_messages_dir(section, team), m['file']), dest)
     print(f'Removed message #{number} by {m.get("name", "?")} from {team}.')
+
+
+# ============================================================================ instructor: the class roster
+EMAIL_DOMAIN = 'temple.edu'          # a student's email is their SIS Login ID @ this, unless the roster has an Email column
+
+
+def _hash(login):
+    "The scrambled id class_games gives a hub login (so a roster login can be matched to a spin)."
+    return hashlib.sha256(('class-games:' + str(login).strip().lower()).encode()).hexdigest()[:10]
+
+
+def _tokens(text):
+    text = unicodedata.normalize('NFKD', str(text)).encode('ascii', 'ignore').decode().lower()
+    return re.findall(r'[a-z]+', text)
+
+
+def _read_roster(section, path=None):
+    """The class roster as [{'full', 'first', 'last', 'login', 'email', 'sections', 'player'}, ...].
+    Reads class_<section>.csv from this folder (a Canvas gradebook export works: it needs a Student column,
+    'Last, First', and a SIS Login ID column). Returns None, with a message, if there is no usable roster."""
+    section = _norm_section(section)
+    path = path or f'class_{section}.csv'
+    if not os.path.exists(path):
+        print(f'No roster file {path} in this folder. Upload the class roster here as class_{section}.csv '
+              '(from Canvas: Grades → Export → Export Entire Gradebook), or pass roster="your_file.csv".')
+        return None
+    with open(path, newline='', encoding='utf-8-sig') as f:
+        rows = list(csv.DictReader(f))
+    cols = {re.sub(r'[^a-z]', '', (c or '').lower()): c for c in (rows[0].keys() if rows else [])}
+    name_col = cols.get('student') or cols.get('name') or cols.get('studentname')
+    login_col = cols.get('sisloginid') or cols.get('loginid') or cols.get('login')
+    if not name_col or not login_col:
+        print(f'{path} needs a "Student" column and a "SIS Login ID" column; it has: {", ".join(c for c in cols.values() if c)}')
+        return None
+    out = []
+    for r in rows:
+        full, login = (r.get(name_col) or '').strip(), (r.get(login_col) or '').strip()
+        if not full or not login or full.lower().startswith(('points possible', 'student, test', 'test student')):
+            continue
+        last, _, first = full.partition(',')
+        if not first:                                    # 'First Last'
+            first, _, last = full.rpartition(' ')
+        email = (r.get(cols.get('email', '')) or '').strip() if cols.get('email') else ''
+        out.append({'full': full, 'first': first.strip(), 'last': last.strip(), 'login': login,
+                    'email': email or f'{login.lower()}@{EMAIL_DOMAIN}',
+                    'sections': (r.get(cols.get('section', '')) or '').strip() if cols.get('section') else '',
+                    'player': _hash(login)})
+    if not out:
+        print(f'{path} has no student rows.')
+        return None
+    return sorted(out, key=lambda st: (st['last'].lower(), st['first'].lower()))
+
+
+def _name_fit(typed, st):
+    "How well a typed name ('Ada L', 'adal', 'Lovelace, Ada') fits a roster student: 0 (no) to 3 (first and last)."
+    toks = _tokens(typed)
+    given, last = _tokens(st['first']), _tokens(st['last'])
+    if not toks or not given:
+        return 0
+
+    def like(a, b):
+        return a == b or (len(a) >= 3 and (b.startswith(a) or a.startswith(b))) or difflib.SequenceMatcher(None, a, b).ratio() >= 0.84
+
+    if toks[0] in last and len(toks) > 1:                # 'Lovelace Ada'
+        toks = toks[1:] + toks[:1]
+    first_ok = any(like(toks[0], g) for g in given)
+    glued = next((g for g in given if toks[0].startswith(g) and 0 < len(toks[0]) - len(g) <= 2), None)   # 'adal'
+    if not first_ok and glued:
+        toks, first_ok = [glued, toks[0][len(glued):]] + toks[1:], True
+    if not first_ok:
+        return 0
+    rest = [t for t in toks[1:] if not any(like(t, g) for g in given)]
+    if not rest:
+        return 1
+    if any(like(t, l) for t in rest for l in last if len(t) > 1):
+        return 3
+    if any(len(t) <= 2 and l.startswith(t[0]) for t in rest for l in last):
+        return 2
+    return 0                                             # a last name or initial that does not fit
+
+
+def _roster_match(section, roster=None):
+    """Line the roster up with the teams. Returns None without a roster, else a dict:
+    'on'      [(student, member)]   on a team in this class (matched by hub login, or linked with match_student)
+    'other'   [(student, member)]   on the roster here, but spun in another class
+    'review'  [(member, student or None)]   team members with no login match; student = the roster name they seem to be
+    'missing' [student]             on the roster, on no team"""
+    section = _norm_section(section)
+    students = _read_roster(section, roster)
+    if students is None:
+        return None
+    everyone = load_members()
+    by_player = {m['player']: m for m in everyone}
+    by_login = {str(m['login']).lower(): m for m in everyone if m.get('login')}
+    on, other, free = [], [], []
+    for st in students:
+        m = by_player.get(st['player']) or by_login.get(st['login'].lower())
+        if m is None:
+            free.append(st)
+        elif m['section'] == section:
+            on.append((st, m))
+        else:
+            other.append((st, m))
+    known = {id(m) for _, m in on}
+    loose = [m for m in everyone if m['section'] == section and id(m) not in known]
+    review = []
+    for m in loose:
+        fits = sorted(((_name_fit(m.get('name', ''), st), st) for st in free), key=lambda x: -x[0])
+        best = [st for score, st in fits if score and score == fits[0][0]]
+        review.append((m, best[0] if len(best) == 1 else None))
+    suggested = {id(st) for _, st in review if st}
+    return {'section': section, 'students': students, 'on': on, 'other': other, 'review': review,
+            'missing': [st for st in free if id(st) not in suggested]}
+
+
+def _odd_name(typed, st):
+    return _name_fit(typed, st) == 0
+
+
+def roster_check(section, roster=None):
+    """Instructor: compare the class roster (class_<section>.csv in this folder) with the teams.
+    Shows who is on a team, who needs a second look (and the line to run to fix each one), and who is missing."""
+    r = _roster_match(section, roster)
+    if r is None:
+        return
+    sec = r['section']
+    td = 'padding:3px 10px;font-size:13px;border-top:1px solid #F0EDE8;vertical-align:top'
+
+    def table(head, rows):
+        return (f'<table style="border-collapse:collapse;margin:4px 0 12px"><tr>'
+                + ''.join(f'<th style="padding:3px 10px;font-size:11px;color:#888;text-align:left">{h}</th>' for h in head) + '</tr>'
+                + ''.join('<tr>' + ''.join(f'<td style="{td}">{c}</td>' for c in row) + '</tr>' for row in rows) + '</table>')
+
+    def code(text):
+        return f'<code style="background:#F7F5F0;padding:1px 5px;border-radius:4px">{html.escape(text)}</code>'
+
+    e = html.escape
+    parts = [f'<div style="font-family:system-ui,sans-serif;max-width:980px"><div style="font-size:1.3em;font-weight:900;color:{CHERRY}">'
+             f'📋 Roster check · class {sec}</div><div style="color:#555;margin-bottom:10px">{len(r["students"])} on the roster · '
+             f'✅ {len(r["on"])} on a team · 🔶 {len(r["review"]) + len(r["other"])} to review · ❌ {len(r["missing"])} missing</div>']
+    if r['review']:
+        rows = []
+        for m, st in r['review']:
+            who = 'added by you' if m.get('manual') else 'spun with a login that is not on this roster'
+            fix = (code(f"match_student({m.get('name', '')!r}, {st['login']!r})") + f' if this is <b>{e(st["full"])}</b>' if st else
+                   'no clear roster match: find them below, then ' + code(f"match_student({m.get('name', '')!r}, 'their login')")
+                   + ', or ' + code(f"remove_student({m.get('name', '')!r})"))
+            rows.append([f'<b>{e(m.get("name", "?"))}</b>', e(m['team']), who, fix])
+        parts.append('<b>🔶 On a team, but not matched to the roster.</b> Match each one, so they are not listed as missing:'
+                     + table(['typed name', 'team', 'why', 'to fix'], rows))
+    if r['other']:
+        rows = [[e(st['full']), f'class {m["section"]} · {e(m["team"])}',
+                 code(f"move_student({m.get('name', '')!r}, 'TEAM NAME', section={m['section']!r}, to_section={sec!r})")]
+                for st, m in r['other']]
+        parts.append(f'<b>🔶 On this roster, but they spun in another class.</b> Move them to a class {sec} team if that was a mistake:'
+                     + table(['roster name', 'spun in', 'to fix'], rows))
+    odd = [(st, m) for st, m in r['on'] if _odd_name(m.get('name', ''), st)]
+    if odd:
+        rows = [[f'<b>{e(m.get("name", "?"))}</b>', e(st['full']), e(m['team']),
+                 code(f"rename_student({m.get('name', '')!r}, {(st['first'].split() or [''])[0] + ' ' + st['last'][:1]!r})")]
+                for st, m in odd]
+        parts.append('<b>✏️ Matched by login, but the typed name does not look like the roster name.</b> Rename if you want the '
+                     'boards to show the real name:' + table(['typed name', 'roster name', 'team', 'to rename'], rows))
+    if r['missing']:
+        rows = [[e(st['full']), e(st['login']), e(st['email'])] for st in r['missing']]
+        parts.append(f'<b>❌ Missing: on the roster, on no team.</b>' + table(['roster name', 'login', 'email'], rows)
+                     + f'<div style="color:#555">Next: {code(f"missing_students({sec!r})")} for the email list, and '
+                       f'{code(f"open_teams_for_missing({sec!r})")} to open the wheel for just these students.</div>')
+    else:
+        parts.append('<b>🎉 Nobody is missing.</b>')
+    _show(''.join(parts) + '</div>')
+
+
+def missing_students(section, link='', roster=None):
+    """Instructor: the students on the roster who are on no team, with their emails and a message you can send.
+    link: the link students should open to spin (the GroupProject_Teams notebook). Saves the list as a CSV too."""
+    r = _roster_match(section, roster)
+    if r is None:
+        return
+    sec, missing = r['section'], r['missing']
+    if r['review']:
+        print(f'⚠️ {len(r["review"])} team member(s) are not matched to the roster yet. Run roster_check({sec!r}) and match them '
+              'first, or a student who is already on a team could be listed here.')
+    if not missing:
+        print(f'🎉 Class {sec}: everyone on the roster is on a team.')
+        return
+    path = f'group_project_teams_{sec}_missing.csv'
+    with open(path, 'w', newline='', encoding='utf-8-sig') as f:
+        w = csv.writer(f)
+        w.writerow(['section', 'student', 'login', 'email'])
+        w.writerows([sec, st['full'], st['login'], st['email']] for st in missing)
+    names = ''.join(f'<tr><td style="padding:2px 10px">{html.escape(st["full"])}</td><td style="padding:2px 10px">'
+                    f'{html.escape(st["email"])}</td></tr>' for st in missing)
+    emails = '; '.join(st['email'] for st in missing)
+    message = (f'Subject: SCTC 1013 Group Project: please join your team\n\n'
+               f'Hello,\n\nOur group project teams are set, and you are not on one yet. Please join today:\n\n'
+               f'  1. Open this link: {link or "[paste the link to GroupProject_Teams here]"}\n'
+               f'  2. Run the Setup cell, type your name, and pick section {sec}.\n'
+               f'  3. Run the spin cell and click Spin! The wheel puts you on a team.\n'
+               f'  4. Run the next cells to see your teammates and the team\'s project, pick your role, '
+               f'and say hello on the team message board.\n\n'
+               f'If the wheel says it is closed, reply to this email and I will let you in.\n\nThank you,\n')
+    _show(f'<div style="font-family:system-ui,sans-serif;max-width:900px"><div style="font-size:1.2em;font-weight:900;color:{CHERRY}">'
+          f'❌ Class {sec}: {len(missing)} student{"s" if len(missing) != 1 else ""} not on a team</div>'
+          f'<table style="border-collapse:collapse;font-size:13px;margin:6px 0">{names}</table>'
+          f'<div style="font-weight:700;margin-top:8px">Addresses (paste into BCC):</div>'
+          f'<pre style="background:#F7F5F0;padding:8px 10px;border-radius:6px;white-space:pre-wrap">{html.escape(emails)}</pre>'
+          f'<div style="font-weight:700">Message:</div>'
+          f'<pre style="background:#F7F5F0;padding:8px 10px;border-radius:6px;white-space:pre-wrap">{html.escape(message)}</pre>'
+          f'<div style="color:#555">💾 Saved {path}. 🔒 It holds names and logins: keep it off GitHub.</div></div>')
+
+
+def open_teams_for_missing(section, roster=None):
+    """Instructor: open the wheel ONLY for the roster students who are on no team. Everyone else stays locked.
+    Each of them lands on one of the smallest teams. close_teams(section) ends it."""
+    r = _roster_match(section, roster)
+    if r is None:
+        return
+    cfg = get_section(r['section'])
+    if not cfg:
+        print(f'Class {r["section"]} has no teams yet.')
+        return
+    cfg['allow'] = [st['player'] for st in r['missing']]
+    cfg['teams_open'] = False
+    _save_section(cfg)
+    print(f'Class {r["section"]}: the wheel is open for {len(r["missing"])} missing student(s) only:')
+    print('   ' + ', '.join(st['full'] for st in r['missing']) if r['missing'] else '   (nobody is missing)')
+    print('   Everyone else stays locked. Run it again after the roster changes; close_teams ends it.')
+
+
+def match_student(name, login, section=None, roster=None):
+    """Instructor: say which roster student a team member is, e.g. match_student('Sam T', 'tuv12345').
+    For a student you added by hand this also connects their own hub login to the team, so their notebook finds it."""
+    rec = _find(name, section)
+    if not rec:
+        return
+    students = _read_roster(rec['section'], roster) or []
+    st = next((x for x in students if x['login'].lower() == str(login).strip().lower()), None)
+    if not st:
+        print(f'{login!r} is not a login on the class {rec["section"]} roster.')
+        return
+    theirs = _read(_member_path(st['player']))
+    if theirs and theirs.get('team') and theirs['player'] != rec['player']:
+        print(f'{st["full"]} already spun as {theirs.get("name")!r} onto {theirs["team"]} (class {theirs["section"]}). '
+              f'Remove the extra entry: remove_student({name!r}) or remove_student({theirs.get("name")!r}).')
+        return
+    old = rec['player']
+    rec['login'] = st['login']
+    if rec.get('manual'):                                # hand-added: re-key it to the student's own hub login
+        rec['player'] = st['player']
+        _write(_member_path(st['player']), rec)
+        os.remove(_member_path(old))
+    else:
+        _write(_member_path(old), rec)
+    print(f'Matched {rec["name"]!r} ({rec["team"]}) to {st["full"]} · {st["login"]}.')
+
+
+def rename_student(name, new_name, section=None):
+    "Instructor: change the name shown for a student, e.g. rename_student('sammy', 'Sam T')."
+    rec = _find(name, section)
+    if rec:
+        rec['name'] = ' '.join(str(new_name).split())[:40]
+        _write(_member_path(rec['player']), rec)
+        print(f'{name!r} is now shown as {rec["name"]!r} ({rec["team"]}, class {rec["section"]}).')
+
+
+def canvas_groups(section, with_section=True, roster=None):
+    """Instructor: write the CSV that creates these teams as Canvas groups: group_project_teams_<section>_canvas_groups.csv.
+    In Canvas: People → + Group Set → name it, choose "I'll create groups later" → Save → Import → upload the file.
+    with_section=True names the groups 'Data Owls (08)', so classes that share a Canvas course and team names stay apart."""
+    r = _roster_match(section, roster)
+    if r is None:
+        return
+    sec = r['section']
+    rows = [[st['full'], '', '', st['login'], st['sections'], f'{m["team"]} ({sec})' if with_section else m['team']]
+            for st, m in sorted(r['on'], key=lambda x: (x[1]['team'].lower(), x[0]['last'].lower()))]
+    path = f'group_project_teams_{sec}_canvas_groups.csv'
+    with open(path, 'w', newline='', encoding='utf-8') as f:
+        w = csv.writer(f)
+        w.writerow(['name', 'canvas_user_id', 'user_id', 'login_id', 'sections', 'group_name'])
+        w.writerows(rows)
+    print(f'💾 Saved {path}: {len(rows)} students in {len({row[-1] for row in rows})} groups.')
+    left = len(r['missing']) + len(r['review']) + len(r['other'])
+    if left:
+        print(f'   ⚠️ Not in the file: {len(r["missing"])} missing, {len(r["review"])} unmatched team member(s), '
+              f'{len(r["other"])} who spun in another class. Run roster_check({sec!r}) to sort them out, then run this again.')
+    print('   In Canvas: People → + Group Set → name it → "I\'ll create groups later" → Save → Import → upload this file.')
+    print('   🔒 It holds names and logins: keep it off GitHub.')
 
 
 def save_teams(section):
