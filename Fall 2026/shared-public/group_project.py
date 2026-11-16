@@ -19,7 +19,8 @@ Students:   team_sign_in()   team_spin()   team_page()   team_choose_project()  
 Instructor: set_teams('01', Groups)   teams_board('01')   open_projects('01')   close_teams('01')
             move_student(...)   add_student(...)   remove_student(...)   assign_project(...)   release_project(...)
             show_messages('01')   remove_message(...)   save_teams('01')   export_teams_html('01')   reset_section('01')
-Roster:     roster_check('01')   missing_students('01', link=...)   open_teams_for_missing('01')
+Recovery:   find_saved()   restore_section('01')   place_students('01', from_section='08')
+Roster:     roster_check('01')   roster_review('01')   missing_students('01', link=...)   open_teams_for_missing('01')
             match_student('Sam T', 'tuv12345')   rename_student('sammy', 'Sam T')   canvas_groups('01')
             (these read the class roster class_01.csv from the notebook's folder)
 """
@@ -34,7 +35,8 @@ __all__ = ['team_sign_in', 'team_spin', 'team_page', 'team_choose_project', 'tea
            'set_teams', 'teams_board', 'open_teams', 'close_teams', 'open_projects', 'close_projects',
            'move_student', 'add_student', 'remove_student', 'assign_project', 'release_project',
            'save_teams', 'save_team_sheets', 'team_sheet', 'reset_section', 'export_teams_html',
-           'roster_check', 'missing_students', 'open_teams_for_missing', 'match_student', 'rename_student', 'canvas_groups',
+           'roster_check', 'roster_review', 'missing_students', 'open_teams_for_missing', 'match_student', 'rename_student',
+           'canvas_groups', 'find_saved', 'restore_section', 'place_students',
            'load_members', 'load_claims', 'get_section', 'DATASETS', 'SECTIONS']
 
 ROOT = os.environ.get('GROUP_PROJECT_ROOT', '/home/jovyan/shared-public/group_project')
@@ -951,77 +953,97 @@ def _tokens(text):
     return re.findall(r'[a-z]+', text)
 
 
-def _read_roster(section, path=None):
-    """The class roster as [{'full', 'first', 'last', 'login', 'email', 'sections', 'player'}, ...].
+def _read_roster(section, path=None, quiet=False):
+    """The class roster as [{'full', 'first', 'last', 'login', 'email', 'sections', 'ids', 'file'}, ...].
     Reads class_<section>.csv from this folder (a Canvas gradebook export works: it needs a Student column,
-    'Last, First', and a SIS Login ID column). Returns None, with a message, if there is no usable roster."""
+    'Last, First', and a SIS Login ID column). path may be one file or a list of files, for a class that meets
+    as two rosters. Returns None, with a message, if there is no usable roster."""
     section = _norm_section(section)
-    path = path or f'class_{section}.csv'
-    if not os.path.exists(path):
-        print(f'No roster file {path} in this folder. Upload the class roster here as class_{section}.csv '
-              '(from Canvas: Grades → Export → Export Entire Gradebook), or pass roster="your_file.csv".')
-        return None
-    with open(path, newline='', encoding='utf-8-sig') as f:
-        rows = list(csv.DictReader(f))
-    cols = {re.sub(r'[^a-z]', '', (c or '').lower()): c for c in (rows[0].keys() if rows else [])}
-    name_col = cols.get('student') or cols.get('name') or cols.get('studentname')
-    login_col = cols.get('sisloginid') or cols.get('loginid') or cols.get('login')
-    if not name_col or not login_col:
-        print(f'{path} needs a "Student" column and a "SIS Login ID" column; it has: {", ".join(c for c in cols.values() if c)}')
-        return None
+    paths = [path] if isinstance(path, str) else list(path or [f'class_{section}.csv'])
     out = []
-    for r in rows:
-        full, login = (r.get(name_col) or '').strip(), (r.get(login_col) or '').strip()
-        if not full or not login or full.lower().startswith(('points possible', 'student, test', 'test student')):
-            continue
-        last, _, first = full.partition(',')
-        if not first:                                    # 'First Last'
-            first, _, last = full.rpartition(' ')
-        email = (r.get(cols.get('email', '')) or '').strip() if cols.get('email') else ''
-        out.append({'full': full, 'first': first.strip(), 'last': last.strip(), 'login': login,
-                    'email': email or f'{login.lower()}@{EMAIL_DOMAIN}',
-                    'sections': (r.get(cols.get('section', '')) or '').strip() if cols.get('section') else '',
-                    'player': _hash(login)})
+    for path in paths:
+        if not os.path.exists(path):
+            if not quiet:
+                print(f'No roster file {path} in this folder. Upload the class roster here as class_{section}.csv '
+                      '(from Canvas: Grades → Export → Export Entire Gradebook), or pass roster="your_file.csv".')
+            return None
+        with open(path, newline='', encoding='utf-8-sig') as f:
+            rows = list(csv.DictReader(f))
+        cols = {re.sub(r'[^a-z]', '', (c or '').lower()): c for c in (rows[0].keys() if rows else [])}
+        name_col = cols.get('student') or cols.get('name') or cols.get('studentname')
+        login_col = cols.get('sisloginid') or cols.get('loginid') or cols.get('login')
+        if not name_col or not login_col:
+            if not quiet:
+                print(f'{path} needs a "Student" column and a "SIS Login ID" column; it has: '
+                      f'{", ".join(c for c in cols.values() if c)}')
+            return None
+        for r in rows:
+            full, login = (r.get(name_col) or '').strip(), (r.get(login_col) or '').strip()
+            if not full or not login or full.lower().startswith(('points possible', 'student, test', 'test student')):
+                continue
+            last, _, first = full.partition(',')
+            if not first:                                    # 'First Last'
+                first, _, last = full.rpartition(' ')
+            email = ((r.get(cols.get('email', '')) or '').strip() if cols.get('email') else '') or f'{login.lower()}@{EMAIL_DOMAIN}'
+            # the hub login may be the bare login or the email: both scrambled ids are tried
+            ids = list(dict.fromkeys([_hash(login), _hash(f'{login}@{EMAIL_DOMAIN}'), _hash(email)]))
+            out.append({'full': full, 'first': first.strip(), 'last': last.strip(), 'login': login, 'email': email,
+                        'sections': (r.get(cols.get('section', '')) or '').strip() if cols.get('section') else '',
+                        'ids': ids, 'player': ids[0], 'file': path})
     if not out:
-        print(f'{path} has no student rows.')
+        if not quiet:
+            print(f'{", ".join(paths)}: no student rows.')
         return None
+    # which form of login does this hub use? The one that matches the most spins (the email form, if none do yet)
+    spun = {m['player'] for m in load_members()}
+    hits = [sum(1 for st in out if len(st['ids']) > k and st['ids'][k] in spun) for k in range(2)]
+    form = 0 if hits[0] > hits[1] else 1
+    for st in out:
+        st['player'] = st['ids'][min(form, len(st['ids']) - 1)]
     return sorted(out, key=lambda st: (st['last'].lower(), st['first'].lower()))
 
 
 def _name_fit(typed, st):
-    "How well a typed name ('Ada L', 'adal', 'Lovelace, Ada') fits a roster student: 0 (no) to 3 (first and last)."
+    """How well a typed name ('Ada L', 'adal', 'Lovelace, Ada', 'Ada Lovelace') fits a roster student:
+    0 no · 1 first name only, or only a middle initial · 2 first name + last initial · 3 first and last name."""
     toks = _tokens(typed)
     given, last = _tokens(st['first']), _tokens(st['last'])
     if not toks or not given:
         return 0
 
     def like(a, b):
-        return a == b or (len(a) >= 3 and (b.startswith(a) or a.startswith(b))) or difflib.SequenceMatcher(None, a, b).ratio() >= 0.84
+        if a == b:
+            return True
+        if min(len(a), len(b)) < 3:
+            return False
+        return b.startswith(a) or a.startswith(b) or difflib.SequenceMatcher(None, a, b).ratio() >= 0.8
 
-    if toks[0] in last and len(toks) > 1:                # 'Lovelace Ada'
-        toks = toks[1:] + toks[:1]
+    if len(toks) > 1 and any(like(toks[0], l) for l in last) and any(like(t, g) for t in toks[1:] for g in given):
+        toks = toks[1:] + toks[:1]                       # 'Lovelace Ada'
     first_ok = any(like(toks[0], g) for g in given)
-    glued = next((g for g in given if toks[0].startswith(g) and 0 < len(toks[0]) - len(g) <= 2), None)   # 'adal'
+    glued = next((g for g in given if len(g) >= 3 and toks[0].startswith(g) and 0 < len(toks[0]) - len(g) <= 2), None)   # 'adal'
     if not first_ok and glued:
         toks, first_ok = [glued, toks[0][len(glued):]] + toks[1:], True
-    if not first_ok:
-        return 0
+    if not first_ok:                                     # goes by a middle name: 'Caleb' for 'Elissa C.'
+        return 1 if len(toks) == 1 and any(len(g) == 1 and toks[0].startswith(g) for g in given[1:]) else 0
     rest = [t for t in toks[1:] if not any(like(t, g) for g in given)]
     if not rest:
         return 1
-    if any(like(t, l) for t in rest for l in last if len(t) > 1):
+    joined = ''.join(last)
+    if any(len(t) > 2 and (like(t, joined) or any(like(t, l) for l in last)) for t in rest):
         return 3
-    if any(len(t) <= 2 and l.startswith(t[0]) for t in rest for l in last):
+    if any(len(t) <= 2 and any(l.startswith(t) or l.startswith(t[0]) for l in last) for t in rest):
         return 2
     return 0                                             # a last name or initial that does not fit
 
 
 def _roster_match(section, roster=None):
     """Line the roster up with the teams. Returns None without a roster, else a dict:
-    'on'      [(student, member)]   on a team in this class (matched by hub login, or linked with match_student)
-    'other'   [(student, member)]   on the roster here, but spun in another class
-    'review'  [(member, student or None)]   team members with no login match; student = the roster name they seem to be
-    'missing' [student]             on the roster, on no team"""
+    'on'      [(student, member, how)]  on a team in this class; how = 'login' (hub login), 'checked' (you confirmed
+                                        it) or 'name' (first name + last initial fit exactly one roster student)
+    'other'   [(student, member)]       on the roster here, but spun in another class
+    'review'  [(member, student or None)]   team members still unmatched; student = a weaker guess, if there is one
+    'missing' [student]                 on the roster, on no team"""
     section = _norm_section(section)
     students = _read_roster(section, roster)
     if students is None:
@@ -1031,32 +1053,56 @@ def _roster_match(section, roster=None):
     by_login = {str(m['login']).lower(): m for m in everyone if m.get('login')}
     on, other, free = [], [], []
     for st in students:
-        m = by_player.get(st['player']) or by_login.get(st['login'].lower())
+        m = by_login.get(st['login'].lower())
+        how = 'checked'
+        if m is None:
+            m, how = next((by_player[i] for i in st['ids'] if i in by_player), None), 'login'
         if m is None:
             free.append(st)
         elif m['section'] == section:
-            on.append((st, m))
+            on.append((st, m, how))
         else:
             other.append((st, m))
-    known = {id(m) for _, m in on}
-    loose = [m for m in everyone if m['section'] == section and id(m) not in known]
-    review = []
+    known = {id(m) for _, m, _ in on}
+    loose = [m for m in everyone if m['section'] == section and id(m) not in known and m.get('roster') != 'none']
+    guess = {}                                           # member -> (score, the one roster student that fits best)
     for m in loose:
-        fits = sorted(((_name_fit(m.get('name', ''), st), st) for st in free), key=lambda x: -x[0])
-        best = [st for score, st in fits if score and score == fits[0][0]]
-        review.append((m, best[0] if len(best) == 1 else None))
-    suggested = {id(st) for _, st in review if st}
+        fits = sorted(((_name_fit(m.get('name', ''), st), i) for i, st in enumerate(free)), reverse=True)
+        if fits and fits[0][0] and (len(fits) == 1 or fits[1][0] < fits[0][0]):
+            guess[id(m)] = (fits[0][0], free[fits[0][1]])
+    wanted = {}
+    for score, st in guess.values():
+        wanted[id(st)] = wanted.get(id(st), 0) + 1
+    review, taken = [], set()
+    for m in loose:
+        score, st = guess.get(id(m), (0, None))
+        if st is not None and score >= 2 and wanted[id(st)] == 1:
+            on.append((st, m, 'name'))
+            taken.add(id(st))
+        else:
+            review.append((m, st))
+            if st is not None:
+                taken.add(id(st))
+    on.sort(key=lambda x: (x[0]['last'].lower(), x[0]['first'].lower()))
     return {'section': section, 'students': students, 'on': on, 'other': other, 'review': review,
-            'missing': [st for st in free if id(st) not in suggested]}
+            'missing': [st for st in free if id(st) not in taken],
+            'left_out': [m for m in everyone if m['section'] == section and m.get('roster') == 'none']}
 
 
-def _odd_name(typed, st):
-    return _name_fit(typed, st) == 0
+def _other_rosters(section, used):
+    "Students on the other class_NN.csv rosters in this folder, to spot a team member who belongs to another class."
+    out = []
+    for f in sorted(glob.glob('class_[0-9]*.csv')):
+        if f not in used:
+            out += _read_roster(section, f, quiet=True) or []
+    return out
 
 
 def roster_check(section, roster=None):
     """Instructor: compare the class roster (class_<section>.csv in this folder) with the teams.
-    Shows who is on a team, who needs a second look (and the line to run to fix each one), and who is missing."""
+    Students are matched by hub login when that works, and otherwise by name: a first name plus last initial that
+    fits exactly one roster student counts as a match. Shows who still needs a look, and who is missing.
+    roster=['class_08.csv', 'class_09.csv'] checks a class that meets as two rosters."""
     r = _roster_match(section, roster)
     if r is None:
         return
@@ -1072,40 +1118,137 @@ def roster_check(section, roster=None):
         return f'<code style="background:#F7F5F0;padding:1px 5px;border-radius:4px">{html.escape(text)}</code>'
 
     e = html.escape
+    by = {how: [(st, m) for st, m, h in r['on'] if h == how] for how in ('login', 'checked', 'name')}
     parts = [f'<div style="font-family:system-ui,sans-serif;max-width:980px"><div style="font-size:1.3em;font-weight:900;color:{CHERRY}">'
              f'📋 Roster check · class {sec}</div><div style="color:#555;margin-bottom:10px">{len(r["students"])} on the roster · '
-             f'✅ {len(r["on"])} on a team · 🔶 {len(r["review"]) + len(r["other"])} to review · ❌ {len(r["missing"])} missing</div>']
+             f'✅ {len(r["on"])} on a team ({len(by["login"])} by login, {len(by["checked"])} checked by you, {len(by["name"])} by name) · '
+             f'🔶 {len(r["review"]) + len(r["other"])} to review · ❌ {len(r["missing"])} missing</div>']
+    if by['name']:
+        rows = [[f'<b>{e(m.get("name", "?"))}</b>', '→', e(st['full']), e(st['login']), e(m['team'])] for st, m in by['name']]
+        parts.append('<details><summary style="cursor:pointer"><b>✅ Matched by name</b> (click to look them over). '
+                     f'To confirm or correct any of them, use {code(f"roster_review({sec!r})")}.</summary>'
+                     + table(['typed name', '', 'roster name', 'login', 'team'], rows) + '</details><div style="height:8px"></div>')
     if r['review']:
+        others = _other_rosters(sec, {st['file'] for st in r['students']})
         rows = []
         for m, st in r['review']:
-            who = 'added by you' if m.get('manual') else 'spun with a login that is not on this roster'
-            fix = (code(f"match_student({m.get('name', '')!r}, {st['login']!r})") + f' if this is <b>{e(st["full"])}</b>' if st else
-                   'no clear roster match: find them below, then ' + code(f"match_student({m.get('name', '')!r}, 'their login')")
-                   + ', or ' + code(f"remove_student({m.get('name', '')!r})"))
-            rows.append([f'<b>{e(m.get("name", "?"))}</b>', e(m['team']), who, fix])
-        parts.append('<b>🔶 On a team, but not matched to the roster.</b> Match each one, so they are not listed as missing:'
-                     + table(['typed name', 'team', 'why', 'to fix'], rows))
+            name = m.get('name', '')
+            if st:
+                note = f'could be <b>{e(st["full"])}</b> (a weaker fit)'
+            else:
+                far = sorted(((_name_fit(name, o), o) for o in others), key=lambda x: -x[0])
+                note = (f'not on this roster; fits <b>{e(far[0][1]["full"])}</b> on {e(far[0][1]["file"])}'
+                        if far and far[0][0] >= 2 and (len(far) == 1 or far[1][0] < far[0][0]) else 'no one left on this roster fits')
+            rows.append([f'<b>{e(name or "?")}</b>', e(m['team']), 'added by you' if m.get('manual') else '', note])
+        parts.append(f'<b>🔶 On a team, not matched to this roster.</b> Settle these with {code(f"roster_review({sec!r})")}: '
+                     'pick the roster student, or mark them as not on this roster.'
+                     + table(['typed name', 'team', '', 'best guess'], rows))
     if r['other']:
         rows = [[e(st['full']), f'class {m["section"]} · {e(m["team"])}',
                  code(f"move_student({m.get('name', '')!r}, 'TEAM NAME', section={m['section']!r}, to_section={sec!r})")]
                 for st, m in r['other']]
         parts.append(f'<b>🔶 On this roster, but they spun in another class.</b> Move them to a class {sec} team if that was a mistake:'
                      + table(['roster name', 'spun in', 'to fix'], rows))
-    odd = [(st, m) for st, m in r['on'] if _odd_name(m.get('name', ''), st)]
+    odd = [(st, m) for st, m in by['login'] + by['checked'] if _name_fit(m.get('name', ''), st) == 0]
     if odd:
         rows = [[f'<b>{e(m.get("name", "?"))}</b>', e(st['full']), e(m['team']),
                  code(f"rename_student({m.get('name', '')!r}, {(st['first'].split() or [''])[0] + ' ' + st['last'][:1]!r})")]
                 for st, m in odd]
-        parts.append('<b>✏️ Matched by login, but the typed name does not look like the roster name.</b> Rename if you want the '
+        parts.append('<b>✏️ Matched, but the typed name does not look like the roster name.</b> Rename if you want the '
                      'boards to show the real name:' + table(['typed name', 'roster name', 'team', 'to rename'], rows))
+    if r['left_out']:
+        parts.append(f'<div style="color:#777;font-size:13px;margin-bottom:8px">Marked "not on this roster": '
+                     f'{e(", ".join(m.get("name", "?") for m in r["left_out"]))}</div>')
     if r['missing']:
         rows = [[e(st['full']), e(st['login']), e(st['email'])] for st in r['missing']]
         parts.append(f'<b>❌ Missing: on the roster, on no team.</b>' + table(['roster name', 'login', 'email'], rows)
                      + f'<div style="color:#555">Next: {code(f"missing_students({sec!r})")} for the email list, and '
                        f'{code(f"open_teams_for_missing({sec!r})")} to open the wheel for just these students.</div>')
     else:
-        parts.append('<b>🎉 Nobody is missing.</b>')
+        parts.append('<b>🎉 Nobody on the roster is missing.</b>')
     _show(''.join(parts) + '</div>')
+
+
+def _link(rec, st):
+    "Record that team member rec is roster student st."
+    old = rec['player']
+    rec['login'] = st['login']
+    rec.pop('roster', None)
+    if rec.get('manual'):                                # hand-added: re-key it so the student's own notebook finds the team
+        rec['player'] = st['player']
+        _write(_member_path(rec['player']), rec)
+        if old != rec['player']:
+            os.remove(_member_path(old))
+    else:
+        _write(_member_path(old), rec)
+
+
+def roster_review(section, roster=None):
+    """Instructor: a check-off list to match team members to the roster. Each row shows a typed name and the roster
+    student it seems to be. Tick the rows that are right (confident ones start ticked), change the pulldown where the
+    guess is wrong, choose 'not on this roster' for a student who belongs elsewhere, then click Save."""
+    import ipywidgets as widgets
+    from IPython.display import display
+    r = _roster_match(section, roster)
+    if r is None:
+        return
+    sec = r['section']
+    rows = [(m, st, True) for st, m, how in r['on'] if how == 'name'] + [(m, st, False) for m, st in r['review']]
+    if not rows:
+        _show(_box(f'✅ Class {sec}: every team member is matched to the roster.', 'Nothing to review.'))
+        return
+    open_students = sorted([st for st, m, how in r['on'] if how == 'name'] + [st for _, st in r['review'] if st] + r['missing'],
+                           key=lambda st: (st['last'].lower(), st['first'].lower()))
+    NOT, NONE = '✖ not on this roster', '— choose —'
+    label = {st['login']: f'{st["full"]} · {st["login"]}' for st in open_students}
+    by_login = {st['login']: st for st in open_students}
+    lines = []
+    for m, st, sure in sorted(rows, key=lambda x: (not x[2], x[0].get('name', '').lower())):
+        tick = widgets.Checkbox(value=sure, indent=False, layout=widgets.Layout(width='28px'))
+        who = widgets.HTML(f'<div style="font-family:system-ui,sans-serif;font-size:14px"><b>{html.escape(m.get("name", "?"))}</b> '
+                           f'<span style="color:#888;font-size:12px">· {html.escape(m["team"])}'
+                           f'{" · added by you" if m.get("manual") else ""}</span></div>', layout=widgets.Layout(width='330px'))
+        pick = widgets.Dropdown(options=[(NONE, NONE)] + [(v, k) for k, v in label.items()] + [(NOT, NOT)],
+                                value=st['login'] if st else NONE, layout=widgets.Layout(width='380px'))
+        lines.append((m, tick, pick, widgets.HBox([tick, who, widgets.HTML('→', layout=widgets.Layout(width='22px')), pick],
+                                                  layout=widgets.Layout(align_items='center'))))
+    save = widgets.Button(description='✅ Save the ticked rows', layout=widgets.Layout(width='220px', height='38px'),
+                          style={'button_color': CHERRY, 'text_color': 'white', 'font_weight': 'bold'})
+    said = widgets.HTML()
+
+    def on_save(_):
+        chosen = [(m, pick.value) for m, tick, pick, _ in lines if tick.value and pick.value != NONE]
+        logins = [v for _, v in chosen if v != NOT]
+        twice = sorted({label[v] for v in logins if logins.count(v) > 1})
+        if twice:
+            said.value = (f'<b style="color:{CHERRY}">⚠️ Chosen for more than one row: {html.escape("; ".join(twice))}. '
+                          'Nothing was saved.</b>')
+            return
+        linked = left = 0
+        for m, value in chosen:
+            rec = _read(_member_path(m['player']))
+            if not rec:
+                continue
+            if value == NOT:
+                rec['roster'] = 'none'
+                rec.pop('login', None)
+                _write(_member_path(rec['player']), rec)
+                left += 1
+            else:
+                _link(rec, by_login[value])
+                linked += 1
+        save.disabled = True
+        said.value = (f'<b style="color:#2E7D50">✅ Saved: {linked} matched to the roster, {left} marked as not on this roster.</b> '
+                      f'Run roster_check({sec!r}) again to see what is left.')
+
+    save.on_click(on_save)
+    n_sure = sum(1 for x in rows if x[2])
+    head = widgets.HTML(f'<div style="font-family:system-ui,sans-serif;max-width:860px"><div style="font-size:1.2em;font-weight:900;'
+                        f'color:{CHERRY}">☑️ Roster review · class {sec}</div><div style="color:#555;margin:2px 0 8px">'
+                        f'{n_sure} confident name matches are ticked already; {len(rows) - n_sure} need your choice. Untick a row to leave '
+                        f'it for later. Only ticked rows are saved.</div></div>')
+    display(widgets.VBox([head] + [x[3] for x in lines] + [widgets.HBox([save, said], layout=widgets.Layout(align_items='center', gap='10px',
+                                                                                                         margin='10px 0 0 0'))]))
 
 
 def missing_students(section, link='', roster=None):
@@ -1115,11 +1258,12 @@ def missing_students(section, link='', roster=None):
     if r is None:
         return
     sec, missing = r['section'], r['missing']
-    if r['review']:
-        print(f'⚠️ {len(r["review"])} team member(s) are not matched to the roster yet. Run roster_check({sec!r}) and match them '
-              'first, or a student who is already on a team could be listed here.')
+    held = [st for _, st in r['review'] if st]
+    if held:
+        print(f'⚠️ Not listed because a team member might be them (settle these in roster_review({sec!r})): '
+              + '; '.join(st['full'] for st in held))
     if not missing:
-        print(f'🎉 Class {sec}: everyone on the roster is on a team.')
+        print(f'🎉 Class {sec}: nobody on the roster is missing.')
         return
     path = f'group_project_teams_{sec}_missing.csv'
     with open(path, 'w', newline='', encoding='utf-8-sig') as f:
@@ -1157,17 +1301,21 @@ def open_teams_for_missing(section, roster=None):
     if not cfg:
         print(f'Class {r["section"]} has no teams yet.')
         return
-    cfg['allow'] = [st['player'] for st in r['missing']]
+    cfg['allow'] = [i for st in r['missing'] for i in st['ids']]
     cfg['teams_open'] = False
     _save_section(cfg)
     print(f'Class {r["section"]}: the wheel is open for {len(r["missing"])} missing student(s) only:')
     print('   ' + ', '.join(st['full'] for st in r['missing']) if r['missing'] else '   (nobody is missing)')
-    print('   Everyone else stays locked. Run it again after the roster changes; close_teams ends it.')
+    if not any(how == 'login' for _, _, how in r['on']):
+        print('   ⚠️ No one in this class has been matched by hub login so far, so this lock may not recognise the missing '
+              'students either. If one of them still sees "the wheel is closed", use open_teams while they spin, then '
+              'close_teams, or put them on a team yourself with add_student.')
+    print('   Everyone else stays locked. close_teams ends it.')
 
 
 def match_student(name, login, section=None, roster=None):
     """Instructor: say which roster student a team member is, e.g. match_student('Sam T', 'tuv12345').
-    For a student you added by hand this also connects their own hub login to the team, so their notebook finds it."""
+    (roster_review does the same for many students at once.)"""
     rec = _find(name, section)
     if not rec:
         return
@@ -1176,19 +1324,13 @@ def match_student(name, login, section=None, roster=None):
     if not st:
         print(f'{login!r} is not a login on the class {rec["section"]} roster.')
         return
-    theirs = _read(_member_path(st['player']))
-    if theirs and theirs.get('team') and theirs['player'] != rec['player']:
-        print(f'{st["full"]} already spun as {theirs.get("name")!r} onto {theirs["team"]} (class {theirs["section"]}). '
-              f'Remove the extra entry: remove_student({name!r}) or remove_student({theirs.get("name")!r}).')
-        return
-    old = rec['player']
-    rec['login'] = st['login']
-    if rec.get('manual'):                                # hand-added: re-key it to the student's own hub login
-        rec['player'] = st['player']
-        _write(_member_path(st['player']), rec)
-        os.remove(_member_path(old))
-    else:
-        _write(_member_path(old), rec)
+    for i in st['ids']:
+        theirs = _read(_member_path(i))
+        if theirs and theirs.get('team') and theirs['player'] != rec['player']:
+            print(f'{st["full"]} already spun as {theirs.get("name")!r} onto {theirs["team"]} (class {theirs["section"]}). '
+                  f'Remove the extra entry: remove_student({name!r}) or remove_student({theirs.get("name")!r}).')
+            return
+    _link(rec, st)
     print(f'Matched {rec["name"]!r} ({rec["team"]}) to {st["full"]} · {st["login"]}.')
 
 
@@ -1210,19 +1352,205 @@ def canvas_groups(section, with_section=True, roster=None):
         return
     sec = r['section']
     rows = [[st['full'], '', '', st['login'], st['sections'], f'{m["team"]} ({sec})' if with_section else m['team']]
-            for st, m in sorted(r['on'], key=lambda x: (x[1]['team'].lower(), x[0]['last'].lower()))]
+            for st, m, how in sorted(r['on'], key=lambda x: (x[1]['team'].lower(), x[0]['last'].lower()))]
     path = f'group_project_teams_{sec}_canvas_groups.csv'
     with open(path, 'w', newline='', encoding='utf-8') as f:
         w = csv.writer(f)
         w.writerow(['name', 'canvas_user_id', 'user_id', 'login_id', 'sections', 'group_name'])
         w.writerows(rows)
+    by_name = sum(1 for _, _, how in r['on'] if how == 'name')
     print(f'💾 Saved {path}: {len(rows)} students in {len({row[-1] for row in rows})} groups.')
-    left = len(r['missing']) + len(r['review']) + len(r['other'])
-    if left:
+    if by_name:
+        print(f'   {by_name} of them were matched by name only: look them over in roster_review({sec!r}) before importing.')
+    if r['missing'] or r['review'] or r['other']:
         print(f'   ⚠️ Not in the file: {len(r["missing"])} missing, {len(r["review"])} unmatched team member(s), '
-              f'{len(r["other"])} who spun in another class. Run roster_check({sec!r}) to sort them out, then run this again.')
+              f'{len(r["other"])} who spun in another class.')
     print('   In Canvas: People → + Group Set → name it → "I\'ll create groups later" → Save → Import → upload this file.')
     print('   🔒 It holds names and logins: keep it off GitHub.')
+
+
+def place_students(section, from_section=None, names=None, roster=None):
+    """Instructor: a board to put students on teams by hand: one row per student, with a pulldown of the class's teams.
+    Rows come from the class roster (class_<section>.csv in this folder). For each student it shows where they are now:
+    on a team in this class, on a team in another class (choosing a team here MOVES them, keeping their own login, so
+    their notebook still finds their team), or on no team (choosing a team places them).
+    from_section='08' also looks, by name, for roster students who spun in class 08 by mistake.
+    names=['Ada L', 'Sam T'] uses a typed list instead of a roster (those students are added by hand).
+    Set the class's teams first with set_teams. Only rows where you pick a team are changed."""
+    import ipywidgets as widgets
+    from IPython.display import display
+    section = _norm_section(section)
+    cfg = get_section(section)
+    if not cfg or not cfg.get('teams'):
+        print(f"Class {section} has no teams yet: run set_teams('{section}', Groups, n_teams=...) first.")
+        return
+    teams = cfg['teams']
+    rows = []                                            # (label, where-now text, current team or None, member rec or None, student or None)
+    if names:
+        here = {m.get('name', '').lower(): m for m in load_members(section)}
+        for n in names:
+            n = ' '.join(str(n).split())
+            m = here.get(n.lower())
+            rows.append((n, f'on {m["team"]}' if m else 'not on a team', m['team'] if m else None, m, None))
+    else:
+        r = _roster_match(section, roster)
+        if r is None:
+            print(f"   Or give the names yourself: place_students('{section}', names=['Ada L', 'Sam T', ...]).")
+            return
+        placed = {id(st): (m, how) for st, m, how in r['on']}
+        elsewhere = {id(st): m for st, m in r['other']}
+        guess = {}
+        if from_section:
+            src = _norm_section(from_section)
+            theirs = _read_roster(src, None, quiet=True)
+            if theirs:                                   # skip the students who really belong to that class
+                rm = _roster_match(src)
+                own = {m['player'] for _, m, _ in rm['on']}
+            else:
+                own = set()
+            pool = [m for m in load_members(src) if m['player'] not in own and not m.get('login')]
+            used = set()
+            for st in r['missing'] + [x for _, x in r['review'] if x]:
+                fits = sorted(((_name_fit(m.get('name', ''), st), i) for i, m in enumerate(pool)), reverse=True)
+                if fits and fits[0][0] >= 2 and (len(fits) == 1 or fits[1][0] < fits[0][0]) and fits[0][1] not in used:
+                    guess[id(st)] = pool[fits[0][1]]
+                    used.add(fits[0][1])
+        for st in r['students']:
+            if id(st) in placed:
+                m, how = placed[id(st)]
+                rows.append((st['full'], f'on {m["team"]}' + (' (matched by name)' if how == 'name' else ''), m['team'], m, st))
+            elif id(st) in elsewhere:
+                m = elsewhere[id(st)]
+                rows.append((st['full'], f'in class {m["section"]} · {m["team"]}', None, m, st))
+            elif id(st) in guess:
+                m = guess[id(st)]
+                rows.append((st['full'], f'in class {m["section"]} · {m["team"]} as "{m.get("name", "")}" (by name)', None, m, st))
+            else:
+                rows.append((st['full'], 'not on a team', None, None, st))
+    KEEP = '— leave as is —'
+    lines = []
+    for label, where, current, m, st in rows:
+        pick = widgets.Dropdown(options=[KEEP] + teams, value=KEEP, layout=widgets.Layout(width='260px'))
+        color = '#2E7D50' if current else ('#B26A00' if m else CHERRY)
+        text = widgets.HTML(f'<div style="font-family:system-ui,sans-serif;font-size:14px"><b>{html.escape(label)}</b> '
+                            f'<span style="color:{color};font-size:12px">· {html.escape(where)}</span></div>',
+                            layout=widgets.Layout(width='470px'))
+        lines.append((pick, current, m, st, label, widgets.HBox([text, pick], layout=widgets.Layout(align_items='center'))))
+    save = widgets.Button(description='✅ Save the teams I picked', layout=widgets.Layout(width='240px', height='38px'),
+                          style={'button_color': CHERRY, 'text_color': 'white', 'font_weight': 'bold'})
+    said = widgets.HTML()
+
+    def short(st, label):
+        return ((st['first'].split() or [''])[0] + ' ' + st['last'][:1]).strip() if st else label
+
+    def on_save(_):
+        moved = made = changed = 0
+        for pick, current, m, st, label, _ in lines:
+            team = pick.value
+            if team == KEEP or team == current:
+                continue
+            rec = _read(_member_path(m['player'])) if m else None
+            if rec:                                      # already saved somewhere: move them, keeping their own login
+                if rec['section'] != section:
+                    moved += 1
+                else:
+                    changed += 1
+                rec.pop('role', None)
+                rec.update(team=team, section=section, moved=_now())
+                if st:
+                    rec['login'] = st['login']
+                    rec.pop('roster', None)
+                _write(_member_path(rec['player']), rec)
+            else:
+                rec = {'player': st['player'] if st else f'manual-{section}-{_slug(label).lower()}', 'name': short(st, label),
+                       'section': section, 'team': team, 'at': _now(), 'placed': True}
+                if st:
+                    rec['login'] = st['login']
+                else:
+                    rec['manual'] = True
+                _write(_member_path(rec['player']), rec)
+                made += 1
+        save.disabled = True
+        said.value = (f'<b style="color:#2E7D50">✅ Saved: {made} placed, {moved} moved from another class, {changed} changed team.</b> '
+                      f'Run this cell again to see the result, or teams_board({section!r}).')
+
+    save.on_click(on_save)
+    n_none = sum(1 for x in rows if not x[3])
+    n_else = sum(1 for x in rows if x[3] and not x[2])
+    head = widgets.HTML(f'<div style="font-family:system-ui,sans-serif;max-width:860px"><div style="font-size:1.2em;font-weight:900;'
+                        f'color:{CHERRY}">🧩 Place students · class {section}</div><div style="color:#555;margin:2px 0 8px">'
+                        f'{len(rows)} students: <span style="color:#2E7D50">{len(rows) - n_none - n_else} on a team here</span> · '
+                        f'<span style="color:#B26A00">{n_else} in another class</span> · <span style="color:{CHERRY}">{n_none} on no team</span>. '
+                        f'Pick a team only for the students you want to place or move; the rest stay as they are.</div></div>')
+    display(widgets.VBox([head] + [x[5] for x in lines] + [widgets.HBox([save, said], layout=widgets.Layout(align_items='center', gap='10px',
+                                                                                                         margin='10px 0 0 0'))]))
+
+
+# ============================================================================ instructor: what is saved, and getting it back
+def find_saved():
+    """Instructor: show everything that is saved, for every class: students by the day and time they spun, projects,
+    and what has been archived by reset_section. Changes nothing."""
+    base = os.path.join(ROOT, TERM)
+    print(f'📁 {base}')
+    terms = [d for d in sorted(os.listdir(ROOT)) if os.path.isdir(os.path.join(ROOT, d))] if os.path.isdir(ROOT) else []
+    if len(terms) > 1:
+        print(f'   (other folders here: {", ".join(t for t in terms if t != TERM)})')
+    everyone = load_members()
+    sections = sorted({m['section'] for m in everyone} | {os.path.basename(p)[:-5] for p in glob.glob(os.path.join(base, 'sections', '*.json'))})
+    if not sections:
+        print('   Nothing is saved here.')
+    for sec in sections:
+        mine = [m for m in everyone if m['section'] == sec]
+        cfg = get_section(sec)
+        print(f'\nClass {sec}: {len(mine)} students · {len(cfg["teams"]) if cfg else "no"} teams set · {len(load_claims(sec))} projects chosen')
+        days = {}
+        for m in mine:
+            days.setdefault(m.get('at', '')[:10], []).append(m.get('at', '')[11:16])
+        for day in sorted(days):
+            times = sorted(days[day])
+            print(f'   spun {day}: {len(times):>3} students, {times[0]}–{times[-1]}')
+    found = sorted(d for d in glob.glob(os.path.join(base, '_archive', '[0-9][0-9]_*')) if os.path.isdir(d))
+    print('\n🗄️ Archived by reset_section:' if found else '\n🗄️ Nothing has been archived by reset_section.')
+    for d in found:
+        n = {k: len(glob.glob(os.path.join(d, k, '**', '*.json'), recursive=True)) for k in ('members', 'claims', 'messages')}
+        sec = os.path.basename(d)[:2]
+        print(f'   {os.path.basename(d)}: class {sec} · {n["members"]} students · {n["claims"]} projects · {n["messages"]} messages'
+              + (f"   → restore_section('{sec}')" if n['members'] else ''))
+
+
+def restore_section(section, archive=None):
+    """Instructor: put back a class that reset_section archived: its students, roles, projects and messages.
+    Uses the newest archive that holds students (or archive='01_20261112-101500'). Files that exist now are kept."""
+    section = _norm_section(section)
+    base = os.path.join(ROOT, TERM)
+    if archive:
+        chosen = os.path.join(base, '_archive', archive)
+    else:
+        having = [d for d in sorted(glob.glob(os.path.join(base, '_archive', f'{section}_*')))
+                  if glob.glob(os.path.join(d, 'members', '*.json'))]
+        chosen = having[-1] if having else ''
+    if not chosen or not os.path.isdir(chosen):
+        print(f'No archive with students was found for class {section}. Run find_saved() to see what there is.')
+        return
+    put, kept = 0, 0
+    has_members = bool(load_members(section))
+    for path in glob.glob(os.path.join(chosen, '**', '*.json'), recursive=True):
+        rel = os.path.relpath(path, chosen)
+        dest = os.path.join(base, rel)
+        is_config = rel.startswith('sections' + os.sep)
+        if os.path.exists(dest) and not (is_config and not has_members):
+            kept += 1
+            continue
+        _dir(*os.path.dirname(rel).split(os.sep))
+        shutil.copy2(path, dest)
+        try:
+            os.chmod(dest, 0o666)
+        except OSError:
+            pass
+        put += 1
+    print(f'Class {section}: restored {put} files from {os.path.basename(chosen)}'
+          + (f' ({kept} already existed and were left as they are).' if kept else '.'))
+    print(f'   Now: {len(load_members(section))} students, {len(load_claims(section))} projects chosen. The archive copy is still there.')
 
 
 def save_teams(section):
