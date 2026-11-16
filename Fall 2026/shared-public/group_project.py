@@ -942,6 +942,18 @@ def remove_message(section, team, number):
 # ============================================================================ instructor: the class roster
 EMAIL_DOMAIN = 'temple.edu'          # a student's email is their SIS Login ID @ this, unless the roster has an Email column
 MASTER_ROSTER = 'master_roster.csv'  # every section in one file, with a Section column; used when it is in this folder
+# The link students open to spin: it pulls the course folder and opens GroupProject_Teams on the hub
+TEAMS_LINK = ('https://temple.2i2c.cloud/hub/user-redirect/git-pull?repo=https%3A%2F%2Fgithub.com%2Flaserchemist%2Fdata'
+              '&urlpath=lab%2Ftree%2Fdata%2FFall%202026%2FGroup-project%2FGroupProject_Teams.ipynb&branch=main')
+
+
+def _email_button(link, title='📋 Group Dashboard', sub='Teams & Project Assignments'):
+    "A link styled as a button with inline styles only (a table cell), so it survives being pasted into an email."
+    return (f'<table role="presentation" cellspacing="0" cellpadding="0" style="margin:14px 0"><tr>'
+            f'<td style="background-color:{CHERRY};border-radius:8px;padding:12px 26px;text-align:center">'
+            f'<a href="{html.escape(link, quote=True)}" target="_blank" style="color:#ffffff;text-decoration:none;'
+            f'font-family:Arial,sans-serif;font-size:16px;font-weight:bold">{html.escape(title)}<br>'
+            f'<span style="font-size:12px;font-weight:normal;color:#F3D9DE">{html.escape(sub)}</span></a></td></tr></table>')
 
 
 def _section_of(value):
@@ -1279,7 +1291,8 @@ def roster_review(section, roster=None):
 
 def missing_students(section, link='', roster=None):
     """Instructor: the students on the roster who are on no team, with their emails and a message you can send.
-    link: the link students should open to spin (the GroupProject_Teams notebook). Saves the list as a CSV too."""
+    The message has a button that opens GroupProject_Teams on the hub (TEAMS_LINK; link=... uses another address).
+    Saves the list as a CSV and the message as an HTML file."""
     r = _roster_match(section, roster)
     if r is None:
         return
@@ -1299,22 +1312,44 @@ def missing_students(section, link='', roster=None):
     names = ''.join(f'<tr><td style="padding:2px 10px">{html.escape(st["full"])}</td><td style="padding:2px 10px">'
                     f'{html.escape(st["email"])}</td></tr>' for st in missing)
     emails = '; '.join(st['email'] for st in missing)
-    message = (f'Subject: SCTC 1013 Group Project: please join your team\n\n'
-               f'Hello,\n\nOur group project teams are set, and you are not on one yet. Please join today:\n\n'
-               f'  1. Open this link: {link or "[paste the link to GroupProject_Teams here]"}\n'
-               f'  2. Run the Setup cell, type your name, and pick section {sec}.\n'
-               f'  3. Run the spin cell and click Spin! The wheel puts you on a team.\n'
-               f'  4. Run the next cells to see your teammates and the team\'s project, pick your role, '
-               f'and say hello on the team message board.\n\n'
-               f'If the wheel says it is closed, reply to this email and I will let you in.\n\nThank you,\n')
+    link = link or TEAMS_LINK
+    subject = 'SCTC 1013 Group Project: please join your team'
+    steps = ['Click the button. It opens the <b>GroupProject_Teams</b> notebook on the JupyterHub.',
+             f'Run the Setup cell, type your name, and pick section <b>{sec}</b>.',
+             'Run the spin cell and click <b>Spin!</b> The wheel puts you on a team.',
+             'Run the next cells to see your teammates and your team\'s project, pick your role, and say hello on the '
+             'team message board.']
+    body = ('<div style="font-family:Arial,sans-serif;font-size:14px;color:#222222;line-height:1.5">'
+            '<p>Hello,</p><p>Our group project teams are set, and you are not on one yet. Please join today:</p>'
+            + _email_button(link)
+            + '<ol>' + ''.join(f'<li>{x}</li>' for x in steps) + '</ol>'
+            f'<p>If the button does not work, copy this link into your browser:<br>'
+            f'<a href="{html.escape(link, quote=True)}" style="color:{CHERRY};word-break:break-all">{html.escape(link)}</a></p>'
+            '<p>If the wheel says it is closed, reply to this email and I will let you in.</p><p>Thank you,</p></div>')
+    plain = (f'Hello,\n\nOur group project teams are set, and you are not on one yet. Please join today:\n\n'
+             f'  1. Open this link: {link}\n'
+             f'  2. Run the Setup cell, type your name, and pick section {sec}.\n'
+             f'  3. Run the spin cell and click Spin! The wheel puts you on a team.\n'
+             f'  4. Run the next cells to see your teammates and your team\'s project, pick your role, '
+             f'and say hello on the team message board.\n\n'
+             f'If the wheel says it is closed, reply to this email and I will let you in.\n\nThank you,\n')
+    page = f'group_project_teams_{sec}_missing_email.html'
+    with open(page, 'w', encoding='utf-8') as f:
+        f.write(f'<!DOCTYPE html><html><head><meta charset="utf-8"><title>{html.escape(subject)}</title></head><body>{body}</body></html>')
+    pre = 'background:#F7F5F0;padding:8px 10px;border-radius:6px;white-space:pre-wrap'
     _show(f'<div style="font-family:system-ui,sans-serif;max-width:900px"><div style="font-size:1.2em;font-weight:900;color:{CHERRY}">'
           f'❌ Class {sec}: {len(missing)} student{"s" if len(missing) != 1 else ""} not on a team</div>'
           f'<table style="border-collapse:collapse;font-size:13px;margin:6px 0">{names}</table>'
           f'<div style="font-weight:700;margin-top:8px">Addresses (paste into BCC):</div>'
-          f'<pre style="background:#F7F5F0;padding:8px 10px;border-radius:6px;white-space:pre-wrap">{html.escape(emails)}</pre>'
-          f'<div style="font-weight:700">Message:</div>'
-          f'<pre style="background:#F7F5F0;padding:8px 10px;border-radius:6px;white-space:pre-wrap">{html.escape(message)}</pre>'
-          f'<div style="color:#555">💾 Saved {path}. 🔒 It holds names and logins: keep it off GitHub.</div></div>')
+          f'<pre style="{pre}">{html.escape(emails)}</pre>'
+          f'<div style="font-weight:700">Subject:</div><pre style="{pre}">{html.escape(subject)}</pre>'
+          f'<div style="font-weight:700">Message — select everything inside the box, copy, and paste into your email '
+          f'(the button and link come with it):</div>'
+          f'<div style="border:2px dashed #C9C4BA;border-radius:8px;padding:6px 16px;margin:6px 0;background:#ffffff">{body}</div>'
+          f'<details><summary style="cursor:pointer;color:#555">Plain-text version (no button)</summary>'
+          f'<pre style="{pre}">{html.escape(plain)}</pre></details>'
+          f'<div style="color:#555;margin-top:6px">💾 Saved {path} (the list) and {page} (the message: open it in a browser tab to '
+          f'copy from there). 🔒 The list holds names and logins: keep it off GitHub.</div></div>')
 
 
 def open_teams_for_missing(section, roster=None):
