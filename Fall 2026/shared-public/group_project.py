@@ -941,6 +941,13 @@ def remove_message(section, team, number):
 
 # ============================================================================ instructor: the class roster
 EMAIL_DOMAIN = 'temple.edu'          # a student's email is their SIS Login ID @ this, unless the roster has an Email column
+MASTER_ROSTER = 'master_roster.csv'  # every section in one file, with a Section column; used when it is in this folder
+
+
+def _section_of(value):
+    "A roster's Section entry ('8', '008', 'SCTC 1013-008') as '08'; '' if it holds no number."
+    found = re.findall(r'\d+', str(value))
+    return f'{int(found[-1]) % 100:02d}' if found else ''
 
 
 def _hash(login):
@@ -953,19 +960,22 @@ def _tokens(text):
     return re.findall(r'[a-z]+', text)
 
 
-def _read_roster(section, path=None, quiet=False):
-    """The class roster as [{'full', 'first', 'last', 'login', 'email', 'sections', 'ids', 'file'}, ...].
-    Reads class_<section>.csv from this folder (a Canvas gradebook export works: it needs a Student column,
-    'Last, First', and a SIS Login ID column). path may be one file or a list of files, for a class that meets
-    as two rosters. Returns None, with a message, if there is no usable roster."""
+def _read_roster(section, path=None, quiet=False, every=False):
+    """The class roster as [{'full', 'first', 'last', 'login', 'email', 'sections', 'class', 'ids', 'file'}, ...].
+    With no path it reads master_roster.csv from this folder, keeping only the rows whose Section is this class
+    (every=True keeps all sections); if there is no master roster it reads class_<section>.csv. A roster needs a
+    Student column ('Last, First') and a SIS Login ID column. path may be one file or a list of files.
+    Returns None, with a message, if there is no usable roster."""
     section = _norm_section(section)
-    paths = [path] if isinstance(path, str) else list(path or [f'class_{section}.csv'])
-    out = []
+    if path is None:
+        path = MASTER_ROSTER if os.path.exists(MASTER_ROSTER) else f'class_{section}.csv'
+    paths = [path] if isinstance(path, str) else list(path)
+    out, seen = [], set()
     for path in paths:
         if not os.path.exists(path):
             if not quiet:
-                print(f'No roster file {path} in this folder. Upload the class roster here as class_{section}.csv '
-                      '(from Canvas: Grades → Export → Export Entire Gradebook), or pass roster="your_file.csv".')
+                print(f'No roster file {path} in this folder. Put {MASTER_ROSTER} here (all sections, with Student, '
+                      f'SIS Login ID and Section columns), or class_{section}.csv, or pass roster="your_file.csv".')
             return None
         with open(path, newline='', encoding='utf-8-sig') as f:
             rows = list(csv.DictReader(f))
@@ -977,9 +987,18 @@ def _read_roster(section, path=None, quiet=False):
                 print(f'{path} needs a "Student" column and a "SIS Login ID" column; it has: '
                       f'{", ".join(c for c in cols.values() if c)}')
             return None
+        master = os.path.basename(path) == MASTER_ROSTER
+        if master and not cols.get('section'):
+            if not quiet:
+                print(f'{path} needs a "Section" column to tell the classes apart.')
+            return None
         for r in rows:
             full, login = (r.get(name_col) or '').strip(), (r.get(login_col) or '').strip()
             if not full or not login or full.lower().startswith(('points possible', 'student, test', 'test student')):
+                continue
+            cls = _section_of(r.get(cols['section'], '')) if cols.get('section') else ''
+            seen.add(cls)
+            if master and not every and cls != section:
                 continue
             last, _, first = full.partition(',')
             if not first:                                    # 'First Last'
@@ -989,10 +1008,12 @@ def _read_roster(section, path=None, quiet=False):
             ids = list(dict.fromkeys([_hash(login), _hash(f'{login}@{EMAIL_DOMAIN}'), _hash(email)]))
             out.append({'full': full, 'first': first.strip(), 'last': last.strip(), 'login': login, 'email': email,
                         'sections': (r.get(cols.get('section', '')) or '').strip() if cols.get('section') else '',
-                        'ids': ids, 'player': ids[0], 'file': path})
+                        'class': cls or section, 'ids': ids, 'player': ids[0],
+                        'file': f'{path}, class {cls}' if master else path})
     if not out:
         if not quiet:
-            print(f'{", ".join(paths)}: no student rows.')
+            print(f'{", ".join(paths)}: no students for class {section}.'
+                  + (f' Its Section column has: {", ".join(sorted(x for x in seen if x)) or "no section numbers"}.' if seen else ''))
         return None
     # which form of login does this hub use? The one that matches the most spins (the email form, if none do yet)
     spun = {m['player'] for m in load_members()}
@@ -1090,7 +1111,10 @@ def _roster_match(section, roster=None):
 
 
 def _other_rosters(section, used):
-    "Students on the other class_NN.csv rosters in this folder, to spot a team member who belongs to another class."
+    "Students on the other classes' rosters (the master roster, or other class_NN.csv files), to spot who belongs elsewhere."
+    section = _norm_section(section)
+    if os.path.exists(MASTER_ROSTER):
+        return [st for st in (_read_roster(section, MASTER_ROSTER, quiet=True, every=True) or []) if st['class'] != section]
     out = []
     for f in sorted(glob.glob('class_[0-9]*.csv')):
         if f not in used:
@@ -1102,7 +1126,7 @@ def roster_check(section, roster=None):
     """Instructor: compare the class roster (class_<section>.csv in this folder) with the teams.
     Students are matched by hub login when that works, and otherwise by name: a first name plus last initial that
     fits exactly one roster student counts as a match. Shows who still needs a look, and who is missing.
-    roster=['class_08.csv', 'class_09.csv'] checks a class that meets as two rosters."""
+    The roster is this class's rows of master_roster.csv (or class_<section>.csv if there is no master roster)."""
     r = _roster_match(section, roster)
     if r is None:
         return
@@ -1119,8 +1143,10 @@ def roster_check(section, roster=None):
 
     e = html.escape
     by = {how: [(st, m) for st, m, h in r['on'] if h == how] for how in ('login', 'checked', 'name')}
+    source = sorted({st['file'].split(',')[0] for st in r['students']})
     parts = [f'<div style="font-family:system-ui,sans-serif;max-width:980px"><div style="font-size:1.3em;font-weight:900;color:{CHERRY}">'
-             f'📋 Roster check · class {sec}</div><div style="color:#555;margin-bottom:10px">{len(r["students"])} on the roster · '
+             f'📋 Roster check · class {sec}</div><div style="color:#555;margin-bottom:10px">{len(r["students"])} on the roster '
+             f'({html.escape(", ".join(source))}) · '
              f'✅ {len(r["on"])} on a team ({len(by["login"])} by login, {len(by["checked"])} checked by you, {len(by["name"])} by name) · '
              f'🔶 {len(r["review"]) + len(r["other"])} to review · ❌ {len(r["missing"])} missing</div>']
     if by['name']:
