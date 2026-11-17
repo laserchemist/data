@@ -357,7 +357,17 @@ def team_sheet(section, team):
             'project': ({'dataset': claim['dataset'], 'chosen_by': claim.get('by', ''), 'at': claim.get('at', '')}
                         if claim else None),
             'messages': [{'name': m.get('name', ''), 'text': m['text'], 'at': m.get('at', '')}
-                         for m in load_messages(section, team)]}
+                         for m in load_messages(section, team)],
+            'proposal': _proposal(section, team)}
+
+
+def _proposal(section, team):
+    "The team's proposal summary, from proposals.py (None if not started, or if that module is not there)."
+    try:
+        import proposals
+        return proposals.proposal_summary(section, team)
+    except Exception:
+        return None
 
 
 def save_team_sheets(section, quiet=True):
@@ -793,6 +803,11 @@ def _board_html(section):
     games = _game_lines(section)
     cards = ''
     for i, (team, names) in enumerate(by_team.items()):
+        prop = _proposal(section, team)
+        if prop:
+            games = dict(games)
+            games[team] = ' · '.join(x for x in [('📝 proposal submitted' if prop.get('status') == 'submitted'
+                                                   else '📝 proposal draft'), games.get(team, '')] if x)
         color = WHEEL_COLORS[i % len(WHEEL_COLORS)]
         chips = ''.join(f'<div style="padding:4px 10px;border-radius:14px;background:#F7F5F0;margin:3px 0;font-size:15px">'
                         f'{html.escape(n)}'
@@ -1563,7 +1578,9 @@ def find_saved():
     for sec in sections:
         mine = [m for m in everyone if m['section'] == sec]
         cfg = get_section(sec)
-        print(f'\nClass {sec}: {len(mine)} students · {len(cfg["teams"]) if cfg else "no"} teams set · {len(load_claims(sec))} projects chosen')
+        n_prop = len(glob.glob(os.path.join(base, 'proposals', sec, '*.json')))
+        print(f'\nClass {sec}: {len(mine)} students · {len(cfg["teams"]) if cfg else "no"} teams set · '
+              f'{len(load_claims(sec))} projects chosen · {n_prop} proposals saved')
         days = {}
         for m in mine:
             days.setdefault(m.get('at', '')[:10], []).append(m.get('at', '')[11:16])
@@ -1648,6 +1665,8 @@ def export_teams_html(section, title=None):
             html.escape(m['name']) + (f' <span style="color:#666666;font-size:12px">· {html.escape(m["role"])}</span>' if m['role'] else '')
             for m in sorted(sheet['members'], key=lambda m: m['name'].lower())) or '<em>no members yet</em>'
         project = html.escape(sheet['project']['dataset']) if sheet['project'] else '<em>not chosen yet</em>'
+        if (sheet.get('proposal') or {}).get('title'):
+            project = f'<b>{html.escape(sheet["proposal"]["title"])}</b><br>' + project
         small = (f'<br><span style="color:#777777;font-size:11px">🎮 {html.escape(games[team])}</span>' if games.get(team) else '')
         rows += (f'<tr><td style="{cell};background-color:{color};color:#ffffff;font-weight:bold;width:24%">{html.escape(team)}'
                  f'<br><span style="font-weight:normal;font-size:12px">{len(sheet["members"])} member'
@@ -1680,6 +1699,7 @@ def reset_section(section, confirm=''):
              + glob.glob(os.path.join(base, 'claims', f'{section}__*.json'))
              + glob.glob(os.path.join(base, 'picks', f'{section}__*.json'))
              + glob.glob(os.path.join(base, 'messages', f'{section}__*', '*.json'))
+             + glob.glob(os.path.join(base, 'proposals', section, '**', '*.json'), recursive=True)
              + glob.glob(os.path.join(base, 'teams', section, '*.json'))
              + glob.glob(os.path.join(base, 'sections', f'{section}.json')))
     if not files:
