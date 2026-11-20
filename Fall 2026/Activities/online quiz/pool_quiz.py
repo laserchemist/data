@@ -16,6 +16,11 @@ import json
 import os
 
 import numpy as np
+from zoneinfo import ZoneInfo
+
+# Quiz OPENS/CLOSES times in the notebooks are read as local (Philadelphia) time,
+# whatever clock the hub server uses (2i2c servers run on UTC).
+QUIZ_TZ = ZoneInfo("America/New_York")
 
 
 def _rng(user, quiz_id):
@@ -45,16 +50,21 @@ def pick_questions(pool, user, quiz_id, attempt, n=12, per_topic=2):
     return [{k: v for k, v in pool[i].items() if k != "topic"} for i in chosen]
 
 
+def _local(stamp):
+    t = datetime.datetime.fromisoformat(stamp)
+    return t if t.tzinfo else t.replace(tzinfo=QUIZ_TZ)
+
+
 def in_window(opens, closes, now=None):
-    now = now or datetime.datetime.now()
-    return datetime.datetime.fromisoformat(opens) <= now <= datetime.datetime.fromisoformat(closes)
+    now = now or datetime.datetime.now(QUIZ_TZ)
+    return _local(opens) <= now <= _local(closes)
 
 
 def open_pool_quiz(pool_file, name, user, quiz_id, attempt, n=12, per_topic=2,
                    opens=None, closes=None):
     """Write this student's questions for `attempt` to a file and open the recorded quiz."""
     if opens and closes and not in_window(opens, closes):
-        print(f"⏰ This quiz is open from {opens} to {closes}. It is not open right now.")
+        print(f"⏰ This quiz is open from {opens} to {closes} (Eastern time). It is not open right now.")
         return None
     if name is ... or not str(name).strip():
         print("✋ Enter your name in the cell near the top of the notebook first.")
